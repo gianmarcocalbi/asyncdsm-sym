@@ -131,6 +131,8 @@ if __name__ == "__main__":
         "iteration_amount": 100
     }
 
+    training_set = np.matrix
+
     cluster = Cluster(setup)
     cluster.run()
     print(cluster.nodes[0].local_clock)
