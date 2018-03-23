@@ -116,7 +116,7 @@ class Node:
         self.local_clock = 0.0
         self.iteration = 0
         self.log = [0.0]
-        self.buffer = []
+        self.buffer = {}
         self.training_setup = training_setup
         self.training_model = mltoolbox.TrainingModel(
             self.training_setup["X"],
@@ -126,12 +126,13 @@ class Node:
         )
 
     def set_dependencies(self, dependencies):
-        for i in range(len(dependencies)):
-            self.dependencies.append(dependencies[i])
-            self.buffer.append([])
+        for dep in dependencies:
+            self.dependencies.append(dep)
+            self.buffer[dep.id] = []
 
     def add_dependency(self, dependency):
         self.dependencies.append(dependency)
+        self.buffer[dependency.id] = []
 
     def set_local_clock(self, new_local_clock):
         self.local_clock = new_local_clock
@@ -145,7 +146,7 @@ class Node:
         self.buffer[sender_node].append(weight)
 
     def dequeue_weight(self, dep_node):
-        self.buffer[dep_node].pop(0)
+        return self.buffer[dep_node].pop(0)
 
     def step(self):
         """
@@ -168,7 +169,8 @@ class Node:
         c0 = time.perf_counter()
 
         # avg with dependencies
-        self.avg_weight_with_dependencies()
+        if self.iteration > 0:
+            self.avg_weight_with_dependencies()
         self.training_model.gradient_descent_step()
         self.broadcast_weight_to_dependencies()
 
@@ -176,6 +178,7 @@ class Node:
         tf = t0 + cf - c0
         self.local_clock = tf
         self.iteration += 1
+        self.log.append(self.local_clock)
 
         print("Error in Node {0} = {1}".format(self.id, self.training_model.loss_log[-1]))
 
@@ -185,7 +188,7 @@ class Node:
         if len(self.dependencies) > 0:
             W = self.training_model.W
             for dep in self.dependencies:
-                W += self.dequeue_weight(dep.id)
+                W = W + self.dequeue_weight(dep.id)
             self.training_model.W = W / (len(self.dependencies) + 1)
 
     def broadcast_weight_to_dependencies(self):
@@ -201,7 +204,7 @@ class Node:
 
 if __name__ == "__main__":
     # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(5, ["i->i+1"])
-    adjacency_matrix = GraphGenerator.generate_complete_graph(1)
+    adjacency_matrix = GraphGenerator.generate_complete_graph(2)
     markov_matrix = normalize(adjacency_matrix, axis=1, norm='l1')
     (X, y) = make_blobs(n_samples=10, n_features=10, centers=2, cluster_std=2, random_state=20)
 

@@ -7,7 +7,6 @@ import time
 
 np.random.seed(2894)
 
-
 class TrainingModel:
     def __init__(self, X, y, f, learning_rate):
         self.X = X
