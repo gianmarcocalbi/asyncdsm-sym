@@ -8,9 +8,20 @@ import copy
 np.random.seed(2894)
 random.seed(2894)
 
+
 class GraphGenerator:
+
     @staticmethod
     def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
+        """
+        Generate considering linear adjacency relationship, that is
+        if there exists and edge (i,j) then there exists also an
+        edge (i+i,j+i). Therefore given the 1st row of the adjacency
+        matrix, then , for instance, the 2nd row of the adjacency
+        matrix will be the 1st line shifted to the right by one.
+        :param adj_matrix_first_row: first row of the adjacency matrix
+        :return: whole adjacency NUMPY matrix
+        """
         N = len(adj_matrix_first_row)
         adjacency_matrix = np.diag(np.ones(N))
         print(adjacency_matrix)
@@ -21,6 +32,18 @@ class GraphGenerator:
 
     @staticmethod
     def generate_d_regular_graph_by_edges(N, edges):
+        """
+        Generate a d-regular adjacency graph matrix starting from the
+        general form of the edges formatted as a string "i->f(i)" so
+        that the right part of the expression (f(i)) is a function of
+        i in python language (e.g. f(i)=math.floor(i+math.sqrt(i))). If
+        you would like to use the total number of vertices in the graph
+        then type "N". So, for instance, "i->(i+math.floor(N/2))%N" is
+        a valid expression. NB: always use he right arrow "->" and not "<-"!
+        :param N: total amount of vertices in the graph
+        :param edges: list of strings formatted as "i->f(i)"
+        :return: adjacency numpy matrix
+        """
         adjacency_matrix = np.diag(np.ones(N))
         for i in range(N):
             for e in edges:
@@ -41,15 +64,27 @@ class GraphGenerator:
 class Cluster:
     def __init__(self, adjacency_matrix, training_setup, setup):
         self.nodes = []
-        self.log = []
+        self.log = []  # TODO: never used
         self.adjacency_matrix = adjacency_matrix
         self.training_setup = training_setup
         self.settings = setup
-        self._boot()
+        self._bootstrap()
 
-    def _boot(self):
+    def _bootstrap(self):
+        """
+        Bootstrap the cluster in order to get it ready to run.
+        :return: None
+        """
+        # TODO: deepcopy of the training set must be avoided!
+        # indeed how the following code works should be changed
+
+        # deepcopy of the instances of the training set
         X = copy.deepcopy(self.training_setup["X"])
+
+        # deepcopy of all oracle function values of the training set
         y = copy.deepcopy(self.training_setup["y"])
+
+        # if they have different sizes then the training set is bad formatted
         if len(y) != X.shape[0]:
             raise Exception("X has different amount of rows w.r.t. y")
         N = self.adjacency_matrix.shape[0]
@@ -58,19 +93,34 @@ class Cluster:
                 "alpha": self.training_setup["alpha"],
                 "activation_function": self.training_setup["activation_function"]
             }
+
+            # size of the subsample of the training set that will be assigned to
+            # this node
             batch_size = math.floor(X.shape[0] / (N - i))
-            node_setup["X"] = copy.deepcopy(X[0:batch_size])
-            node_setup["y"] = copy.deepcopy(y[0:batch_size])
+
+            # assign the correct subsample to this node
+            node_setup["X"] = copy.deepcopy(X[0:batch_size])  # instances
+            node_setup["y"] = copy.deepcopy(y[0:batch_size])  # oracle outputs
+
+            # instantiate new node for the just-selected subsample
             self.nodes.append(Node(i, node_setup))
             self.log.append([])
+
+            # evict the just-already-assigned samples of the training-set
             X = X[batch_size:]
             y = y[batch_size:]
+
+        # set up all nodes' dependencies following the adjacency_matrix
         for i in range(N):
             for j in range(self.adjacency_matrix.shape[1]):
                 if i != j and self.adjacency_matrix[i, j] == 1:
                     self.nodes[j].add_dependency(self.nodes[i])
 
     def run(self):
+        """
+        Run the cluster (distributed computation).
+        :return: None
+        """
         stop_condition = False
         while not stop_condition:
             for node in self.get_most_in_late_nodes():
@@ -204,18 +254,18 @@ class Node:
 
 if __name__ == "__main__":
     # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(5, ["i->i+1"])
-    adjacency_matrix = GraphGenerator.generate_complete_graph(2)
+    adjacency_matrix = GraphGenerator.generate_complete_graph(1)
     markov_matrix = normalize(adjacency_matrix, axis=1, norm='l1')
-    (X, y) = make_blobs(n_samples=10, n_features=10, centers=2, cluster_std=2, random_state=20)
+    (X, y) = make_blobs(n_samples=10000, n_features=10, centers=2, cluster_std=2, random_state=20)
 
     setup = {
-        "iteration_amount": 10,
+        "iteration_amount": 10000,
     }
 
     training_setup = {
         "X": X,
         "y": y,
-        "alpha": 0.005,
+        "alpha": 0.01,
         "activation_function": "sigmoid"
     }
 
