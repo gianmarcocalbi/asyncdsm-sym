@@ -3,6 +3,35 @@ from sklearn.preprocessing import normalize
 import time, random, math
 
 
+class GraphGenerator:
+    @staticmethod
+    def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
+        N = len(adj_matrix_first_row)
+        adjacency_matrix = np.diag(np.ones(N))
+        print(adjacency_matrix)
+        for i in range(N):
+            for j in range(N):
+                adjacency_matrix[i][j] = adj_matrix_first_row[(j - i) % N]
+        return adjacency_matrix
+
+    @staticmethod
+    def generate_d_regular_graph_by_edges(N, edges):
+        adjacency_matrix = np.diag(np.ones(N))
+        for i in range(N):
+            for e in edges:
+                u, v = e.replace(" ", "").split("->")
+                adjacency_matrix[eval(u) % N][eval(v) % N] = 1
+        return adjacency_matrix
+
+    @staticmethod
+    def generate_complete_graph(N):
+        return np.ones((N, N))
+
+    @staticmethod
+    def generate_expander_graph(N, degree):
+        for i in range(N):
+            pass
+
 
 class Cluster:
     def __init__(self, setup):
@@ -111,6 +140,7 @@ class Node:
 
 
 if __name__ == "__main__":
+    """
     adjacency_matrix = np.matrix([
         [1, 1, 0, 0, 0, 1],
         [1, 1, 1, 0, 0, 0],
@@ -136,3 +166,6 @@ if __name__ == "__main__":
     cluster = Cluster(setup)
     cluster.run()
     print(cluster.nodes[0].local_clock)
+    """
+
+    print(GraphGenerator.generate_complete_graph(10))
