@@ -2,10 +2,13 @@
 import matplotlib.pyplot as plt
 from sklearn.datasets.samples_generator import make_regression, make_blobs
 import numpy as np
+import random
 import time
 
+np.random.seed(2894)
 
-class LearningModel:
+
+class TrainingModel:
     def __init__(self, X, y, f, learning_rate):
         self.X = X
         self.y = y
@@ -42,13 +45,8 @@ class SampleGenerator:
 
 
 if __name__ == "__main__":
-    np.random.seed(2894)
-    (X, y) = make_blobs(n_samples=3000, n_features=10, centers=2,
-                        cluster_std=2, random_state=20)
-
-    lm = LearningModel(X, y, lambda x: 2 * x, 0.0005)
-    for i in range(1000000):
+    (X, y) = make_blobs(n_samples=10, n_features=10, centers=2, cluster_std=2, random_state=20)
+    lm = TrainingModel(X, y, lambda x: 2 * x, 0.005)
+    for i in range(10):
         lm.gradient_descent_step()
         print(lm.loss_log[-1])
-
-    # print(lm.loss_log[::50])

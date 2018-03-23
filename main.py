@@ -1,7 +1,12 @@
 import numpy as np
 from sklearn.preprocessing import normalize
 import time, random, math
+import mltoolbox
+from sklearn.datasets.samples_generator import make_blobs
+import copy
 
+np.random.seed(2894)
+random.seed(2894)
 
 class GraphGenerator:
     @staticmethod
@@ -34,27 +39,43 @@ class GraphGenerator:
 
 
 class Cluster:
-    def __init__(self, setup):
+    def __init__(self, adjacency_matrix, training_setup, setup):
         self.nodes = []
         self.log = []
+        self.adjacency_matrix = adjacency_matrix
+        self.training_setup = training_setup
         self.settings = setup
-        for i in range(self.settings["adjacency_matrix"].shape[1]):
-            self.nodes.append(Node(i))
-            self.log.append([])
-        for i in range(self.settings["adjacency_matrix"].shape[0]):
-            for j in range(self.settings["adjacency_matrix"].shape[1]):
-                if i != j and self.settings["adjacency_matrix"][i, j] == 1:
-                    self.nodes[j].add_dependency(self.nodes[i])
+        self._boot()
 
-    def boot(self):
-        pass
+    def _boot(self):
+        X = copy.deepcopy(self.training_setup["X"])
+        y = copy.deepcopy(self.training_setup["y"])
+        if len(y) != X.shape[0]:
+            raise Exception("X has different amount of rows w.r.t. y")
+        N = self.adjacency_matrix.shape[0]
+        for i in range(N):
+            node_setup = {
+                "alpha": self.training_setup["alpha"],
+                "activation_function": self.training_setup["activation_function"]
+            }
+            batch_size = math.floor(X.shape[0] / (N - i))
+            node_setup["X"] = copy.deepcopy(X[0:batch_size])
+            node_setup["y"] = copy.deepcopy(y[0:batch_size])
+            self.nodes.append(Node(i, node_setup))
+            self.log.append([])
+            X = X[batch_size:]
+            y = y[batch_size:]
+        for i in range(N):
+            for j in range(self.adjacency_matrix.shape[1]):
+                if i != j and self.adjacency_matrix[i, j] == 1:
+                    self.nodes[j].add_dependency(self.nodes[i])
 
     def run(self):
         stop_condition = False
         while not stop_condition:
             for node in self.get_most_in_late_nodes():
                 if node.can_run():
-                    self.log[node.id].append(node.step())
+                    self.log[node.id].append(node.gradient_step())
                 else:
                     max_local_clock = node.local_clock
                     for dep in node.dependencies:
@@ -63,15 +84,10 @@ class Cluster:
                     node.set_local_clock(max_local_clock)
 
                 stop_condition = True
-                for node in self.nodes:
-                    if node.iteration < self.settings["iteration_amount"]:
+                for _node in self.nodes:
+                    if _node.iteration < self.settings["iteration_amount"]:
                         stop_condition = False
                         break
-
-                if node.id == 0 and node.iteration == 19:
-                    print("stuck")
-                    # input("press to continue....")
-                    pass
 
     def get_most_in_late_node(self):
         candidate = None
@@ -94,16 +110,25 @@ class Cluster:
 
 
 class Node:
-    def __init__(self, id):
+    def __init__(self, id, training_setup):
         self.id = id
         self.dependencies = []
         self.local_clock = 0.0
         self.iteration = 0
         self.log = [0.0]
+        self.buffer = []
+        self.training_setup = training_setup
+        self.training_model = mltoolbox.TrainingModel(
+            self.training_setup["X"],
+            self.training_setup["y"],
+            lambda x: x * x,
+            self.training_setup["alpha"]
+        )
 
     def set_dependencies(self, dependencies):
         for i in range(len(dependencies)):
             self.dependencies.append(dependencies[i])
+            self.buffer.append([])
 
     def add_dependency(self, dependency):
         self.dependencies.append(dependency)
@@ -115,6 +140,12 @@ class Node:
         if len(self.log) > iteration:
             return self.log[iteration]
         return math.inf
+
+    def enqueue_weight(self, sender_node, weight):
+        self.buffer[sender_node].append(weight)
+
+    def dequeue_weight(self, dep_node):
+        self.buffer[dep_node].pop(0)
 
     def step(self):
         """
@@ -132,6 +163,35 @@ class Node:
         print("node ({0}) advanced to iteration #{1}".format(self.id, self.iteration))
         return [t0, tf]
 
+    def gradient_step(self):
+        t0 = self.local_clock
+        c0 = time.perf_counter()
+
+        # avg with dependencies
+        self.avg_weight_with_dependencies()
+        self.training_model.gradient_descent_step()
+        self.broadcast_weight_to_dependencies()
+
+        cf = time.perf_counter()
+        tf = t0 + cf - c0
+        self.local_clock = tf
+        self.iteration += 1
+
+        print("Error in Node {0} = {1}".format(self.id, self.training_model.loss_log[-1]))
+
+        return [t0, tf]
+
+    def avg_weight_with_dependencies(self):
+        if len(self.dependencies) > 0:
+            W = self.training_model.W
+            for dep in self.dependencies:
+                W += self.dequeue_weight(dep.id)
+            self.training_model.W = W / (len(self.dependencies) + 1)
+
+    def broadcast_weight_to_dependencies(self):
+        for dep in self.dependencies:
+            dep.enqueue_weight(self.id, self.training_model.W)
+
     def can_run(self):
         for dep in self.dependencies:
             if dep.get_local_clock_by_iteration(self.iteration) > self.local_clock:
@@ -140,32 +200,21 @@ class Node:
 
 
 if __name__ == "__main__":
-    """
-    adjacency_matrix = np.matrix([
-        [1, 1, 0, 0, 0, 1],
-        [1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 0, 0],
-        [0, 0, 1, 1, 1, 0],
-        [0, 0, 0, 1, 1, 1],
-        [1, 0, 0, 0, 1, 1]
-    ])
-    adjacency_matrix_diag = np.diag(np.ones(6))
-    adjacency_matrix_bsp = np.ones((6, 6))
-
+    # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(5, ["i->i+1"])
+    adjacency_matrix = GraphGenerator.generate_complete_graph(1)
     markov_matrix = normalize(adjacency_matrix, axis=1, norm='l1')
-
-    random.seed(2894)
+    (X, y) = make_blobs(n_samples=10, n_features=10, centers=2, cluster_std=2, random_state=20)
 
     setup = {
-        "adjacency_matrix": adjacency_matrix,
-        "iteration_amount": 100
+        "iteration_amount": 10,
     }
 
-    training_set = np.matrix
+    training_setup = {
+        "X": X,
+        "y": y,
+        "alpha": 0.005,
+        "activation_function": "sigmoid"
+    }
 
-    cluster = Cluster(setup)
+    cluster = Cluster(adjacency_matrix, training_setup, setup)
     cluster.run()
-    print(cluster.nodes[0].local_clock)
-    """
-
-    print(GraphGenerator.generate_complete_graph(10))
