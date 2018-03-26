@@ -8,7 +8,6 @@ import copy
 np.random.seed(2894)
 random.seed(2894)
 
-
 class GraphGenerator:
 
     @staticmethod
@@ -53,6 +52,11 @@ class GraphGenerator:
 
     @staticmethod
     def generate_complete_graph(N):
+        """
+        Generate complete (clique) graph adjacency matrix.
+        :param N: amount of vertices
+        :return: adjacency numpy matrix
+        """
         return np.ones((N, N))
 
     @staticmethod
@@ -66,7 +70,7 @@ class Cluster:
         self.nodes = []
         self.log = []  # TODO: never used
         self.adjacency_matrix = adjacency_matrix
-        self.training_setup = training_setup
+        self.training_setup = training_setup  # setup for training model
         self.settings = setup
         self._bootstrap()
 
@@ -76,7 +80,7 @@ class Cluster:
         :return: None
         """
         # TODO: deepcopy of the training set must be avoided!
-        # indeed how the following code works should be changed
+        # indeed should be changed how the following code works
 
         # deepcopy of the instances of the training set
         X = copy.deepcopy(self.training_setup["X"])
@@ -123,16 +127,24 @@ class Cluster:
         """
         stop_condition = False
         while not stop_condition:
+            # loop on all nodes with smallest local_clock value
             for node in self.get_most_in_late_nodes():
                 if node.can_run():
                     self.log[node.id].append(node.gradient_step())
                 else:
+                    # node cannot run computation because it lacks some
+                    # dependencies' informations
                     max_local_clock = node.local_clock
                     for dep in node.dependencies:
                         if dep.get_local_clock_by_iteration(node.iteration) > max_local_clock:
                             max_local_clock = max(max_local_clock, dep.local_clock)
+
+                    # set the local_clock of the node equal to the value of the
+                    # local_clock of the last dependency that ended the computation
+                    # this node needs
                     node.set_local_clock(max_local_clock)
 
+                # check for the stop condition
                 stop_condition = True
                 for _node in self.nodes:
                     if _node.iteration < self.settings["iteration_amount"]:
@@ -140,6 +152,12 @@ class Cluster:
                         break
 
     def get_most_in_late_node(self):
+        """
+        Get the node that has the smallest value for local_clock among all the
+        nodes currently within the cluster. If more than one then returns the
+        latest.
+        :return: most in late node
+        """
         candidate = None
         for node in self.nodes:
             if candidate is None:
@@ -149,25 +167,41 @@ class Cluster:
         return candidate
 
     def get_most_in_late_nodes(self):
+        """
+        Get the list of the nodes that have the smallest value for local_clock
+        among all the nodes currently within the cluster. If all nodes own the
+        same value for local_clock then returns the list of all of them.
+        :return: list of nodes
+        """
         in_late_clock = self.get_most_in_late_node().local_clock
         in_late_nodes = []
         for node in self.nodes:
             if node.local_clock == in_late_clock:
                 in_late_nodes.append(node)
             elif node.local_clock < in_late_clock:
-                raise Exception("Node clock is less than the most in late clock. Impossible.")
+                raise Exception("Error: Node clock is less than the most in late clock. Impossible.")
         return in_late_nodes
 
 
 class Node:
+    """
+    Represent a computational node.
+    """
+
     def __init__(self, id, training_setup):
-        self.id = id
-        self.dependencies = []
-        self.local_clock = 0.0
-        self.iteration = 0
-        self.log = [0.0]
+        self.id = id  # id number of the node
+        self.dependencies = []  # list of node dependencies
+        self.local_clock = 0.0  # local internal clock (float)
+        self.iteration = 0  # current iteration
+        self.log = [0.0]  # log indexed as "iteration" -> "completion clock"
+
+        # buffer of incoming weights from dependencies
+        # it store a queue for each dependency. Such queue can be accessed by
+        # addressing the id of the node: "dependency_id" -> dep_queue.
         self.buffer = {}
         self.training_setup = training_setup
+
+        # instantiate training model for the node
         self.training_model = mltoolbox.TrainingModel(
             self.training_setup["X"],
             self.training_setup["y"],
@@ -176,11 +210,20 @@ class Node:
         )
 
     def set_dependencies(self, dependencies):
-        for dep in dependencies:
-            self.dependencies.append(dep)
-            self.buffer[dep.id] = []
+        """
+        Set the node's dependencies.
+        :param dependencies: list of nodes
+        :return: None
+        """
+        for dependency in dependencies:
+            self.add_dependency(dependency)
 
     def add_dependency(self, dependency):
+        """
+        Add a new dependency for the node.
+        :param dependency: node
+        :return: None
+        """
         self.dependencies.append(dependency)
         self.buffer[dependency.id] = []
 
@@ -188,17 +231,43 @@ class Node:
         self.local_clock = new_local_clock
 
     def get_local_clock_by_iteration(self, iteration):
+        """
+        Given the iteration number, returns the value of the local_clock when
+        such iteration had been completed. If the iteration has not been completed
+        yet then returns the constant math.inf (INFINITE), due to comparison
+        reasons.
+        :param iteration: iteration value
+        :return: local_clock when iteration had been completed
+        """
         if len(self.log) > iteration:
             return self.log[iteration]
         return math.inf
 
     def enqueue_weight(self, sender_node, weight):
+        """
+        Enqueue a weight in the buffer.
+        :param sender_node: node that perform the enqueue operation
+        :param weight: weight vector to enqueue
+        :return: None
+        """
         self.buffer[sender_node].append(weight)
 
     def dequeue_weight(self, dep_node):
+        """
+        Remove and return the head of the queue for a certain dependency.
+        :param dep_node: id of the dependency
+        :return: weight vector from such dependency (for the current iteration)
+        """
         return self.buffer[dep_node].pop(0)
 
     def step(self):
+        """
+        Perform a single step (iteration) of the computation task. Actually this
+        method just performs a time.sleep() that lasts for a time distributed
+        following Exp(0.5).
+        :return: None
+        """
+
         """
         t0 = time.perf_counter()
         time.sleep(random.expovariate(0.5))
@@ -215,26 +284,44 @@ class Node:
         return [t0, tf]
 
     def gradient_step(self):
+        """
+        Perform a single step of the gradient descent method.
+        :return: a list containing [clock_before, clock_after] w.r.t. the computation
+        """
+        # useful vars for estimate the time taken by the computation
         t0 = self.local_clock
+        # get the counter before the computation starts
         c0 = time.perf_counter()
 
-        # avg with dependencies
+        # avg internal self.W vector with W incoming from dependencies
         if self.iteration > 0:
             self.avg_weight_with_dependencies()
+
+        # compute the gradient descent step
         self.training_model.gradient_descent_step()
+
+        # broadcast the obtained value to all node's dependencies
         self.broadcast_weight_to_dependencies()
 
+        # get the counter after the computation has ended
         cf = time.perf_counter()
+
+        # computes the clock when the computation has finished
         tf = t0 + cf - c0
+        # update the local_clock
         self.local_clock = tf
+
         self.iteration += 1
         self.log.append(self.local_clock)
 
         print("Error in Node {0} = {1}".format(self.id, self.training_model.loss_log[-1]))
-
         return [t0, tf]
 
     def avg_weight_with_dependencies(self):
+        """
+        Average self.W vector with weights W from dependencies.
+        :return: None
+        """
         if len(self.dependencies) > 0:
             W = self.training_model.W
             for dep in self.dependencies:
@@ -242,10 +329,20 @@ class Node:
             self.training_model.W = W / (len(self.dependencies) + 1)
 
     def broadcast_weight_to_dependencies(self):
+        """
+        Broadcast the just computed self.W vector to dependencies by enqueuing
+        it on their buffers.
+        :return: None
+        """
         for dep in self.dependencies:
             dep.enqueue_weight(self.id, self.training_model.W)
 
     def can_run(self):
+        """
+        Returns whether the node can go further computing a new iteration, thus
+        can proceed to the next step or not.
+        :return: Boolean
+        """
         for dep in self.dependencies:
             if dep.get_local_clock_by_iteration(self.iteration) > self.local_clock:
                 return False
