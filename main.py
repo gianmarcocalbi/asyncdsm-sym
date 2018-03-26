@@ -61,6 +61,7 @@ class GraphGenerator:
 
     @staticmethod
     def generate_expander_graph(N, degree):
+        # todo
         for i in range(N):
             pass
 
@@ -80,7 +81,7 @@ class Cluster:
         :return: None
         """
         # TODO: deepcopy of the training set must be avoided!
-        # indeed should be changed how the following code works
+        # indeed, should be changed how the following code works
 
         # deepcopy of the instances of the training set
         X = copy.deepcopy(self.training_setup["X"])
@@ -154,7 +155,7 @@ class Cluster:
     def get_most_in_late_node(self):
         """
         Get the node that has the smallest value for local_clock among all the
-        nodes currently within the cluster. If more than one then returns the
+        nodes currently within the cluster. If more than one then return the
         latest.
         :return: most in late node
         """
@@ -170,7 +171,7 @@ class Cluster:
         """
         Get the list of the nodes that have the smallest value for local_clock
         among all the nodes currently within the cluster. If all nodes own the
-        same value for local_clock then returns the list of all of them.
+        same value for local_clock then return the list of all of them.
         :return: list of nodes
         """
         in_late_clock = self.get_most_in_late_node().local_clock
@@ -232,9 +233,9 @@ class Node:
 
     def get_local_clock_by_iteration(self, iteration):
         """
-        Given the iteration number, returns the value of the local_clock when
+        Given the iteration number, return the value of the local_clock when
         such iteration had been completed. If the iteration has not been completed
-        yet then returns the constant math.inf (INFINITE), due to comparison
+        yet then return the constant math.inf (INFINITE), due to comparison
         reasons.
         :param iteration: iteration value
         :return: local_clock when iteration had been completed
@@ -339,7 +340,7 @@ class Node:
 
     def can_run(self):
         """
-        Returns whether the node can go further computing a new iteration, thus
+        Return whether the node can go further computing a new iteration, thus
         can proceed to the next step or not.
         :return: Boolean
         """
@@ -351,20 +352,20 @@ class Node:
 
 if __name__ == "__main__":
     # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(5, ["i->i+1"])
-    adjacency_matrix = GraphGenerator.generate_complete_graph(1)
-    markov_matrix = normalize(adjacency_matrix, axis=1, norm='l1')
-    (X, y) = make_blobs(n_samples=10000, n_features=10, centers=2, cluster_std=2, random_state=20)
+    __adjacency_matrix = GraphGenerator.generate_complete_graph(1)
+    __markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
+    (__X, __y) = make_blobs(n_samples=10000, n_features=10, centers=2, cluster_std=2, random_state=20)
 
-    setup = {
+    __setup = {
         "iteration_amount": 10000,
     }
 
-    training_setup = {
-        "X": X,
-        "y": y,
+    __training_setup = {
+        "X": __X,
+        "y": __y,
         "alpha": 0.01,
         "activation_function": "sigmoid"
     }
 
-    cluster = Cluster(adjacency_matrix, training_setup, setup)
-    cluster.run()
+    __cluster = Cluster(__adjacency_matrix, __training_setup, __setup)
+    __cluster.run()
