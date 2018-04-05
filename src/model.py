@@ -58,20 +58,22 @@ class Cluster:
                 if i != j and self.adjacency_matrix[i, j] == 1:
                     self.nodes[j].add_dependency(self.nodes[i])
 
-    """
-    event = {
-        'time' : #INTEGER#,
-        'type' : #STRING#,
-        (...)
-    }
-    """
-
     def enqueue_event(self, e):
+        """
+        Enqueue a new event in the future_event_list.
+        :param e: Event dict
+        :return: None
+        """
         if not e["time"] in self.future_event_list:
             self.future_event_list[e["time"]] = []
         self.future_event_list[e["time"]].append(e)
 
     def dequeue_event(self):
+        """
+        Dequeue the event with the highest priority in the future_event_list.
+        :return: Event
+        :rtype: dict
+        """
         keys = sorted(self.future_event_list.keys())
 
         if len(keys) == 0:

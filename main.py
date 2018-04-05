@@ -22,7 +22,9 @@ if __name__ == "__main__":
         "X": __X,
         "y": __y,
         "alpha": 0.01,
-        "activation_function": "sigmoid"
+        "activation_function": "sigmoid",
+        "method": "classic",  # stochastic
+        "batch_size": 1  # matters only for stochastic method
     }
 
     __cluster = Cluster(__adjacency_matrix, __training_setup, __setup)
