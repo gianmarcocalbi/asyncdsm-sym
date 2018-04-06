@@ -82,7 +82,7 @@ class SampleGenerator:
         X = []
         y = []
         w = []
-        f = lambda _x, _w: _x.dot(_w)  # + np.random.rand()/domain
+        f = lambda _x, _w: _x.dot(_w) + np.random.rand()
 
         for _ in range(n_features):
             w.append(np.random.uniform(-10, 10))

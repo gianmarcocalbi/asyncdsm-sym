@@ -62,6 +62,7 @@ class Cluster:
             for j in range(self.adjacency_matrix.shape[1]):
                 if i != j and self.adjacency_matrix[i, j] == 1:
                     self.nodes[j].add_dependency(self.nodes[i])
+                    self.nodes[i].add_recipient(self.nodes[j])
 
     def enqueue_event(self, e):
         """
@@ -158,6 +159,7 @@ class Node:
     def __init__(self, id, training_setup):
         self.id = id  # id number of the node
         self.dependencies = []  # list of node dependencies
+        self.recipients = []
         self.local_clock = 0.0  # local internal clock (float)
         self.iteration = 0  # current iteration
         self.log = [0.0]  # log indexed as "iteration" -> "completion clock"
@@ -194,6 +196,14 @@ class Node:
         self.dependencies.append(dependency)
         self.buffer[dependency.id] = []
 
+    def add_recipient(self, recipient):
+        """
+        Add a new recipient for the node.
+        :param recipient: node
+        :return: None
+        """
+        self.recipients.append(recipient)
+
     def set_local_clock(self, new_local_clock):
         self.local_clock = new_local_clock
 
@@ -211,22 +221,22 @@ class Node:
             return self.log[iteration]
         return math.inf
 
-    def enqueue_weight(self, sender_node, weight):
+    def enqueue_weight(self, dependency_node_id, weight):
         """
         Enqueue a weight in the buffer.
-        :param sender_node: node that perform the enqueue operation
+        :param dependency_node_id: node that perform the enqueue operation
         :param weight: weight vector to enqueue
         :return: None
         """
-        self.buffer[sender_node].append(weight)
+        self.buffer[dependency_node_id].append(weight)
 
-    def dequeue_weight(self, dep_node):
+    def dequeue_weight(self, dependency_node_id):
         """
-        Remove and return the head of the queue for a certain dependency.
-        :param dep_node: id of the dependency
+        Remove and return the head of the buffer for a certain dependency.
+        :param dependency_node_id: id of the dependency
         :return: weight vector from such dependency (for the current iteration)
         """
-        return self.buffer[dep_node].pop(0)
+        return self.buffer[dependency_node_id].pop(0)
 
     def step(self):
         """
@@ -271,8 +281,8 @@ class Node:
         else:
             self.training_model.gradient_descent_step()
 
-        # broadcast the obtained value to all node's dependencies
-        self.broadcast_weight_to_dependencies()
+        # broadcast the obtained value to all node's recipients
+        self.broadcast_weight_to_recipients()
 
         # get the counter after the computation has ended
         cf = time.perf_counter()
@@ -299,14 +309,14 @@ class Node:
                 W = W + self.dequeue_weight(dep.id)
             self.training_model.W = W / (len(self.dependencies) + 1)
 
-    def broadcast_weight_to_dependencies(self):
+    def broadcast_weight_to_recipients(self):
         """
-        Broadcast the just computed self.W vector to dependencies by enqueuing
+        Broadcast the just computed self.W vector to recipients by enqueuing
         it on their buffers.
         :return: None
         """
-        for dep in self.dependencies:
-            dep.enqueue_weight(self.id, self.training_model.W)
+        for recipient in self.recipients:
+            recipient.enqueue_weight(self.id, self.training_model.W)
 
     def can_run(self):
         """
