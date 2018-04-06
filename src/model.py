@@ -1,4 +1,9 @@
-import time, random, math, mltoolbox, copy
+import copy
+import math
+import random
+import time
+
+from src import mltoolbox
 
 
 class Cluster:
@@ -70,7 +75,8 @@ class Cluster:
 
     def dequeue_event(self):
         """
-        Dequeue the event with the highest priority in the future_event_list.
+        Dequeue the event with the highest priority in the future_event_list,
+        that is the one with the smallest time field value.
         :return: Event
         :rtype: dict
         """
@@ -88,9 +94,10 @@ class Cluster:
 
     def run(self):
         """
-        Run the cluster (distributed computation).
+        Run the cluster (distributed computation simulation).
         :return: None
         """
+        # enqueue one step event for each node in the cluster
         for _node in self.nodes:
             self.enqueue_event({
                 'time': _node.local_clock,
@@ -105,7 +112,7 @@ class Cluster:
                 node = event["node"]
 
                 if node.can_run():
-                    self.log[node.id].append(node.gradient_step())
+                    self.log[node.id].append(node.gradient_step(self.training_setup["method"]))
                 else:
                     # node cannot run computation because it lacks some
                     # dependencies' informations
@@ -126,6 +133,7 @@ class Cluster:
                         stop_condition = False
                         break
 
+                # enqueue the next event for current node
                 if not stop_condition:
                     new_event = {
                         'time': node.local_clock,
@@ -134,10 +142,12 @@ class Cluster:
                     }
                     self.enqueue_event(new_event)
 
-            elif event.type == "":
+            elif event["type"] == "":
                 pass
             else:
                 pass
+
+            event = self.dequeue_event()
 
 
 class Node:
@@ -186,6 +196,7 @@ class Node:
 
     def set_local_clock(self, new_local_clock):
         self.local_clock = new_local_clock
+
 
     def get_local_clock_by_iteration(self, iteration):
         """
@@ -240,7 +251,7 @@ class Node:
         print("node ({0}) advanced to iteration #{1}".format(self.id, self.iteration))
         return [t0, tf]
 
-    def gradient_step(self):
+    def gradient_step(self, method):
         """
         Perform a single step of the gradient descent method.
         :return: a list containing [clock_before, clock_after] w.r.t. the computation
@@ -255,7 +266,10 @@ class Node:
             self.avg_weight_with_dependencies()
 
         # compute the gradient descent step
-        self.training_model.gradient_descent_step()
+        if method == "stochastic":
+            self.training_model.stochastic_gradient_descent_step()
+        else:
+            self.training_model.gradient_descent_step()
 
         # broadcast the obtained value to all node's dependencies
         self.broadcast_weight_to_dependencies()

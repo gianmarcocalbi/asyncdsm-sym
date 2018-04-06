@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import normalize
 import time, random, math
-import mltoolbox
+from src import mltoolbox
 from sklearn.datasets.samples_generator import make_blobs
 import copy
 

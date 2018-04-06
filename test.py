@@ -1,7 +1,6 @@
-import time, random
+import time, sys
 
-random.seed()
-
-t0 = time.perf_counter()
-time.sleep(random.expovariate(0.5))
-print(str(time.perf_counter() - t0))
+for i in range(10):
+    sys.stdout.write("\rDoing thing %i" % i)
+    sys.stdout.flush()
+    time.sleep(1)
