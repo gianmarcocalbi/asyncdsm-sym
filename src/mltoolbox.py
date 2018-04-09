@@ -7,12 +7,11 @@ np.random.seed(2894)
 
 
 class TrainingModel:
-    def __init__(self, X, y, f, learning_rate, batch_size=1):
+    def __init__(self, X, y, f, learning_rate):
         self.X = X  # sample instances matrix
         self.y = y  # sample function's values array
         self.f = f  # network function (usually just like <X,y>)
         self.learning_rate = learning_rate  # learning rate alpha
-        self.batch_size = batch_size
 
         # bias inserted as w0
         self.X = np.c_[np.ones((X.shape[0])), X]
@@ -43,13 +42,16 @@ class TrainingModel:
         # update W following the steepest gradient descent
         self.W -= self.learning_rate * gradient
 
-    def stochastic_gradient_descent_step(self):
+    def stochastic_gradient_descent_step(self, batch_size):
         # determine the mini batch upon which compute the SGD
-        batch_indices = np.random.choice(self.X.shape[0], min(self.batch_size, self.X.shape[0]), replace=False)
+        batch_indices = np.random.choice(self.X.shape[0], min(batch_size, self.X.shape[0]), replace=False)
         M = batch_indices.shape[0]
 
         sub_X = np.take(self.X, batch_indices, axis=0)
         sub_y = np.take(self.y, batch_indices, axis=0)
+
+        if sub_X.shape[0] != self.X.shape[0]:
+            raise Exception("sub_X.shape[0] = {0} != {1} = self.X.shape[0] ".format(sub_X.shape[0], self.X.shape[0]))
 
         # get the prediction values by exploiting the sigmoid function
         predictions = sub_X.dot(self.W)

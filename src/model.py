@@ -36,10 +36,7 @@ class Cluster:
             raise Exception("X has different amount of rows w.r.t. y")
         N = self.adjacency_matrix.shape[0]
         for i in range(N):
-            node_setup = {
-                "alpha": self.training_setup["alpha"],
-                "activation_function": self.training_setup["activation_function"]
-            }
+            node_setup = self.training_setup
 
             # size of the subsample of the training set that will be assigned to
             # this node
@@ -277,7 +274,7 @@ class Node:
 
         # compute the gradient descent step
         if method == "stochastic":
-            self.training_model.stochastic_gradient_descent_step()
+            self.training_model.stochastic_gradient_descent_step(self.training_setup["batch_size"])
         else:
             self.training_model.gradient_descent_step()
 
