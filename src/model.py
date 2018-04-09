@@ -274,7 +274,9 @@ class Node:
 
         # compute the gradient descent step
         if method == "stochastic":
-            self.training_model.stochastic_gradient_descent_step(self.training_setup["batch_size"])
+            self.training_model.stochastic_gradient_descent_step()
+        elif method == "batch":
+            self.training_model.batch_gradient_descent_step(self.training_setup["batch_size"])
         else:
             self.training_model.gradient_descent_step()
 

@@ -1,6 +1,17 @@
-import time, sys
+from curses import wrapper
 
-for i in range(10):
-    sys.stdout.write("\rDoing thing %i" % i)
-    sys.stdout.flush()
-    time.sleep(1)
+
+def main(stdscr):
+    # Clear screen
+    stdscr.clear()
+
+    # This raises ZeroDivisionError when i == 10.
+    for i in range(0, 11):
+        v = 7
+        stdscr.addstr(i, 0, '10 divided by {} is {}'.format(v, 10 / v))
+
+    stdscr.refresh()
+    stdscr.getkey()
+
+
+wrapper(main)

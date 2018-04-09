@@ -23,26 +23,13 @@ class TrainingModel:
         Gradient descent step function.
         :return: None
         """
-        N = self.X.shape[0]
+        self._gradient_descent_weight_update(self.X, self.y)
 
-        # get the prediction values by exploiting the sigmoid function
-        # predictions = self.sigmoid(self.X.dot(self.W))
-        predictions = self.X.dot(self.W)
+    def stochastic_gradient_descent_step(self):
+        pick = np.random.randint(0, self.X.shape[0])
+        self._gradient_descent_weight_update(self.X[pick], self.y[pick])
 
-        # compute the linear error as the difference between predicted y and y
-        linear_error = predictions - self.y
-
-        # compute the error function (mean square error)
-        mean_square_error = np.sum(linear_error ** 2) / (2 * N)
-        self.loss_log.append(mean_square_error)
-
-        # compute the gradient
-        gradient = self.X.T.dot(linear_error) / N
-
-        # update W following the steepest gradient descent
-        self.W -= self.learning_rate * gradient
-
-    def stochastic_gradient_descent_step(self, batch_size):
+    def batch_gradient_descent_step(self, batch_size):
         # determine the mini batch upon which compute the SGD
         batch_indices = np.random.choice(self.X.shape[0], min(batch_size, self.X.shape[0]), replace=False)
         M = batch_indices.shape[0]
@@ -50,21 +37,23 @@ class TrainingModel:
         sub_X = np.take(self.X, batch_indices, axis=0)
         sub_y = np.take(self.y, batch_indices, axis=0)
 
-        if sub_X.shape[0] != self.X.shape[0]:
-            raise Exception("sub_X.shape[0] = {0} != {1} = self.X.shape[0] ".format(sub_X.shape[0], self.X.shape[0]))
+        self._gradient_descent_weight_update(sub_X, sub_y)
+
+    def _gradient_descent_weight_update(self, X, y):
+        N = X.shape[0]
 
         # get the prediction values by exploiting the sigmoid function
-        predictions = sub_X.dot(self.W)
+        predictions = X.dot(self.W)
 
         # compute the linear error as the difference between predicted y and y
-        linear_error = predictions - sub_y
+        linear_error = predictions - y
 
         # compute the loss function loss(f(X), y)
-        mean_square_error = np.sum(linear_error ** 2) / (2 * M)
+        mean_square_error = np.sum(linear_error ** 2) / (2 * N)
         self.loss_log.append(mean_square_error)
 
         # compute the gradient
-        gradient = sub_X.T.dot(linear_error) / M
+        gradient = X.T.dot(linear_error) / N
 
         # update W following the steepest gradient descent
         self.W -= self.learning_rate * gradient
