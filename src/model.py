@@ -1,8 +1,5 @@
-import copy
-import math
-import random
-import time
-
+import copy, math, random, time, types, sys
+import numpy as np
 from src import mltoolbox
 
 
@@ -146,7 +143,7 @@ class Cluster:
                 pass
 
             event = self.dequeue_event()
-
+            sys.stdout.flush()
 
 class Node:
     """
@@ -167,12 +164,25 @@ class Node:
         self.buffer = {}
         self.training_setup = training_setup
 
+        if not "activation_function" in self.training_setup:
+            self.training_setup["activation_function"] = "identity"
+
+        if not self.training_setup["activation_function"] is types.FunctionType:
+            if self.training_setup["activation_function"] == "sigmoid":
+                self.training_setup["activation_function"] = mltoolbox.TrainingModel.sigmoid
+            elif self.training_setup["activation_function"] == "sign":
+                self.training_setup["activation_function"] = np.sign
+            elif self.training_setup["activation_function"] == "tanh":
+                self.training_setup["activation_function"] = np.tanh
+            else:
+                self.training_setup["activation_function"] = lambda x: x
+
         # instantiate training model for the node
         self.training_model = mltoolbox.TrainingModel(
             self.training_setup["X"],
             self.training_setup["y"],
-            lambda x: x * x,
-            self.training_setup["alpha"]
+            self.training_setup["activation_function"],
+            self.training_setup["learning_rate"]
         )
 
     def set_dependencies(self, dependencies):
@@ -294,7 +304,7 @@ class Node:
         self.iteration += 1
         self.log.append(self.local_clock)
 
-        print("Error in Node {0} = {1}".format(self.id, self.training_model.loss_log[-1]))
+        sys.stdout.write("\rError in Node {0} = {1}".format(self.id, self.training_model.loss_log[-1]))
         return [t0, tf]
 
     def avg_weight_with_dependencies(self):

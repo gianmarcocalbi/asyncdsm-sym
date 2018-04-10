@@ -7,15 +7,19 @@ np.random.seed(2894)
 
 
 class TrainingModel:
-    def __init__(self, X, y, f, learning_rate):
+    def __init__(self, X, y, activation_function, learning_rate):
         self.X = X  # sample instances matrix
         self.y = y  # sample function's values array
-        self.f = f  # network function (usually just like <X,y>)
+        # todo: remove or exploit self.f
+        self.activation_function = activation_function  # network function (usually just like <X,y>)
         self.learning_rate = learning_rate  # learning rate alpha
 
-        # bias inserted as w0
+        # bias inserted as w0 = (1,...,1)
         self.X = np.c_[np.ones((X.shape[0])), X]
+
+        # weight vector random sampled from uniform distribution
         self.W = np.random.uniform(size=(X.shape[1] + 1,))
+
         self.loss_log = []
 
     def gradient_descent_step(self):
@@ -26,34 +30,60 @@ class TrainingModel:
         self._gradient_descent_weight_update(self.X, self.y)
 
     def stochastic_gradient_descent_step(self):
+        """
+        Stochastic gradient descent step function. Computes a step of the SGD.
+        :return: None
+        """
+        # pick a random row index in [0, height of X)
         pick = np.random.randint(0, self.X.shape[0])
+
+        # compute gradient weight update consider only pick-th example
         self._gradient_descent_weight_update(self.X[pick], self.y[pick])
 
     def batch_gradient_descent_step(self, batch_size):
-        # determine the mini batch upon which compute the SGD
+        """
+        Batch gradient descent step function.
+        :param batch_size: size of the batch of X on which computing the gradient
+        :return: None
+        """
+        # determine the mini batch upon which computing the SGD
         batch_indices = np.random.choice(self.X.shape[0], min(batch_size, self.X.shape[0]), replace=False)
-        M = batch_indices.shape[0]
 
+        # extract subsamples
         sub_X = np.take(self.X, batch_indices, axis=0)
         sub_y = np.take(self.y, batch_indices, axis=0)
 
+        # compute weight update on the subsamples
         self._gradient_descent_weight_update(sub_X, sub_y)
 
     def _gradient_descent_weight_update(self, X, y):
-        N = X.shape[0]
+        """
+        Gradient descent core function.
+        Updates the weight following the direction of the gradient.
+        :param X: examples matrix
+        :param y: examples values for the target function (oracle-provided)
+        :return: None
+        """
+        N = self.X.shape[0]  # amount of samples in original X matrix
+        M = X.shape[0]  # amount of samples in current batch
 
-        # get the prediction values by exploiting the sigmoid function
-        predictions = X.dot(self.W)
+        ## BEGIN: only for statistical purpose
 
-        # compute the linear error as the difference between predicted y and y
-        linear_error = predictions - y
+        # get the prediction
+        predictions = self.activation_function(self.X.dot(self.W))
+
+        # compute the linear error as the difference between predicted y and real y values
+        linear_error = predictions - self.y
 
         # compute the loss function loss(f(X), y)
         mean_square_error = np.sum(linear_error ** 2) / (2 * N)
         self.loss_log.append(mean_square_error)
 
+        ## END: only for statistical purpose
+
         # compute the gradient
-        gradient = X.T.dot(linear_error) / N
+        batch_linear_error = self.activation_function(X.dot(self.W)) - y
+        gradient = X.T.dot(batch_linear_error) / M
 
         # update W following the steepest gradient descent
         self.W -= self.learning_rate * gradient
@@ -62,18 +92,17 @@ class TrainingModel:
     def sigmoid(x):
         return 1.0 / (1 + np.exp(-x))
 
-
 class SampleGenerator:
     def __init__(self):
         # a lot of useful parameters
         pass
 
     @staticmethod
-    def generate_linear_function_sample(n_samples, n_features, domain):
+    def generate_linear_function_sample(n_samples, n_features, domain, biased=True):
         X = []
         y = []
         w = []
-        f = lambda _x, _w: _x.dot(_w) + np.random.rand()
+        f = lambda _x, _w: _x.dot(_w) + np.random.rand() * int(biased)
 
         for _ in range(n_features):
             w.append(np.random.uniform(-10, 10))
