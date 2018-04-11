@@ -7,8 +7,8 @@ from src.graph_generator import GraphGenerator
 from src import model, mltoolbox
 
 seed = 28041993
-np.random.seed(28041993)
-random.seed(28041993)
+np.random.seed(seed)
+random.seed(seed)
 
 if __name__ == "__main__":
     # __adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(5, ["i->i+1"])
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         "y": __y,
         "learning_rate": 0.01,
         "activation_function": "identity",  # sigmoid, sign, tanh, identity, whatever other name will lead to identity
-        "method": "batch",  # classic, stochastic, batch
+        "method": "stochastic",  # classic, stochastic, batch
         "batch_size": 10  # matters only for batch method
     }
 
