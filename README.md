@@ -1,2 +1,2 @@
-# qADAC
-quasi-Asynchronous Distributed Approximate Computation for Machine Learning
+# asyadcml
+Asynchronous Approximated and Distributed Computation for Machine Learning
