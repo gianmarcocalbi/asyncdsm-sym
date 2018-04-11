@@ -98,20 +98,33 @@ class SampleGenerator:
         pass
 
     @staticmethod
-    def generate_linear_function_sample(n_samples, n_features, domain, biased=True):
+    def sample_from_function(n_samples, n_features, func, domain, biased=False):
         X = []
         y = []
         w = []
-        f = lambda _x, _w: _x.dot(_w) + np.random.rand() * int(biased)
 
         for _ in range(n_features):
-            w.append(np.random.uniform(-10, 10))
+            w.append(np.random.uniform(0, 1))
 
         for i in range(n_samples):
             x = np.random.uniform(-domain, domain, n_features)
             X.append(x)
-            y.append(f(x, w))
+            y.append(func(x, w) +  np.random.rand() * int(biased))
         return np.array(X), np.array(y)
+
+
+def linear_function(_x, _w):
+    return _x.dot(_w)
+
+def sphere_function(_x, _w):
+    return np.sum(np.power(_x,2))
+
+def rosenbrock_function(_x, _w):
+    n = len(_x)
+    v = 0
+    for i in range(0, n-1):
+        v += 100 * (_x[i+1] - _x[i] ** 2) + (1 - _x[i]) ** 2
+    return v
 
 
 if __name__ == "__main__":
@@ -122,4 +135,4 @@ if __name__ == "__main__":
         lm.stochastic_gradient_descent_step()
         print(lm.loss_log[-1])
     """
-    print(SampleGenerator.generate_linear_function_sample(10, 1, 10))
+    print(SampleGenerator.linear_function_sample(10, 1, 10))

@@ -8,6 +8,7 @@
 - [ ] Try the SGD method with a bigger dataset whose informations are already known (for example accuracy after N steps).
 - [ ] Starting to output some plots.
 - [ ] Improve all gd performances.
+- [ ] Augment precision in computation by exploiting Decimal module in std library.
 
 ## High priority
 - [ ] Add validation.

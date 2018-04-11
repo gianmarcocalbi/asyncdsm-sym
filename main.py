@@ -6,7 +6,7 @@ from src.graph_generator import GraphGenerator
 from src import model, mltoolbox, console
 from curses import wrapper
 
-seed = 28041993
+seed = 28041994
 np.random.seed(seed)
 random.seed(seed)
 
@@ -15,10 +15,10 @@ def main(stdscr):
     console.stdout.open()
 
     # __adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(5, ["i->i+1"])
-    __adjacency_matrix = GraphGenerator.generate_complete_graph(4)
+    __adjacency_matrix = GraphGenerator.generate_complete_graph(1)
     __markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
-    # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=2, cluster_std=2, random_state=20)
-    __X, __y = mltoolbox.SampleGenerator.generate_linear_function_sample(10000, 100, 1)
+    # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
+    __X, __y = mltoolbox.SampleGenerator.sample_from_function(100000, 50, mltoolbox.linear_function, 10, biased=True)
     # __X, __y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat"), np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
 
     __setup = {
