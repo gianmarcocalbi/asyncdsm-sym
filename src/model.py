@@ -1,6 +1,6 @@
 import copy, math, random, time, types, sys
 import numpy as np
-from src import mltoolbox
+from src import mltoolbox, console
 
 
 class Cluster:
@@ -103,6 +103,7 @@ class Cluster:
         stop_condition = False
         event = self.dequeue_event()
         while not stop_condition and not event is None:
+            console.stdout.screen.clrtoeol()
             if event["type"] == "node_step":
                 node = event["node"]
 
@@ -137,13 +138,26 @@ class Cluster:
                     }
                     self.enqueue_event(new_event)
 
+                _depstr = ""
+                for _dep in node.dependencies:
+                    if _dep.get_local_clock_by_iteration(node.iteration) > node.iteration:
+                        _depstr += str(_dep.id)
+
+                console.stdout.screen.addstr(node.id, 0,
+                                             "Node: {} | iter: {} | error: {} | wait for: {}".format(node.id,
+                                                                                                     node.iteration,
+                                                                                                     node.training_model.loss_log[
+                                                                                                         -1], _depstr))
+
             elif event["type"] == "":
                 pass
             else:
                 pass
 
             event = self.dequeue_event()
-            sys.stdout.flush()
+
+            console.stdout.screen.refresh()
+
 
 class Node:
     """
@@ -213,7 +227,6 @@ class Node:
 
     def set_local_clock(self, new_local_clock):
         self.local_clock = new_local_clock
-
 
     def get_local_clock_by_iteration(self, iteration):
         """
@@ -304,7 +317,6 @@ class Node:
         self.iteration += 1
         self.log.append(self.local_clock)
 
-        sys.stdout.write("\rError in Node {0} = {1}".format(self.id, self.training_model.loss_log[-1]))
         return [t0, tf]
 
     def avg_weight_with_dependencies(self):
