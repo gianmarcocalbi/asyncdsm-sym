@@ -1,2 +1,0 @@
-/dataset/largescale_challenge/** filter=lfs diff=lfs merge=lfs -text
-/dataset/largescale_challenge/ filter=lfs diff=lfs merge=lfs -text
