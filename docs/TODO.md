@@ -4,7 +4,7 @@
 
 ## Very high priority
 - [ ] Design better generator function for the training_set.
-- [ ] Utilize `sys.stdout.write()` and `sys.stdout.flush()` functions instead of `print()` for a better output visualization.
+- [ ] Utilize python curse module instead of classic print for a better output visualization.
 - [ ] Try the SGD method with a bigger dataset whose informations are already known (for example accuracy after N steps).
 - [ ] Starting to output some plots.
 - [ ] Improve all gd performances.
