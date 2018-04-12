@@ -316,7 +316,7 @@ class Node:
         self.iteration += 1
         self.log.append(self.local_clock)
 
-        print("Error in Node {0} = {1}".format(self.id, self.training_model.loss_log[-1]))
+        print("Error in Node {0} = {1}".format(self.id, self.training_model.squared_loss_log[-1]))
         return [t0, tf]
 
     def avg_weight_with_dependencies(self):

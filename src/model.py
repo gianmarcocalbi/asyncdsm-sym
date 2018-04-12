@@ -100,7 +100,7 @@ class Cluster:
                 'node': _node
             })
 
-        stop_condition = False
+        stop_condition = False  # todo: stop condition (tolerance)
         event = self.dequeue_event()
         while not stop_condition and not event is None:
             console.stdout.screen.clrtoeol()
@@ -144,10 +144,11 @@ class Cluster:
                         _depstr += str(_dep.id)
 
                 console.stdout.screen.addstr(node.id, 0,
-                                             "Node: {} | iter: {} | error: {} | wait for: {}".format(node.id,
-                                                                                                     node.iteration,
-                                                                                                     node.training_model.loss_log[
-                                                                                                         -1], _depstr))
+                                             "Node: {} | iter: {} | error: {} | score: {} | wait for: {}".format(
+                                                 node.id,
+                                                 node.iteration,
+                                                 node.training_model.squared_loss(),
+                                                 node.training_model.score(), _depstr))
 
             elif event["type"] == "":
                 pass

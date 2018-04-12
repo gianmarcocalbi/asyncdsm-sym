@@ -20,7 +20,30 @@ class TrainingModel:
         # weight vector random sampled from uniform distribution
         self.W = np.random.uniform(size=(X.shape[1] + 1,))
 
-        self.loss_log = []
+        self.squared_loss_log = []
+        self.score_log = []
+
+    def score(self):
+        if len(self.score_log) > 0:
+            return self.score_log[-1]
+        else:
+            return 0
+
+    def squared_loss(self):
+        if len(self.squared_loss_log) > 0:
+            return self.squared_loss_log[-1]
+        else:
+            return self._compute_squared_loss()
+
+    def _compute_squared_loss(self):
+        # get the prediction
+        predictions = self.activation_function(self.X.dot(self.W))
+
+        # compute the linear error as the difference between predicted y and real y values
+        linear_error = predictions - self.y
+
+        # compute the loss function loss(f(X), y)
+        return np.sum(linear_error ** 2) / (2 * self.X.shape[0])
 
     def gradient_descent_step(self):
         """
@@ -76,8 +99,9 @@ class TrainingModel:
         linear_error = predictions - self.y
 
         # compute the loss function loss(f(X), y)
-        mean_square_error = np.sum(linear_error ** 2) / (2 * N)
-        self.loss_log.append(mean_square_error)
+        mean_square_error = np.sum(np.apply_along_axis(lambda x : x*x, 0, linear_error)) / (2 * N)
+        self.squared_loss_log.append(mean_square_error)
+        self.score_log.append(1 - sum(np.apply_along_axis(abs, 0, linear_error)) / N)
 
         ## END: only for statistical purpose
 
@@ -91,6 +115,10 @@ class TrainingModel:
     @staticmethod
     def sigmoid(x):
         return 1.0 / (1 + np.exp(-x))
+
+def perceptron_loss_function(_X, _y, _w):
+    pass
+
 
 class SampleGenerator:
     def __init__(self):
@@ -109,30 +137,19 @@ class SampleGenerator:
         for i in range(n_samples):
             x = np.random.uniform(-domain, domain, n_features)
             X.append(x)
-            y.append(func(x, w) +  np.random.rand() * int(biased))
+            y.append(func(x, w) +  np.random.choice([-1,1]) * np.random.rand() * int(biased))
         return np.array(X), np.array(y)
 
 
-def linear_function(_x, _w):
-    return _x.dot(_w)
+def linear_function(_X, _w):
+    return _X.dot(_w)
 
-def sphere_function(_x, _w):
-    return np.sum(np.power(_x,2))
+def sphere_function(_X, _w):
+    return np.sum(np.power(_X,2))
 
-def rosenbrock_function(_x, _w):
-    n = len(_x)
+def rosenbrock_function(_X, _w):
+    n = len(_X)
     v = 0
     for i in range(0, n-1):
-        v += 100 * (_x[i+1] - _x[i] ** 2) + (1 - _x[i]) ** 2
+        v += 100 * (_X[i+1] - _X[i] ** 2) + (1 - _X[i]) ** 2
     return v
-
-
-if __name__ == "__main__":
-    """
-    (__X, __y) = make_blobs(n_samples=10, n_features=10, centers=2, cluster_std=2, random_state=20)
-    lm = TrainingModel(__X, __y, lambda x: 2 * x, 0.005)
-    while True:
-        lm.stochastic_gradient_descent_step()
-        print(lm.loss_log[-1])
-    """
-    print(SampleGenerator.linear_function_sample(10, 1, 10))
