@@ -4,7 +4,7 @@ from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
 from sklearn import linear_model
 from src.graph_generator import GraphGenerator
-from src import model, mltoolbox, console
+from src import model, mltoolbox_old, console
 from curses import wrapper
 import matplotlib.pyplot as plt
 
@@ -20,8 +20,8 @@ def main(stdscr):
     __adjacency_matrix = GraphGenerator.generate_complete_graph(1)
     # __markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    __X, __y = mltoolbox.SampleGenerator.sample_from_function(
-        1000, 3, mltoolbox.sphere_function, 1, biased=True)
+    __X, __y = mltoolbox_old.SampleGenerator.sample_from_function(
+        1000, 3, mltoolbox_old.sphere_function, 1, biased=True)
     # __X, __y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat"), np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
 
     #__X = np.matrix([np.zeros(10),np.arange(10)]).T
@@ -64,13 +64,13 @@ def main(stdscr):
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    __X, __y = mltoolbox.SampleGenerator.sample_from_function(1000, 100, mltoolbox.linear_function, 1, biased=False)
+    __X, __y = mltoolbox_old.SampleGenerator.sample_from_function(1000, 100, mltoolbox_old.linear_function, 1, biased=False)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
     cls.fit(__X, __y)
     print(cls.score(__X, __y))
 
 def main2():
-    __X, __y = mltoolbox.SampleGenerator.sample_from_function(1000, 3, mltoolbox.linear_function, 10, biased=False)
+    __X, __y = mltoolbox_old.SampleGenerator.sample_from_function(1000, 3, mltoolbox_old.linear_function, 10, biased=False)
     cls = linear_model.SGDRegressor(penalty='none', alpha=0.01, max_iter=1000, shuffle=False, learning_rate='constant')
     cls.fit(__X, __y)
     print(cls.score(__X, __y))

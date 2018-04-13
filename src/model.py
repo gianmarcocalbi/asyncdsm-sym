@@ -1,6 +1,6 @@
 import copy, math, random, time, types, sys
 import numpy as np
-from src import mltoolbox, console
+from src import mltoolbox_old, console
 
 
 class Cluster:
@@ -184,7 +184,7 @@ class Node:
 
         if not self.training_setup["activation_function"] is types.FunctionType:
             if self.training_setup["activation_function"] == "sigmoid":
-                self.training_setup["activation_function"] = mltoolbox.TrainingModel.sigmoid
+                self.training_setup["activation_function"] = mltoolbox_old.TrainingModel.sigmoid
             elif self.training_setup["activation_function"] == "sign":
                 self.training_setup["activation_function"] = np.sign
             elif self.training_setup["activation_function"] == "tanh":
@@ -193,7 +193,7 @@ class Node:
                 self.training_setup["activation_function"] = lambda x: x
 
         # instantiate training model for the node
-        self.training_model = mltoolbox.TrainingModel(
+        self.training_model = mltoolbox_old.TrainingModel(
             self.training_setup["X"],
             self.training_setup["y"],
             self.training_setup["activation_function"],

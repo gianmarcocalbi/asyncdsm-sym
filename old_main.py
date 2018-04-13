@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import normalize
 import time, random, math
-from src import mltoolbox
+from src import mltoolbox_old
 from sklearn.datasets.samples_generator import make_blobs
 import copy
 
@@ -204,7 +204,7 @@ class Node:
         self.training_setup = training_setup
 
         # instantiate training model for the node
-        self.training_model = mltoolbox.TrainingModel(
+        self.training_model = mltoolbox_old.TrainingModel(
             self.training_setup["X"],
             self.training_setup["y"],
             lambda x: x * x,
