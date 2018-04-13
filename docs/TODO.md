@@ -11,6 +11,7 @@
 - [ ] Improve all gradient descent algorithms' performances.
 - [ ] Design better generator function for the training_set.
 - [ ] Augment precision in computation by exploiting Decimal module in std library.
+- [ ] Change dict setup to function parameters to avoid too much memory consumption.
 
 ## High priority
 - [ ] Try the SGD method with a bigger dataset whose informations are already known (for example accuracy after N steps).

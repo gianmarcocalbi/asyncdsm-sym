@@ -1,16 +1,24 @@
-from curses import wrapper
-import time
 
-def main(stdscr):
-    # Clear screen
-    stdscr.clear()
+class Parent:
+    def __init__(self):
+        self.name = "Rocco"
+        self.surname = "Calbi"
 
-    # This raises ZeroDivisionError when i == 10.
-    for i in range(0, 10):
-        stdscr.addstr(0, 0, 'Time {}'.format(i))
-        stdscr.refresh()
-        time.sleep(1)
+    def fullname(self):
+        print("Parent: " + self.get_fullname())
 
-    stdscr.getkey()
+    def get_fullname(self):
+        return self.name + " " + self.surname
 
-wrapper(main)
+class Child(Parent):
+    def __init__(self):
+        super().__init__()
+        self.name = "Gianmarco"
+
+    def fullname(self):
+        print("Child: " + self.get_fullname())
+
+p = Parent()
+c = Child()
+p.fullname()
+c.fullname()

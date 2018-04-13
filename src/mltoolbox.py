@@ -93,7 +93,7 @@ class TrainingModel:
         ## BEGIN: only for statistical purpose
 
         # get the prediction
-        predictions = self.activation_function(self.X.dot(self.W))
+        predictions = self.activation_function(np.power(self.X,2).dot(self.W))
 
         # compute the linear error as the difference between predicted y and real y values
         linear_error = predictions - self.y
@@ -106,8 +106,10 @@ class TrainingModel:
         ## END: only for statistical purpose
 
         # compute the gradient
-        batch_linear_error = self.activation_function(X.dot(self.W)) - y
-        gradient = X.T.dot(batch_linear_error) / M
+        batch_linear_error = self.activation_function(np.power(X,2).dot(self.W)) - y
+        # gradient = X.T.dot(batch_linear_error) / M
+
+        gradient = np.power(X, 2).T.dot(batch_linear_error) / M
 
         # update W following the steepest gradient descent
         self.W -= self.learning_rate * gradient
@@ -117,6 +119,9 @@ class TrainingModel:
         return 1.0 / (1 + np.exp(-x))
 
 def perceptron_loss_function(_X, _y, _w):
+    pass
+
+def hinge_loss_function(_X, _y, _W):
     pass
 
 
@@ -145,7 +150,7 @@ def linear_function(_X, _w):
     return _X.dot(_w)
 
 def sphere_function(_X, _w):
-    return np.sum(np.power(_X,2))
+    return np.tanh(np.sum(np.power(_X,2)))
 
 def rosenbrock_function(_X, _w):
     n = len(_X)
