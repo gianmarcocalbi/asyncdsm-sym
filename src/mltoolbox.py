@@ -3,8 +3,18 @@ import numpy as np
 import abc, types, warnings
 
 
-class Trainer:
-    def __init__(self, X, y, y_hat, activation_func=None):
+class Task:
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def step(self):
+        raise NotImplementedError('step method not implemented in Task child class')
+
+
+class Trainer(Task):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, X, y, y_hat, activation_func):
         self.X = X
         self.y = y
         self.y_hat = y_hat
@@ -28,12 +38,16 @@ class Trainer:
 
         self.activation_func = activation_func
 
+    @abc.abstractmethod
+    def step(self):
+        raise NotImplementedError('step method not implemented in Trainer child class')
+
 
 class GradientDescentTrainerAbstract(Trainer):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, X, y, y_hat, activation_func=None, loss="hinge", penalty='l2',
-                 alpha=0.0001, learning_rate="constant", metrics="all", shuffle=False, verbose=False):
+    def __init__(self, X, y, y_hat, activation_func, loss, penalty,
+                 alpha, learning_rate, metrics, shuffle, verbose):
         """GD Trainer Interface
 
         Parameters
@@ -116,14 +130,14 @@ class GradientDescentTrainerAbstract(Trainer):
         n_iter_ : int
             The actual number of iterations to reach the stopping criterion.
         """
-        super().__init__(X, y, y_hat, activation_func=activation_func)
+        super().__init__(X, y, y_hat, activation_func)
         self.loss = loss
         self.penalty = penalty
         self.alpha = alpha
         self.learning_rate = learning_rate
         self.shuffle = shuffle
         self.verbose = verbose
-        self.matrics = metrics
+        self.metrics = metrics
         self.y_hat = y_hat
         self.score_log = []
         self.mean_linear_error_log = []
@@ -133,6 +147,9 @@ class GradientDescentTrainerAbstract(Trainer):
     def _compute_metrics(self):
         if self.metrics == "all":
             self.metrics = ['score', 'mean_linear_error']
+        elif isinstance(self.metrics, str):
+            self.metrics = [self.metrics]
+
         for metric in self.metrics:
             # todo: remove eval!!!
             eval("self.compute_" + metric + "()")
@@ -154,8 +171,8 @@ class GradientDescentTrainerAbstract(Trainer):
 
     def compute_mean_linear_error(self):
         predictions = self.activation_func(self.y_hat.f(self.X, self.W))
-        linear_error = self.y - predictions
-        mean_linear_error = linear_error / self.N
+        linear_error = np.absolute(self.y - predictions)
+        mean_linear_error = np.sum(linear_error) / self.N
         if len(self.mean_linear_error_log) == self.iteration:
             self.mean_linear_error_log.append(mean_linear_error)
         elif len(self.mean_linear_error_log) == self.iteration + 1:
@@ -171,28 +188,26 @@ class GradientDescentTrainerAbstract(Trainer):
 
 
 class GradientDescentTrainer(GradientDescentTrainerAbstract):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
 
     def step(self):
-        print(self.compute_mean_linear_error())
-
         # update W following the steepest gradient descent
         self.W += self.alpha * np.sum(self.loss.f_gradient(self.y, self.y_hat.f(self.X, self.W),
                                                            self.y_hat.f_gradient(self.X, self.y))) / self.N
 
 
 class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
 
     def step(self):
         pass
 
 
 class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
-    def __init__(self, *args, batch_size=5, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, batch_size, *args):
+        super().__init__(*args)
         self.batch_size = batch_size
         if batch_size == 1:
             warnings.warn(
@@ -243,7 +258,7 @@ class YHatFunctionAbstract:
 class LinearYHatFunction(YHatFunctionAbstract):
     @staticmethod
     def f(X, W):
-        return X.T.dot(W)
+        return X.dot(W)
 
     @staticmethod
     def f_gradient(X, W):

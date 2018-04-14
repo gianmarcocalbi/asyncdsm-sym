@@ -3,48 +3,46 @@ import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
 from sklearn import linear_model
+from src.model import Cluster
 from src.graph_generator import GraphGenerator
-from src import model, mltoolbox_old, console
-from curses import wrapper
+from src import mltoolbox
 import matplotlib.pyplot as plt
 
 seed = 28041994
 np.random.seed(seed)
 random.seed(seed)
 
-def main(stdscr):
-    console.stdout.screen = stdscr
-    console.stdout.open()
+
+def main():
+    # console.stdout.screen = stdscr
+    # console.stdout.open()
 
     # __adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(5, ["i->i+1"])
-    __adjacency_matrix = GraphGenerator.generate_complete_graph(1)
+    adjacency_matrix = GraphGenerator.generate_complete_graph(1)
     # __markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
-    # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    __X, __y = mltoolbox_old.SampleGenerator.sample_from_function(
-        1000, 3, mltoolbox_old.sphere_function, 1, biased=True)
+    # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
+    X, y = mltoolbox.SampleGenerator.sample_from_function(
+        1000, 3, mltoolbox.linear_function, 1, biased=True)
     # __X, __y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat"), np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
 
-    #__X = np.matrix([np.zeros(10),np.arange(10)]).T
-    #__y = np.apply_along_axis(lambda x : x * x, 0, np.arange(10))
+    cluster = Cluster(adjacency_matrix)
 
-    #__X = np.matrix("0,0;1,1;2,2;3,3;4,4;5,5")
-    #__y = np.apply_along_axis(lambda x : x * x, 0, np.arange(6))
+    cluster.setup(
+        X, y, mltoolbox.LinearYHatFunction,
+        max_iter=math.inf,
+        method="classic",
+        batch_size=5,
+        activation_func=None,
+        loss=mltoolbox.SquaredLossFunction,
+        penalty='l2',
+        alpha=0.0001,
+        learning_rate="constant",
+        metrics="mean_linear_error",
+        shuffle=False,
+        verbose=False
+    )
 
-    __setup = {
-        "iteration_amount": math.inf
-    }
-
-    __training_setup = {
-        "X": __X,
-        "y": __y,
-        "learning_rate": 0.01,
-        "activation_function": "tanh",  # sigmoid, sign, tanh, identity, whatever other name will lead to identity
-        "method": "stochastic",  # classic, stochastic, batch
-        "batch_size": 10  # matters only for batch method
-    }
-
-    __cluster = model.Cluster(__adjacency_matrix, __training_setup, __setup)
-    __cluster.run()
+    cluster.run()
 
     plt.xlabel("Iteration")
     plt.ylabel("Mean Squared Error")
@@ -52,35 +50,40 @@ def main(stdscr):
     # plt.axis(ymax=0.50)
     # plt.annotate('Error {}'.format(__cluster.nodes[0].training_model.squared_loss_log[-1]),
     #   xy=(len(__cluster.nodes[0].training_model.squared_loss_log)/2, 5))
-    plt.plot(list(range(0, len(__cluster.nodes[0].training_model.squared_loss_log))),
-             __cluster.nodes[0].training_model.squared_loss_log)
+    plt.plot(list(range(0, len(cluster.nodes[0].training_model.squared_loss_log))),
+             cluster.nodes[0].training_model.squared_loss_log)
     plt.show()
 
-    console.print("Score: {}".format(__cluster.nodes[0].training_model.score()))
+    # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
 
-    input("Press an key")
+    # input("Press an key")
 
-    console.stdout.close()
+    # console.stdout.close()
+
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    __X, __y = mltoolbox_old.SampleGenerator.sample_from_function(1000, 100, mltoolbox_old.linear_function, 1, biased=False)
+    __X, __y = mltoolbox.SampleGenerator.sample_from_function(1000, 100, mltoolbox.linear_function, 1,
+                                                              biased=False)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
     cls.fit(__X, __y)
     print(cls.score(__X, __y))
 
+
 def main2():
-    __X, __y = mltoolbox_old.SampleGenerator.sample_from_function(1000, 3, mltoolbox_old.linear_function, 10, biased=False)
+    __X, __y = mltoolbox.SampleGenerator.sample_from_function(1000, 3, mltoolbox.linear_function, 10,
+                                                              biased=False)
     cls = linear_model.SGDRegressor(penalty='none', alpha=0.01, max_iter=1000, shuffle=False, learning_rate='constant')
     cls.fit(__X, __y)
     print(cls.score(__X, __y))
-    print(cls.predict(np.array([2,4,8]).reshape(1,-1)))
+    print(cls.predict(np.array([2, 4, 8]).reshape(1, -1)))
+
 
 switch = 0
 
 if __name__ == "__main__":
     if switch == 0:
-        wrapper(main)
+        main()
     elif switch == 1:
         main1()
     elif switch == 2:
