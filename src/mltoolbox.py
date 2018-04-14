@@ -1,18 +1,20 @@
 # import the necessary packages
 import numpy as np
-import abc, types
+import abc, types, warnings
 
 
-class TrainerlInterface:
-    def __init__(self, X, y, activation_func=None):
+class Trainer:
+    def __init__(self, X, y, y_hat, activation_func=None):
         self.X = X
         self.y = y
+        self.y_hat = y_hat
         self.N = self.X.shape[0]
+        self.iteration = 0
 
         # bias inserted as w0 = (1,...,1)
         self.X = np.c_[np.ones((X.shape[0])), X]
 
-        self.W = np.random.uniform(size=(X.shape[1] + 1,)) #todo: remove "+ 1"?
+        self.W = np.random.uniform(size=(X.shape[1] + 1,))  # todo: remove "+ 1"?
 
         if not activation_func is types.FunctionType:
             if activation_func == "sigmoid":
@@ -27,9 +29,11 @@ class TrainerlInterface:
         self.activation_func = activation_func
 
 
-class GradientDescentTrainerInterface(TrainerlInterface):
-    def __init__(self, X, y, activation_func=None, loss="hinge", penalty='l2',
-                 alpha=0.0001, shuffle=False, verbose=0, learning_rate="optimal"):
+class GradientDescentTrainerAbstract(Trainer):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, X, y, y_hat, activation_func=None, loss="hinge", penalty='l2',
+                 alpha=0.0001, learning_rate="constant", metrics="all", shuffle=False, verbose=False):
         """GD Trainer Interface
 
         Parameters
@@ -112,137 +116,138 @@ class GradientDescentTrainerInterface(TrainerlInterface):
         n_iter_ : int
             The actual number of iterations to reach the stopping criterion.
         """
-        super().__init__(X, y, activation_func=activation_func)
-        self.learning_rate = learning_rate
-        self.alpha = alpha
+        super().__init__(X, y, y_hat, activation_func=activation_func)
         self.loss = loss
         self.penalty = penalty
-        self.verbose = verbose
+        self.alpha = alpha
+        self.learning_rate = learning_rate
         self.shuffle = shuffle
-
-
-class GradientDescentTrainer(GradientDescentTrainerInterface):
-    def __init__(self):
-        super().__init__()
-
-
-class StochasticGradientDescentTrainer(GradientDescentTrainerInterface):
-    def __init__(self):
-        super().__init__()
-
-
-class BatchGradientDescentTrainer(GradientDescentTrainerInterface):
-    def __init__(self):
-        super().__init__()
-
-
-class TrainingModel:
-    def __init__(self, X, y, activation_function, learning_rate):
-        self.X = X  # sample instances matrix
-        self.y = y  # sample function's values array
-        # todo: remove or exploit self.f
-        self.activation_function = activation_function  # network function (usually just like <X,y>)
-        self.learning_rate = learning_rate  # learning rate alpha
-
-        # bias inserted as w0 = (1,...,1)
-        self.X = np.c_[np.ones((X.shape[0])), X]
-
-        # weight vector random sampled from uniform distribution
-        self.W = np.random.uniform(size=(X.shape[1] + 1,))
-
-        self.squared_loss_log = []
+        self.verbose = verbose
+        self.matrics = metrics
+        self.y_hat = y_hat
         self.score_log = []
+        self.mean_linear_error_log = []
 
-    def score(self):
-        if len(self.score_log) > 0:
-            return self.score_log[-1]
+        self._compute_metrics()
+
+    def _compute_metrics(self):
+        if self.metrics == "all":
+            self.metrics = ['score', 'mean_linear_error']
+        for metric in self.metrics:
+            # todo: remove eval!!!
+            eval("self.compute_" + metric + "()")
+
+    def get_score(self):
+        return self.score_log[-1]
+
+    def get_mean_linear_error(self):
+        return self.mean_linear_error_log[-1]
+
+    def compute_score(self):
+        if len(self.score_log) == self.iteration:
+            self.score_log.append(0)
+        elif len(self.score_log) == self.iteration + 1:
+            self.score_log[self.iteration] = 0
         else:
-            return 0
+            raise Exception('Unexpected mean_linear_error_log size')
+        return 0
 
-    def squared_loss(self):
-        if len(self.squared_loss_log) > 0:
-            return self.squared_loss_log[-1]
+    def compute_mean_linear_error(self):
+        predictions = self.activation_func(self.y_hat.f(self.X, self.W))
+        linear_error = self.y - predictions
+        mean_linear_error = linear_error / self.N
+        if len(self.mean_linear_error_log) == self.iteration:
+            self.mean_linear_error_log.append(mean_linear_error)
+        elif len(self.mean_linear_error_log) == self.iteration + 1:
+            self.mean_linear_error_log[self.iteration] = mean_linear_error
         else:
-            return self._compute_squared_loss()
+            raise Exception('Unexpected mean_linear_error_log size')
 
-    def _compute_squared_loss(self):
-        # get the prediction
-        predictions = self.activation_function(self.X.dot(self.W))
+        return mean_linear_error
 
-        # compute the linear error as the difference between predicted y and real y values
-        linear_error = predictions - self.y
+    @abc.abstractmethod
+    def step(self):
+        raise NotImplementedError('step method not implemented in GradientDescentTrainerAbstract child class')
 
-        # compute the loss function loss(f(X), y)
-        return np.sum(linear_error ** 2) / (2 * self.X.shape[0])
 
-    def gradient_descent_step(self):
-        """
-        Gradient descent step function.
-        :return: None
-        """
-        self._gradient_descent_weight_update(self.X, self.y)
+class GradientDescentTrainer(GradientDescentTrainerAbstract):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def stochastic_gradient_descent_step(self):
-        """
-        Stochastic gradient descent step function. Computes a step of the SGD.
-        :return: None
-        """
-        # pick a random row index in [0, height of X)
-        pick = np.random.randint(0, self.X.shape[0])
-
-        # compute gradient weight update consider only pick-th example
-        self._gradient_descent_weight_update(self.X[pick], self.y[pick])
-
-    def batch_gradient_descent_step(self, batch_size):
-        """
-        Batch gradient descent step function.
-        :param batch_size: size of the batch of X on which computing the gradient
-        :return: None
-        """
-        # determine the mini batch upon which computing the SGD
-        batch_indices = np.random.choice(self.X.shape[0], min(batch_size, self.X.shape[0]), replace=False)
-
-        # extract subsamples
-        sub_X = np.take(self.X, batch_indices, axis=0)
-        sub_y = np.take(self.y, batch_indices, axis=0)
-
-        # compute weight update on the subsamples
-        self._gradient_descent_weight_update(sub_X, sub_y)
-
-    def _gradient_descent_weight_update(self, X, y):
-        """
-        Gradient descent core function.
-        Updates the weight following the direction of the gradient.
-        :param X: examples matrix
-        :param y: examples values for the target function (oracle-provided)
-        :return: None
-        """
-        N = self.X.shape[0]  # amount of samples in original X matrix
-        M = X.shape[0]  # amount of samples in current batch
-
-        ## BEGIN: only for statistical purpose
-
-        # get the prediction
-        predictions = self.activation_function(np.power(self.X, 2).dot(self.W))
-
-        # compute the linear error as the difference between predicted y and real y values
-        linear_error = predictions - self.y
-
-        # compute the loss function loss(f(X), y)
-        mean_square_error = np.sum(np.apply_along_axis(lambda x: x * x, 0, linear_error)) / (2 * N)
-        self.squared_loss_log.append(mean_square_error)
-        self.score_log.append(1 - sum(np.apply_along_axis(abs, 0, linear_error)) / N)
-
-        ## END: only for statistical purpose
-
-        # compute the gradient
-        batch_linear_error = self.activation_function(np.power(X, 2).dot(self.W)) - y
-        # gradient = X.T.dot(batch_linear_error) / M
-
-        gradient = np.power(X, 2).T.dot(batch_linear_error) / M
+    def step(self):
+        print(self.compute_mean_linear_error())
 
         # update W following the steepest gradient descent
-        self.W -= self.learning_rate * gradient
+        self.W += self.alpha * np.sum(self.loss.f_gradient(self.y, self.y_hat.f(self.X, self.W),
+                                                           self.y_hat.f_gradient(self.X, self.y))) / self.N
+
+
+class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def step(self):
+        pass
+
+
+class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
+    def __init__(self, *args, batch_size=5, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.batch_size = batch_size
+        if batch_size == 1:
+            warnings.warn(
+                "BatchGradientDescentTrainer started with batch_size = 1, it is preferable to use StochasticGradientDescentTrainer instead")
+
+    def step(self):
+        pass
+
+
+class LossFunctionAbstract:
+    __metaclass__ = abc.ABCMeta
+
+    @staticmethod
+    @abc.abstractmethod
+    def f(y, y_hat_f):
+        raise NotImplementedError('f method not implemented in LossFunctionAbstract --> child class')
+
+    @staticmethod
+    @abc.abstractmethod
+    def f_gradient(y, y_hat_f, y_hat_f_gradient):
+        raise NotImplementedError('f_gradient method not implemented in LossFunctionAbstract child class')
+
+
+class SquaredLossFunction(LossFunctionAbstract):
+    @staticmethod
+    def f(y, y_hat_f):
+        return pow(2, y - y_hat_f) / 2
+
+    @staticmethod
+    def f_gradient(y, y_hat_f, y_hat_f_gradient):
+        return (y - y_hat_f).T.dot(y_hat_f_gradient)
+
+
+class YHatFunctionAbstract:
+    __metaclass__ = abc.ABCMeta
+
+    @staticmethod
+    @abc.abstractmethod
+    def f(X, W):
+        raise NotImplementedError('f method not implemented in YHatFunctionAbstract child class')
+
+    @staticmethod
+    @abc.abstractmethod
+    def f_gradient(X, W):
+        raise NotImplementedError('f_gradient method not implemented in YHatFunctionAbstract child class')
+
+
+class LinearYHatFunction(YHatFunctionAbstract):
+    @staticmethod
+    def f(X, W):
+        return X.T.dot(W)
+
+    @staticmethod
+    def f_gradient(X, W):
+        return X
 
 
 def sigmoid(x):
