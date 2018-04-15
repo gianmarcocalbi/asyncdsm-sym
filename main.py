@@ -21,12 +21,10 @@ def main():
     adjacency_matrix = GraphGenerator.generate_complete_graph(1)
     # __markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    _X, _y = mltoolbox.SampleGenerator.sample_from_function(100, 1, mltoolbox.linear_function, 1, error_std_dev=1,
-                                                            error_coeff=0)
+    X, y = mltoolbox.SampleGenerator.sample_from_function(1000, 10, mltoolbox.linear_function, 1, error_std_dev=1,
+                                                          error_coeff=0)
     # __X, __y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat"), np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
-
-    X = np.array([np.arange(5)]).T
-    y = np.arange(5) * 2
+    # X = np.array([np.arange(5)]).T, y = np.arange(5) * 2
 
     cluster = Cluster(adjacency_matrix)
 

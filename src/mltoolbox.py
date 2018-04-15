@@ -161,6 +161,7 @@ class GradientDescentTrainerAbstract(Trainer):
         return self.mean_absolute_error_log[-1]
 
     def compute_score(self):
+        # todo: compute score
         if len(self.score_log) == self.iteration:
             self.score_log.append(0)
         elif len(self.score_log) == self.iteration + 1:
@@ -200,9 +201,6 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
         self.W -= self.alpha * gradient
 
         self._compute_metrics()
-
-        # self.W += self.alpha * np.sum(self.loss.f_gradient(self.y, self.y_hat.f(self.X, self.W),
-        #                                                    self.y_hat.f_gradient(self.X, self.y))) / self.N
 
 
 class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):

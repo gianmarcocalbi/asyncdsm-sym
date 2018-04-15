@@ -143,10 +143,11 @@ class Cluster:
                                                  node.training_task.squared_loss(),
                                                  node.training_task.score(), _depstr))
                 """
-                print("Node: {} | iter: {} | error: {} | w : {}".format(
+                print("Node: {} | iter: {} | error: {} | score: {}".format(
                     node._id,
                     node.iteration,
-                    node.training_task.get_mean_absolute_error(), node.training_task.W)
+                    node.training_task.get_mean_absolute_error(),
+                    node.training_task.get_score())
                 )
             elif event["type"] == "":
                 pass
