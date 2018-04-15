@@ -140,13 +140,13 @@ class GradientDescentTrainerAbstract(Trainer):
         self.metrics = metrics
         self.y_hat = y_hat
         self.score_log = []
-        self.mean_linear_error_log = []
+        self.mean_absolute_error_log = []
 
         self._compute_metrics()
 
     def _compute_metrics(self):
         if self.metrics == "all":
-            self.metrics = ['score', 'mean_linear_error']
+            self.metrics = ['score', 'mean_absolute_error']
         elif isinstance(self.metrics, str):
             self.metrics = [self.metrics]
 
@@ -157,8 +157,8 @@ class GradientDescentTrainerAbstract(Trainer):
     def get_score(self):
         return self.score_log[-1]
 
-    def get_mean_linear_error(self):
-        return self.mean_linear_error_log[-1]
+    def get_mean_absolute_error(self):
+        return self.mean_absolute_error_log[-1]
 
     def compute_score(self):
         if len(self.score_log) == self.iteration:
@@ -166,21 +166,21 @@ class GradientDescentTrainerAbstract(Trainer):
         elif len(self.score_log) == self.iteration + 1:
             self.score_log[self.iteration] = 0
         else:
-            raise Exception('Unexpected mean_linear_error_log size')
+            raise Exception('Unexpected mean_absolute_error_log size')
         return 0
 
-    def compute_mean_linear_error(self):
+    def compute_mean_absolute_error(self):
         predictions = self.activation_func(self.y_hat.f(self.X, self.W))
         linear_error = np.absolute(self.y - predictions)
-        mean_linear_error = np.sum(linear_error) / self.N
-        if len(self.mean_linear_error_log) == self.iteration:
-            self.mean_linear_error_log.append(mean_linear_error)
-        elif len(self.mean_linear_error_log) == self.iteration + 1:
-            self.mean_linear_error_log[self.iteration] = mean_linear_error
+        mean_absolute_error = np.sum(linear_error) / self.N
+        if len(self.mean_absolute_error_log) == self.iteration:
+            self.mean_absolute_error_log.append(mean_absolute_error)
+        elif len(self.mean_absolute_error_log) == self.iteration + 1:
+            self.mean_absolute_error_log[self.iteration] = mean_absolute_error
         else:
-            raise Exception('Unexpected mean_linear_error_log size')
+            raise Exception('Unexpected mean_absolute_error_log size')
 
-        return mean_linear_error
+        return mean_absolute_error
 
     @abc.abstractmethod
     def step(self):
@@ -193,8 +193,16 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
 
     def step(self):
         # update W following the steepest gradient descent
-        self.W += self.alpha * np.sum(self.loss.f_gradient(self.y, self.y_hat.f(self.X, self.W),
-                                                           self.y_hat.f_gradient(self.X, self.y))) / self.N
+
+        y_hat_f = self.y_hat.f(self.X, self.W)
+        y_hat_f_gradient = self.y_hat.f_gradient(self.X, self.y)
+        loss_f_gradient = self.loss.f_gradient(self.y, y_hat_f, y_hat_f_gradient)
+        gradient = np.sum(loss_f_gradient) / self.N
+        self.W -= self.alpha * gradient
+
+        self._compute_metrics()
+        # self.W += self.alpha * np.sum(self.loss.f_gradient(self.y, self.y_hat.f(self.X, self.W),
+        #                                                    self.y_hat.f_gradient(self.X, self.y))) / self.N
 
 
 class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
@@ -238,7 +246,9 @@ class SquaredLossFunction(LossFunctionAbstract):
 
     @staticmethod
     def f_gradient(y, y_hat_f, y_hat_f_gradient):
-        return (y - y_hat_f).T.dot(y_hat_f_gradient)
+        # the minus sign from the derivative of "- y_hat_f" is represented as follows:
+        #   - (y - y_hat_f) = y_hat_f - y
+        return y_hat_f_gradient.T.dot(y_hat_f - y)
 
 
 class YHatFunctionAbstract:
@@ -283,7 +293,7 @@ class SampleGenerator:
         pass
 
     @staticmethod
-    def sample_from_function(n_samples, n_features, func, domain, biased=False):
+    def sample_from_function(n_samples, n_features, func, domain, error_mean=0, error_std_dev=1, error_coeff=0):
         X = []
         y = []
         w = []
@@ -294,7 +304,7 @@ class SampleGenerator:
         for i in range(n_samples):
             x = np.random.uniform(-domain, domain, n_features)
             X.append(x)
-            y.append(func(x, w) + np.random.choice([-1, 1]) * np.random.rand() * int(biased))
+            y.append(func(x, w) + np.random.normal(error_mean, error_std_dev) * error_coeff)
         return np.array(X), np.array(y)
 
 

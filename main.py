@@ -21,9 +21,12 @@ def main():
     adjacency_matrix = GraphGenerator.generate_complete_graph(1)
     # __markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    X, y = mltoolbox.SampleGenerator.sample_from_function(
-        1000, 3, mltoolbox.linear_function, 1, biased=True)
+    _X, _y = mltoolbox.SampleGenerator.sample_from_function(100, 1, mltoolbox.linear_function, 1, error_std_dev=1,
+                                                            error_coeff=0)
     # __X, __y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat"), np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
+
+    X = np.array([np.arange(5)]).T
+    y = np.arange(5) * 2
 
     cluster = Cluster(adjacency_matrix)
 
@@ -31,13 +34,13 @@ def main():
         X, y, mltoolbox.LinearYHatFunction,
         max_iter=math.inf,
         method="classic",
-        batch_size=5,
+        batch_size=1,
         activation_func=None,
         loss=mltoolbox.SquaredLossFunction,
         penalty='l2',
-        alpha=0.0001,
+        alpha=0.01,
         learning_rate="constant",
-        metrics="mean_linear_error",
+        metrics="mean_absolute_error",
         shuffle=False,
         verbose=False
     )
@@ -64,7 +67,7 @@ def main():
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
     __X, __y = mltoolbox.SampleGenerator.sample_from_function(1000, 100, mltoolbox.linear_function, 1,
-                                                              biased=False)
+                                                              sigma=False)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
     cls.fit(__X, __y)
     print(cls.score(__X, __y))
@@ -72,7 +75,7 @@ def main1():
 
 def main2():
     __X, __y = mltoolbox.SampleGenerator.sample_from_function(1000, 3, mltoolbox.linear_function, 10,
-                                                              biased=False)
+                                                              sigma=False)
     cls = linear_model.SGDRegressor(penalty='none', alpha=0.01, max_iter=1000, shuffle=False, learning_rate='constant')
     cls.fit(__X, __y)
     print(cls.score(__X, __y))

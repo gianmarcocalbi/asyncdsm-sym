@@ -12,8 +12,7 @@ class Cluster:
         self.max_iter = None
 
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None, loss="hinge",
-              penalty='l2', alpha=0.0001,
-              learning_rate="constant", metrics="all", shuffle=False, verbose=False):
+              penalty='l2', alpha=0.0001, learning_rate="constant", metrics="all", shuffle=False, verbose=False):
 
         # if X and y have different sizes then the training set is bad formatted
         if len(y) != X.shape[0]:
@@ -144,10 +143,10 @@ class Cluster:
                                                  node.training_task.squared_loss(),
                                                  node.training_task.score(), _depstr))
                 """
-                print("Node: {} | iter: {} | error: {} | wait for: {}".format(
+                print("Node: {} | iter: {} | error: {} | w : {}".format(
                     node._id,
                     node.iteration,
-                    node.training_task.get_mean_linear_error(), _depstr)
+                    node.training_task.get_mean_absolute_error(), node.training_task.W)
                 )
             elif event["type"] == "":
                 pass
@@ -155,7 +154,6 @@ class Cluster:
                 pass
 
             event = self.dequeue_event()
-
             # console.stdout.screen.refresh()
 
 
