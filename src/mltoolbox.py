@@ -193,14 +193,14 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
 
     def step(self):
         # update W following the steepest gradient descent
-
         y_hat_f = self.y_hat.f(self.X, self.W)
         y_hat_f_gradient = self.y_hat.f_gradient(self.X, self.y)
         loss_f_gradient = self.loss.f_gradient(self.y, y_hat_f, y_hat_f_gradient)
-        gradient = np.sum(loss_f_gradient) / self.N
+        gradient = loss_f_gradient / self.N
         self.W -= self.alpha * gradient
 
         self._compute_metrics()
+
         # self.W += self.alpha * np.sum(self.loss.f_gradient(self.y, self.y_hat.f(self.X, self.W),
         #                                                    self.y_hat.f_gradient(self.X, self.y))) / self.N
 
