@@ -24,7 +24,7 @@ def main():
     X, y = mltoolbox.SampleGenerator.sample_from_function(1000, 10, mltoolbox.linear_function, 1, error_std_dev=1,
                                                           error_coeff=0)
     # __X, __y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat"), np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
-    # X = np.array([np.arange(5)]).T, y = np.arange(5) * 2
+    X, y = np.array([np.arange(5)]).T, np.arange(5) * 2
 
     cluster = Cluster(adjacency_matrix)
 
@@ -38,7 +38,7 @@ def main():
         penalty='l2',
         alpha=0.01,
         learning_rate="constant",
-        metrics="mean_absolute_error",
+        metrics="all",
         shuffle=False,
         verbose=False
     )

@@ -340,7 +340,10 @@ class Node:
         # computes the clock when the computation has finished
         tf = t0 + cf - c0
         # update the local_clock
-        self.local_clock = tf
+        # self.local_clock = tf
+
+        # todo: temp
+        self.local_clock += random.expovariate(1)
 
         self.iteration += 1
         self.log.append(self.local_clock)

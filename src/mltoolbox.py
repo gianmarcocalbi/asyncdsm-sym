@@ -208,7 +208,16 @@ class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
         super().__init__(*args)
 
     def step(self):
-        pass
+        pick = np.random.randint(0, self.X.shape[0])
+        X_pick = self.X[pick]
+        y_pick = self.y[pick]
+        y_hat_f = self.y_hat.f(X_pick, self.W)
+        y_hat_f_gradient = self.y_hat.f_gradient(X_pick, y_pick)
+        loss_f_gradient = self.loss.f_gradient(y_pick, y_hat_f, y_hat_f_gradient)
+        gradient = loss_f_gradient
+        self.W -= self.alpha * gradient
+
+        self._compute_metrics()
 
 
 class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
@@ -220,7 +229,20 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
                 "BatchGradientDescentTrainer started with batch_size = 1, it is preferable to use StochasticGradientDescentTrainer instead")
 
     def step(self):
-        pass
+        # determine the mini batch upon which computing the SGD
+        batch_indices = np.random.choice(self.X.shape[0], min(self.batch_size, self.X.shape[0]), replace=False)
+
+        # extract subsamples
+        X_batch = np.take(self.X, batch_indices, axis=0)
+        y_batch = np.take(self.y, batch_indices, axis=0)
+
+        y_hat_f = self.y_hat.f(X_batch, self.W)
+        y_hat_f_gradient = self.y_hat.f_gradient(X_batch, y_batch)
+        loss_f_gradient = self.loss.f_gradient(y_batch, y_hat_f, y_hat_f_gradient)
+        gradient = loss_f_gradient
+        self.W -= self.alpha * gradient
+
+        self._compute_metrics()
 
 
 class LossFunctionAbstract:
