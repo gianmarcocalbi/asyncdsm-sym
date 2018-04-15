@@ -16,5 +16,4 @@ class CursesStdout:
         curses.echo()
         curses.endwin()
 
-
-stdout = CursesStdout()
+# stdout = CursesStdout()

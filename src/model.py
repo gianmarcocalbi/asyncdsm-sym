@@ -103,7 +103,7 @@ class Cluster:
         stop_condition = False  # todo: stop condition (tolerance)
         event = self.dequeue_event()
         while not stop_condition and not event is None:
-            console.stdout.screen.clrtoeol()
+            # console.stdout.screen.clrtoeol()
             if event["type"] == "node_step":
                 node = event["node"]
 
@@ -143,12 +143,12 @@ class Cluster:
                     if _dep.get_local_clock_by_iteration(node.iteration) > node.iteration:
                         _depstr += str(_dep.id)
 
-                console.stdout.screen.addstr(node.id, 0,
-                                             "Node: {} | iter: {} | error: {} | score: {} | wait for: {}".format(
-                                                 node.id,
-                                                 node.iteration,
-                                                 node.training_model.squared_loss(),
-                                                 node.training_model.score(), _depstr))
+                print("Node: {} | iter: {} | error: {} | score: {} | w: {}".format(
+                    node.id,
+                    node.iteration,
+                    node.training_model.squared_loss(),
+                    node.training_model.score(),
+                    node.training_model.W))
 
             elif event["type"] == "":
                 pass
@@ -157,7 +157,7 @@ class Cluster:
 
             event = self.dequeue_event()
 
-            console.stdout.screen.refresh()
+            # console.stdout.screen.refresh()
 
 
 class Node:
