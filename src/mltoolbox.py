@@ -141,12 +141,13 @@ class GradientDescentTrainerAbstract(Trainer):
         self.y_hat = y_hat
         self.score_log = []
         self.mean_absolute_error_log = []
+        self.mean_squared_error_log = []
 
         self._compute_metrics()
 
     def _compute_metrics(self):
         if self.metrics == "all":
-            self.metrics = ['score', 'mean_absolute_error']
+            self.metrics = ['score', 'mean_absolute_error', 'mean_squared_error']
         elif isinstance(self.metrics, str):
             self.metrics = [self.metrics]
 
@@ -159,6 +160,9 @@ class GradientDescentTrainerAbstract(Trainer):
 
     def get_mean_absolute_error(self):
         return self.mean_absolute_error_log[-1]
+
+    def get_mean_squared_error(self):
+        return self.mean_squared_error_log[-1]
 
     def compute_score(self):
         # todo: compute score
@@ -183,6 +187,20 @@ class GradientDescentTrainerAbstract(Trainer):
 
         return mean_absolute_error
 
+    def compute_mean_squared_error(self):
+        predictions = self.activation_func(self.y_hat.f(self.X, self.W))
+        linear_error = np.absolute(self.y - predictions)
+        mean_squared_error = np.sum(np.power(linear_error, 2)) / self.N
+        if len(self.mean_squared_error_log) == self.iteration:
+            self.mean_squared_error_log.append(mean_squared_error)
+        elif len(self.mean_squared_error_log) == self.iteration + 1:
+            self.mean_squared_error_log[self.iteration] = mean_squared_error
+        else:
+            raise Exception('Unexpected mean_squared_error_log size')
+
+        return mean_squared_error
+
+
     @abc.abstractmethod
     def step(self):
         raise NotImplementedError('step method not implemented in GradientDescentTrainerAbstract child class')
@@ -200,6 +218,7 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
         gradient = loss_f_gradient / self.N
         self.W -= self.alpha * gradient
 
+        self.iteration += 1
         self._compute_metrics()
 
 
@@ -217,6 +236,7 @@ class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
         gradient = loss_f_gradient
         self.W -= self.alpha * gradient
 
+        self.iteration += 1
         self._compute_metrics()
 
 
@@ -242,6 +262,7 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
         gradient = loss_f_gradient
         self.W -= self.alpha * gradient
 
+        self.iteration += 1
         self._compute_metrics()
 
 

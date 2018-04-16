@@ -322,7 +322,7 @@ class Node:
         # useful vars for estimate the time taken by the computation
         t0 = self.local_clock
         # get the counter before the computation starts
-        c0 = time.perf_counter()
+        # c0 = time.perf_counter()
 
         # avg internal self.W vector with W incoming from dependencies
         if self.iteration > 0:
@@ -335,15 +335,14 @@ class Node:
         self.broadcast_weight_to_recipients()
 
         # get the counter after the computation has ended
-        cf = time.perf_counter()
+        # cf = time.perf_counter()
+        dt = random.expovariate(1) #todo: temp
 
         # computes the clock when the computation has finished
-        tf = t0 + cf - c0
+        # tf = t0 + cf - c0
+        tf = t0 + dt
         # update the local_clock
-        # self.local_clock = tf
-
-        # todo: temp
-        self.local_clock += random.expovariate(1)
+        self.local_clock = tf
 
         self.iteration += 1
         self.log.append(self.local_clock)
