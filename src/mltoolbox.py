@@ -200,7 +200,6 @@ class GradientDescentTrainerAbstract(Trainer):
 
         return mean_squared_error
 
-
     @abc.abstractmethod
     def step(self):
         raise NotImplementedError('step method not implemented in GradientDescentTrainerAbstract child class')
@@ -259,7 +258,7 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
         y_hat_f = self.y_hat.f(X_batch, self.W)
         y_hat_f_gradient = self.y_hat.f_gradient(X_batch, y_batch)
         loss_f_gradient = self.loss.f_gradient(y_batch, y_hat_f, y_hat_f_gradient)
-        gradient = loss_f_gradient
+        gradient = loss_f_gradient / self.batch_size
         self.W -= self.alpha * gradient
 
         self.iteration += 1
@@ -333,20 +332,52 @@ class SampleGenerator:
         # a lot of useful parameters
         pass
 
-    @staticmethod
-    def sample_from_function(n_samples, n_features, func, domain, error_mean=0, error_std_dev=1, error_coeff=0):
-        X = []
-        y = []
-        w = []
 
-        for _ in range(n_features):
-            w.append(np.random.uniform(0, 1))
+def sample_from_function(n_samples, n_features, func, samples_abs_threshold=10, samples_mean=0,
+                         samples_std_dev=1, error_mean=0, error_std_dev=1, error_coeff=0):
+    """
+    Parameters
+    ----------
+    n_samples : int
+        Amount of samples to generate in the training set.
 
-        for i in range(n_samples):
-            x = np.random.uniform(-domain, domain, n_features)
-            X.append(x)
-            y.append(func(x, w) + np.random.normal(error_mean, error_std_dev) * error_coeff)
-        return np.array(X), np.array(y)
+    n_features : int
+        Amount of feature each sample will have.
+
+    func : callable
+        Generator function: takes x and return y. Then the sample will be (x,y).
+
+    samples_abs_threshold : float
+        Threshold for samples' domains. If a value of
+
+    samples_mean : float
+    samples_std_dev : float
+    error_mean : float
+    error_std_dev : float
+    error_coeff : float
+
+
+    Returns
+    -------
+    X : numpy.ndarray
+        Matrix of samples
+    y : numpy.array
+        Matrix of function values for such samples.
+    """
+
+    X = []
+    y = []
+    w = []
+
+    for _ in range(n_features):
+        w.append(np.random.uniform(0, 1))
+
+    for i in range(n_samples):
+        x = np.random.normal(samples_mean, samples_std_dev, n_features)
+        # todo: implement threshold
+        X.append(x)
+        y.append(func(x, w) + np.random.normal(error_mean, error_std_dev) * error_coeff)
+    return np.array(X), np.array(y)
 
 
 def linear_function(_X, _w):

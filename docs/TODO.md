@@ -9,10 +9,12 @@
 ## Very high priority
 - [x] Utilize python curses module instead of classic print for a better output visualization.
 - [x] Change dict setup to function parameters to avoid too much memory consumption.
+- [ ] Redesign training set generator functions.
 - [ ] Exploit all parameters of mltoolbox objects that are actually unused.
 - [ ] Implement different kind of loss functions.
 - [ ] Implement several metrics for evaluate the training stage.
 - [ ] Implement plotting system.
+- [ ] Add stop condition in addition to `max_iter` (e.g. error under a certain threshold).
 - [ ] Improve all gradient descent algorithms' performances.
 - [ ] Design better generator function for the training_set.
 

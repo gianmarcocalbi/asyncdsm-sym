@@ -7,9 +7,13 @@ class Cluster:
     def __init__(self, adjacency_matrix):
         self.future_event_list = {}
         self.nodes = []
-        self.log = []  # TODO: never used
         self.adjacency_matrix = adjacency_matrix
         self.max_iter = None
+        self.clock = 0
+        self.log = []
+        self.iterations_time_log = []
+        self.iteration = 0
+        self.global_mean_absolute_error_log = []
 
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None, loss="hinge",
               penalty='l2', alpha=0.0001, learning_rate="constant", metrics="all", shuffle=False, verbose=False):
@@ -97,11 +101,37 @@ class Cluster:
         event = self.dequeue_event()
         while not stop_condition and not event is None:
             # console.stdout.screen.clrtoeol()
+
+            self.clock = event["time"]
+
             if event["type"] == "node_step":
                 node = event["node"]
 
                 if node.can_run():
                     self.log[node._id].append(node.gradient_step())
+
+                    # when this node finishes iteration "i", it checks if all the others
+                    # have already performed the iteration i-th, if so then the global
+                    # iteration i-th has been completed and the completion time for such
+                    # iteration is the actual local_clock of this node
+                    min_iter = math.inf
+                    for _node in self.nodes:
+                        if _node.iteration < min_iter:
+                            min_iter = _node.iteration
+                    if min_iter == self.iteration + 1:
+                        self.iterations_time_log.append(-1)
+                        self.iterations_time_log[self.iteration] = node.local_clock
+
+                        gmae = 0
+                        for _node in self.nodes:
+                            gmae += _node.training_task.mean_absolute_error_log[self.iteration]
+                        gmae /= len(self.nodes)
+                        self.global_mean_absolute_error_log.append(math.inf)
+                        self.global_mean_absolute_error_log[self.iteration] = gmae
+
+                        self.iteration = min_iter
+                    elif min_iter > self.iteration + 1:
+                        raise Exception("Unexpected behaviour of cluster distributed dynamics")
                 else:
                     # node cannot run computation because it lacks some
                     # dependencies' informations
@@ -336,7 +366,7 @@ class Node:
 
         # get the counter after the computation has ended
         # cf = time.perf_counter()
-        dt = random.expovariate(1) #todo: temp
+        dt = random.expovariate(1)  # todo: temp
 
         # computes the clock when the computation has finished
         # tf = t0 + cf - c0
