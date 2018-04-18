@@ -14,9 +14,11 @@ class Cluster:
         self.iterations_time_log = []
         self.iteration = 0
         self.global_mean_absolute_error_log = []
+        self.global_mean_squared_error_log = []
+        self.epsilon = 0.0
 
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None, loss="hinge",
-              penalty='l2', alpha=0.0001, learning_rate="constant", metrics="all", shuffle=False, verbose=False):
+              penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant", metrics="all", shuffle=True, verbose=False):
 
         # if X and y have different sizes then the training set is bad formatted
         if len(y) != X.shape[0]:
@@ -25,6 +27,14 @@ class Cluster:
         if max_iter is None:
             max_iter = math.inf
         self.max_iter = max_iter
+        self.epsilon = epsilon
+
+        if shuffle:
+            Xy = np.c_[X, y]
+            np.random.shuffle(Xy)
+            X = np.delete(Xy, -1, 1)
+            y = np.take(Xy, -1, 1)
+            del Xy
 
         N = self.adjacency_matrix.shape[0]
         for i in range(N):
@@ -51,6 +61,18 @@ class Cluster:
                 if i != j and self.adjacency_matrix[i, j] == 1:
                     self.nodes[j].add_dependency(self.nodes[i])
                     self.nodes[i].add_recipient(self.nodes[j])
+
+    def get_global_mean_absolute_error(self, index=-1):
+        if index < len(self.global_mean_absolute_error_log) > 0:
+            return self.global_mean_absolute_error_log[index]
+        else:
+            return math.inf
+
+    def get_global_mean_squared_error(self, index=-1):
+        if index < len(self.global_mean_squared_error_log) > 0:
+            return self.global_mean_squared_error_log[index]
+        else:
+            return math.inf
 
     def enqueue_event(self, e):
         """
@@ -123,11 +145,18 @@ class Cluster:
                         self.iterations_time_log[self.iteration] = node.local_clock
 
                         gmae = 0
+                        gmse = 0
                         for _node in self.nodes:
                             gmae += _node.training_task.mean_absolute_error_log[self.iteration]
+                            gmse += _node.training_task.mean_squared_error_log[self.iteration]
                         gmae /= len(self.nodes)
+                        gmse /= len(self.nodes)
+
                         self.global_mean_absolute_error_log.append(math.inf)
                         self.global_mean_absolute_error_log[self.iteration] = gmae
+
+                        self.global_mean_squared_error_log.append(math.inf)
+                        self.global_mean_squared_error_log[self.iteration] = gmse
 
                         self.iteration = min_iter
                     elif min_iter > self.iteration + 1:
@@ -152,6 +181,10 @@ class Cluster:
                         stop_condition = False
                         break
 
+                if self.get_global_mean_squared_error() <= self.epsilon:
+                    stop_condition = True
+                    print("Cluster stopped due to error being less than or equal to epsilon")
+
                 # enqueue the next event for current node
                 if not stop_condition:
                     new_event = {
@@ -173,11 +206,10 @@ class Cluster:
                                                  node.training_task.squared_loss(),
                                                  node.training_task.score(), _depstr))
                 """
-                print("Node: {} | iter: {} | error: {} | score: {}".format(
+                print("Node: {} | iter: {} | meanSqError: {}".format(
                     node._id,
                     node.iteration,
-                    node.training_task.get_mean_absolute_error(),
-                    node.training_task.get_score())
+                    node.training_task.get_mean_squared_error())
                 )
             elif event["type"] == "":
                 pass

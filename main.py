@@ -17,9 +17,10 @@ def main():
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
-    # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(6, ["i->i+1"])
-    adjacency_matrix = GraphGenerator.generate_complete_graph(1)
+    adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(6, ["i->i+1"])
+    # adjacency_matrix = GraphGenerator.generate_complete_graph(20)
     # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(1, ["i->i+1", "i->i-1", "i->i+10"])
+    # adjacency_matrix = np.diag(np.ones(20))
 
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
 
@@ -28,12 +29,12 @@ def main():
     # """
     X, y = mltoolbox.sample_from_function(
         10000, 100, mltoolbox.LinearYHatFunction.f,
-        samples_abs_threshold=100,
-        samples_mean=0,
-        samples_std_dev=4,
+        domain_radius=1,
+        domain_center=0,
+        subdomains_radius=10,
         error_mean=0,
         error_std_dev=1,
-        error_coeff=2
+        error_coeff=1
     )
     # """
 
@@ -53,37 +54,40 @@ def main():
 
     cluster.setup(
         X, y, mltoolbox.LinearYHatFunction,
-        max_iter=500,
-        method="batch",
+        max_iter=1200,
+        method="stochastic",
         batch_size=20,
         activation_func=None,
         loss=mltoolbox.SquaredLossFunction,
         penalty='l2',
-        alpha=0.001,
+        epsilon = 0.01,
+        alpha=0.0001,
         learning_rate="constant",
         metrics="all",
-        shuffle=False,
+        shuffle=True,
         verbose=False
     )
 
     cluster.run()
 
+    alpha = cluster.nodes[0].training_task.alpha
+
     #"""
-    n_iter = len(cluster.nodes[0].training_task.mean_absolute_error_log)
-    plt.title("Mean Absolute Error over global iterations (α={})".format(cluster.nodes[0].training_task.alpha))
+    n_iter = len(cluster.global_mean_squared_error_log)
+    plt.title("Mean Squared Error over global iterations (α={})".format(alpha))
     plt.xlabel("Iteration")
-    plt.ylabel("Mean Absolute Error")
-    plt.annotate('MAE = {}'.format(cluster.nodes[0].training_task.get_mean_absolute_error()),
+    plt.ylabel("Mean Squared Error")
+    plt.annotate('MSE = {}'.format(cluster.get_global_mean_squared_error()),
                  xy=(n_iter / 2, 5))
     plt.plot(
-        list(range(0, len(cluster.nodes[0].training_task.mean_absolute_error_log))),
-        cluster.nodes[0].training_task.mean_absolute_error_log
+        list(range(0, n_iter)),
+        cluster.global_mean_squared_error_log
     )
     plt.show()
     #"""
 
-    """
-    plt.title("Global iterations over cluster clock (α={})".format(cluster.nodes[0].training_task.alpha))
+    #"""
+    plt.title("Global iterations over cluster clock (α={})".format(alpha))
     plt.xlabel("Time (s)")
     plt.ylabel("Iteration")
     plt.plot(
@@ -91,18 +95,30 @@ def main():
         cluster.iterations_time_log
     )
     plt.show()
-    """
+    #"""
 
-    """
-    plt.title("α={}".format(cluster.nodes[0].training_task.alpha))
+    #"""
+    plt.title("Nodes iterations over clock (α={})".format(alpha))
     plt.xlabel("Time (s)")
-    plt.ylabel("Mean Absolute Error")
+    plt.ylabel("Iteration")
+    for node in cluster.nodes:
+        plt.plot(
+            list(range(0, len(node.log))),
+            node.log
+        )
+    plt.show()
+    #"""
+
+    #"""
+    plt.title("MSE over time (α={})".format(alpha))
+    plt.xlabel("Time (s)")
+    plt.ylabel("Mean Squared Error")
     plt.plot(
         cluster.iterations_time_log,
-        cluster.global_mean_absolute_error_log
+        cluster.global_mean_squared_error_log
     )
     plt.show()
-    """
+    #"""
 
     # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
 
