@@ -1,36 +1,90 @@
+import random, math, time
+import numpy as np
+from sklearn.datasets.samples_generator import make_blobs
+from sklearn.preprocessing import normalize
+from sklearn import linear_model
+from src.model import Cluster
+from src.graph_generator import GraphGenerator
+from src import mltoolbox
+import matplotlib.pyplot as plt
 
-class Parent:
-    def __init__(self):
-        self.name = "Rocco"
-        self.surname = "Calbi"
+clique_mse_log = np.loadtxt("out/clique_global_mean_squared_error_log")
+cycle_mse_log = np.loadtxt("out/cycle_global_mean_squared_error_log")
+expander_mse_log = np.loadtxt("out/expander_global_mean_squared_error_log")
 
-    def fullname(self):
-        print("Parent: " + self.get_fullname())
+clique_iter_log = np.loadtxt("out/clique_iterations_time_log")
+cycle_iter_log = np.loadtxt("out/cycle_iterations_time_log")
+expander_iter_log = np.loadtxt("out/expander_iterations_time_log")
 
-    def get_fullname(self):
-        return self.name + " " + self.surname
-
-class Child(Parent):
-    def __init__(self, f):
-        super().__init__()
-        self.name = "Gianmarco"
-        self.f = f
-
-    def fullname(self):
-        print("Child: " + self.get_fullname())
-
-    def call(self):
-        self.f.static()
+alpha = "0.0005"
 
 
-class Static:
-    def __init__(self):
-        pass
+n_iter = len(clique_mse_log)
+plt.title("MSE over global iterations (α={})".format(alpha))
+plt.xlabel("Iteration")
+plt.ylabel("MSE")
+plt.ylim(ymax=50)
+plt.plot(
+    list(range(0, n_iter)),
+    clique_mse_log,
+    label="clique MSE"
+)
+plt.plot(
+    list(range(0, n_iter)),
+    cycle_mse_log,
+    label="cycle MSE"
+)
+plt.plot(
+    list(range(0, n_iter)),
+    expander_mse_log,
+    label="expand. MSE"
+)
+plt.legend()
+plt.show()
 
-    @staticmethod
-    def static():
-        print("static")
 
-p = Parent()
-c = Child(Static)
-c.call()
+plt.title("Global iterations over cluster clock (α={})".format(alpha))
+plt.xlabel("Time (s)")
+plt.ylabel("Iteration")
+plt.plot(
+    list(range(0, n_iter)),
+    clique_iter_log,
+    label="clique"
+)
+plt.plot(
+    list(range(0, n_iter)),
+    cycle_iter_log,
+    label="cycle"
+)
+plt.plot(
+    list(range(0, n_iter)),
+    expander_iter_log,
+    label="expand"
+)
+plt.legend()
+plt.show()
+
+
+plt.title("MSE over time (α={})".format(alpha))
+plt.xlabel("Time (s)")
+plt.ylabel("MSE")
+plt.ylim(ymax=50)
+plt.plot(
+    clique_iter_log,
+    clique_mse_log,
+    label="clique MSE"
+)
+plt.plot(
+    cycle_iter_log,
+    cycle_mse_log,
+    label="cycle MSE"
+)
+plt.plot(
+    expander_iter_log,
+    expander_mse_log,
+    label="expand MSE"
+)
+
+plt.legend()
+plt.show()
+

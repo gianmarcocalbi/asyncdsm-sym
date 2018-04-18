@@ -8,7 +8,7 @@ from src.graph_generator import GraphGenerator
 from src import mltoolbox
 import matplotlib.pyplot as plt
 
-seed = 28041993
+seed = 2
 np.random.seed(seed)
 random.seed(seed)
 
@@ -17,9 +17,9 @@ def main():
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
-    adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(6, ["i->i+1"])
     # adjacency_matrix = GraphGenerator.generate_complete_graph(20)
-    # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(1, ["i->i+1", "i->i-1", "i->i+10"])
+    # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(20, ["i->i+1"])
+    adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(20, ["i->i+1", "i->i-1", "i->i+10"])
     # adjacency_matrix = np.diag(np.ones(20))
 
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
@@ -29,9 +29,9 @@ def main():
     # """
     X, y = mltoolbox.sample_from_function(
         10000, 100, mltoolbox.LinearYHatFunction.f,
-        domain_radius=1,
+        domain_radius=10,
         domain_center=0,
-        subdomains_radius=10,
+        subdomains_radius=2,
         error_mean=0,
         error_std_dev=1,
         error_coeff=1
@@ -54,14 +54,14 @@ def main():
 
     cluster.setup(
         X, y, mltoolbox.LinearYHatFunction,
-        max_iter=1200,
+        max_iter=4000,
         method="stochastic",
         batch_size=20,
         activation_func=None,
         loss=mltoolbox.SquaredLossFunction,
         penalty='l2',
         epsilon = 0.01,
-        alpha=0.0001,
+        alpha=0.0005,
         learning_rate="constant",
         metrics="all",
         shuffle=True,
@@ -70,13 +70,23 @@ def main():
 
     cluster.run()
 
+    #np.savetxt("out/clique_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    #np.savetxt("out/clique_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+
+    #np.savetxt("out/cycle_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    #np.savetxt("out/cycle_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+
+    np.savetxt("out/expander_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    np.savetxt("out/expander_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+
     alpha = cluster.nodes[0].training_task.alpha
 
-    #"""
+    """
     n_iter = len(cluster.global_mean_squared_error_log)
-    plt.title("Mean Squared Error over global iterations (α={})".format(alpha))
+    plt.title("MSE over global iterations (α={})".format(alpha))
     plt.xlabel("Iteration")
-    plt.ylabel("Mean Squared Error")
+    plt.ylabel("MSE")
+    plt.ylim(ymax=50)
     plt.annotate('MSE = {}'.format(cluster.get_global_mean_squared_error()),
                  xy=(n_iter / 2, 5))
     plt.plot(
@@ -84,20 +94,21 @@ def main():
         cluster.global_mean_squared_error_log
     )
     plt.show()
-    #"""
+    """
 
-    #"""
+    """
     plt.title("Global iterations over cluster clock (α={})".format(alpha))
     plt.xlabel("Time (s)")
     plt.ylabel("Iteration")
+    plt.ylim(ymax=50)
     plt.plot(
         list(range(0, len(cluster.iterations_time_log))),
         cluster.iterations_time_log
     )
     plt.show()
-    #"""
+    """
 
-    #"""
+    """
     plt.title("Nodes iterations over clock (α={})".format(alpha))
     plt.xlabel("Time (s)")
     plt.ylabel("Iteration")
@@ -107,18 +118,19 @@ def main():
             node.log
         )
     plt.show()
-    #"""
+    """
 
-    #"""
+    """
     plt.title("MSE over time (α={})".format(alpha))
     plt.xlabel("Time (s)")
-    plt.ylabel("Mean Squared Error")
+    plt.ylabel("MSE")
+    plt.ylim(ymax=50)
     plt.plot(
         cluster.iterations_time_log,
         cluster.global_mean_squared_error_log
     )
     plt.show()
-    #"""
+    """
 
     # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
 
