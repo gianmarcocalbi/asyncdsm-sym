@@ -1,59 +1,54 @@
-import copy, math, random, time, types, sys, warnings
+import copy, math, random, time, types, sys
 import numpy as np
-from src import mltoolbox
+from src import mltoolbox_old, console
 
 
 class Cluster:
-    def __init__(self, adjacency_matrix):
+    def __init__(self, adjacency_matrix, training_setup, setup):
         self.future_event_list = {}
         self.nodes = []
+        self.log = []  # TODO: never used
         self.adjacency_matrix = adjacency_matrix
-        self.max_iter = None
-        self.clock = 0
-        self.log = []
-        self.iterations_time_log = []
-        self.iteration = 0
-        self.global_mean_absolute_error_log = []
-        self.global_mean_squared_error_log = []
-        self.epsilon = 0.0
+        self.training_setup = training_setup  # setup for training model
+        self.settings = setup
+        self._bootstrap()
 
-    def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None, loss="hinge",
-              penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant", metrics="all", shuffle=True, verbose=False):
+    def _bootstrap(self):
+        """
+        Bootstrap the cluster in order to get it ready to run.
+        :return: None
+        """
+        # TODO: deepcopy of the training set must be avoided!
+        # indeed, should be changed how the following code works
 
-        # if X and y have different sizes then the training set is bad formatted
+        # deepcopy of the instances of the training set
+        X = copy.deepcopy(self.training_setup["X"])
+
+        # deepcopy of all oracle function values of the training set
+        y = copy.deepcopy(self.training_setup["y"])
+
+        # if they have different sizes then the training set is bad formatted
         if len(y) != X.shape[0]:
             raise Exception("X has different amount of rows w.r.t. y")
-
-        if max_iter is None:
-            max_iter = math.inf
-        self.max_iter = max_iter
-        self.epsilon = epsilon
-
-        if shuffle:
-            Xy = np.c_[X, y]
-            np.random.shuffle(Xy)
-            X = np.delete(Xy, -1, 1)
-            y = np.take(Xy, -1, 1)
-            del Xy
-
         N = self.adjacency_matrix.shape[0]
         for i in range(N):
+            node_setup = self.training_setup
+
             # size of the subsample of the training set that will be assigned to
             # this node
-            node_X_size = math.floor(X.shape[0] / (N - i))
+            batch_size = math.floor(X.shape[0] / (N - i))
 
             # assign the correct subsample to this node
-            node_X = copy.deepcopy(X[0:node_X_size])  # instances
-            node_y = copy.deepcopy(y[0:node_X_size])  # oracle outputs
+            node_setup["X"] = copy.deepcopy(X[0:batch_size])  # instances
+            node_setup["y"] = copy.deepcopy(y[0:batch_size])  # oracle outputs
 
             # instantiate new node for the just-selected subsample
-            self.nodes.append(Node(i, node_X, node_y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                                   learning_rate, metrics, shuffle, verbose))
+            self.nodes.append(Node(i, node_setup))
             self.log.append([])
 
             # evict the just-already-assigned samples of the training-set
-            X = X[node_X_size:]
-            y = y[node_X_size:]
+            X = X[batch_size:]
+            y = y[batch_size:]
 
         # set up all nodes' dependencies following the adjacency_matrix
         for i in range(N):
@@ -61,18 +56,6 @@ class Cluster:
                 if i != j and self.adjacency_matrix[i, j] == 1:
                     self.nodes[j].add_dependency(self.nodes[i])
                     self.nodes[i].add_recipient(self.nodes[j])
-
-    def get_global_mean_absolute_error(self, index=-1):
-        if index < len(self.global_mean_absolute_error_log) > 0:
-            return self.global_mean_absolute_error_log[index]
-        else:
-            return math.inf
-
-    def get_global_mean_squared_error(self, index=-1):
-        if index < len(self.global_mean_squared_error_log) > 0:
-            return self.global_mean_squared_error_log[index]
-        else:
-            return math.inf
 
     def enqueue_event(self, e):
         """
@@ -108,9 +91,6 @@ class Cluster:
         Run the cluster (distributed computation simulation).
         :return: None
         """
-        if len(self.nodes) == 0:
-            raise Exception("Cluster has not been set up before calling run method")
-
         # enqueue one step event for each node in the cluster
         for _node in self.nodes:
             self.enqueue_event({
@@ -122,45 +102,12 @@ class Cluster:
         stop_condition = False  # todo: stop condition (tolerance)
         event = self.dequeue_event()
         while not stop_condition and not event is None:
-            # console.stdout.screen.clrtoeol()
-
-            self.clock = event["time"]
-
+            console.stdout.screen.clrtoeol()
             if event["type"] == "node_step":
                 node = event["node"]
 
                 if node.can_run():
-                    self.log[node._id].append(node.gradient_step())
-
-                    # when this node finishes iteration "i", it checks if all the others
-                    # have already performed the iteration i-th, if so then the global
-                    # iteration i-th has been completed and the completion time for such
-                    # iteration is the actual local_clock of this node
-                    min_iter = math.inf
-                    for _node in self.nodes:
-                        if _node.iteration < min_iter:
-                            min_iter = _node.iteration
-                    if min_iter == self.iteration + 1:
-                        self.iterations_time_log.append(-1)
-                        self.iterations_time_log[self.iteration] = node.local_clock
-
-                        gmae = 0
-                        gmse = 0
-                        for _node in self.nodes:
-                            gmae += _node.training_task.mean_absolute_error_log[self.iteration]
-                            gmse += _node.training_task.mean_squared_error_log[self.iteration]
-                        gmae /= len(self.nodes)
-                        gmse /= len(self.nodes)
-
-                        self.global_mean_absolute_error_log.append(math.inf)
-                        self.global_mean_absolute_error_log[self.iteration] = gmae
-
-                        self.global_mean_squared_error_log.append(math.inf)
-                        self.global_mean_squared_error_log[self.iteration] = gmse
-
-                        self.iteration = min_iter
-                    elif min_iter > self.iteration + 1:
-                        raise Exception("Unexpected behaviour of cluster distributed dynamics")
+                    self.log[node.id].append(node.gradient_step(self.training_setup["method"]))
                 else:
                     # node cannot run computation because it lacks some
                     # dependencies' informations
@@ -177,13 +124,9 @@ class Cluster:
                 # check for the stop condition
                 stop_condition = True
                 for _node in self.nodes:
-                    if _node.iteration < self.max_iter:
+                    if _node.iteration < self.settings["iteration_amount"]:
                         stop_condition = False
                         break
-
-                if self.get_global_mean_squared_error() <= self.epsilon:
-                    stop_condition = True
-                    print("Cluster stopped due to error being less than or equal to epsilon")
 
                 # enqueue the next event for current node
                 if not stop_condition:
@@ -197,27 +140,23 @@ class Cluster:
                 _depstr = ""
                 for _dep in node.dependencies:
                     if _dep.get_local_clock_by_iteration(node.iteration) > node.iteration:
-                        _depstr += str(_dep._id)
+                        _depstr += str(_dep.id)
 
-                """console.stdout.screen.addstr(node._id, 0,
+                console.stdout.screen.addstr(node.id, 0,
                                              "Node: {} | iter: {} | error: {} | score: {} | wait for: {}".format(
-                                                 node._id,
+                                                 node.id,
                                                  node.iteration,
-                                                 node.training_task.squared_loss(),
-                                                 node.training_task.score(), _depstr))
-                """
-                print("Node: {} | iter: {} | meanSqError: {}".format(
-                    node._id,
-                    node.iteration,
-                    node.training_task.get_mean_squared_error())
-                )
+                                                 node.training_model.squared_loss(),
+                                                 node.training_model.score(), _depstr))
+
             elif event["type"] == "":
                 pass
             else:
                 pass
 
             event = self.dequeue_event()
-            # console.stdout.screen.refresh()
+
+            console.stdout.screen.refresh()
 
 
 class Node:
@@ -225,9 +164,8 @@ class Node:
     Represent a computational node.
     """
 
-    def __init__(self, _id, X, y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                 learning_rate, metrics, shuffle, verbose):
-        self._id = _id  # id number of the node
+    def __init__(self, id, training_setup):
+        self.id = id  # id number of the node
         self.dependencies = []  # list of node dependencies
         self.recipients = []
         self.local_clock = 0.0  # local internal clock (float)
@@ -238,61 +176,28 @@ class Node:
         # it store a queue for each dependency. Such queue can be accessed by
         # addressing the id of the node: "dependency_id" -> dep_queue.
         self.buffer = {}
+        self.training_setup = training_setup
 
-        if activation_func is None:
-            activation_func = "identity"
+        if not "activation_function" in self.training_setup:
+            self.training_setup["activation_function"] = "identity"
 
-        if not activation_func is types.FunctionType:
-            if activation_func == "sigmoid":
-                activation_func = mltoolbox.sigmoid
-            elif activation_func == "sign":
-                activation_func = np.sign
-            elif activation_func == "tanh":
-                activation_func = np.tanh
+        if not self.training_setup["activation_function"] is types.FunctionType:
+            if self.training_setup["activation_function"] == "sigmoid":
+                self.training_setup["activation_function"] = mltoolbox_old.TrainingModel.sigmoid
+            elif self.training_setup["activation_function"] == "sign":
+                self.training_setup["activation_function"] = np.sign
+            elif self.training_setup["activation_function"] == "tanh":
+                self.training_setup["activation_function"] = np.tanh
             else:
-                activation_func = lambda x: x
+                self.training_setup["activation_function"] = lambda x: x
 
         # instantiate training model for the node
-        if method == "stochastic":
-            self.training_task = mltoolbox.StochasticGradientDescentTrainer(
-                X, y, y_hat,
-                activation_func,
-                loss,
-                penalty,
-                alpha,
-                learning_rate,
-                metrics,
-                shuffle,
-                verbose
-            )
-        elif method == "batch":
-            self.training_task = mltoolbox.BatchGradientDescentTrainer(
-                batch_size,
-                X, y, y_hat,
-                activation_func,
-                loss,
-                penalty,
-                alpha,
-                learning_rate,
-                metrics,
-                shuffle,
-                verbose
-            )
-        else:
-            if method != "classic":
-                warnings.warn('Method "{}" does not exist, using classic gradient descent instead'.format(method))
-
-            self.training_task = mltoolbox.GradientDescentTrainer(
-                X, y, y_hat,
-                activation_func,
-                loss,
-                penalty,
-                alpha,
-                learning_rate,
-                metrics,
-                shuffle,
-                verbose
-            )
+        self.training_model = mltoolbox_old.TrainingModel(
+            self.training_setup["X"],
+            self.training_setup["y"],
+            self.training_setup["activation_function"],
+            self.training_setup["learning_rate"]
+        )
 
     def set_dependencies(self, dependencies):
         """
@@ -310,7 +215,7 @@ class Node:
         :return: None
         """
         self.dependencies.append(dependency)
-        self.buffer[dependency._id] = []
+        self.buffer[dependency.id] = []
 
     def add_recipient(self, recipient):
         """
@@ -373,10 +278,10 @@ class Node:
         self.local_clock = tf
         self.iteration += 1
         self.log.append(self.local_clock)
-        print("node ({0}) advanced to iteration #{1}".format(self._id, self.iteration))
+        print("node ({0}) advanced to iteration #{1}".format(self.id, self.iteration))
         return [t0, tf]
 
-    def gradient_step(self):
+    def gradient_step(self, method):
         """
         Perform a single step of the gradient descent method.
         :return: a list containing [clock_before, clock_after] w.r.t. the computation
@@ -384,25 +289,28 @@ class Node:
         # useful vars for estimate the time taken by the computation
         t0 = self.local_clock
         # get the counter before the computation starts
-        # c0 = time.perf_counter()
+        c0 = time.perf_counter()
 
         # avg internal self.W vector with W incoming from dependencies
         if self.iteration > 0:
             self.avg_weight_with_dependencies()
 
         # compute the gradient descent step
-        self.training_task.step()
+        if method == "stochastic":
+            self.training_model.stochastic_gradient_descent_step()
+        elif method == "batch":
+            self.training_model.batch_gradient_descent_step(self.training_setup["batch_size"])
+        else:
+            self.training_model.gradient_descent_step()
 
         # broadcast the obtained value to all node's recipients
         self.broadcast_weight_to_recipients()
 
         # get the counter after the computation has ended
-        # cf = time.perf_counter()
-        dt = random.expovariate(1)  # todo: temp
+        cf = time.perf_counter()
 
         # computes the clock when the computation has finished
-        # tf = t0 + cf - c0
-        tf = t0 + dt
+        tf = t0 + cf - c0
         # update the local_clock
         self.local_clock = tf
 
@@ -417,10 +325,10 @@ class Node:
         :return: None
         """
         if len(self.dependencies) > 0:
-            W = self.training_task.W
+            W = self.training_model.W
             for dep in self.dependencies:
-                W = W + self.dequeue_weight(dep._id)
-            self.training_task.W = W / (len(self.dependencies) + 1)
+                W = W + self.dequeue_weight(dep.id)
+            self.training_model.W = W / (len(self.dependencies) + 1)
 
     def broadcast_weight_to_recipients(self):
         """
@@ -429,7 +337,7 @@ class Node:
         :return: None
         """
         for recipient in self.recipients:
-            recipient.enqueue_weight(self._id, self.training_task.W)
+            recipient.enqueue_weight(self.id, self.training_model.W)
 
     def can_run(self):
         """

@@ -3,87 +3,170 @@ import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
 from sklearn import linear_model
+from src.model import Cluster
 from src.graph_generator import GraphGenerator
-from src import model, mltoolbox, console
-from curses import wrapper
+from src import mltoolbox
 import matplotlib.pyplot as plt
 
-seed = 28041994
+seed = 2
 np.random.seed(seed)
 random.seed(seed)
 
 
-def main():
+def main0():
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
-    # __adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(5, ["i->i+1"])
-    __adjacency_matrix = GraphGenerator.generate_complete_graph(1)
-    # __markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
-    # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    # __X, __y = mltoolbox.SampleGenerator.sample_from_function(10, 2, mltoolbox.linear_function, 1, biased=False)
-    # __X, __y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat"), np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
+    n = 20
+    # adjmat, graph_name = GraphGenerator.generate_complete_graph(n), "clique[{}]".format(n)
+    adjmat, graph_name = GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1"]), "cycle[{}]".format(n)
+    # adjmat, graph_name = GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1", "i->i-1", "i->i+{}".format(int(n/2))]), "expander[{}]".format(n)
+    # adjmat, graph_name = np.diag(np.ones(n)), "diag[{}]".format(n)
 
-    #__X = np.matrix([np.zeros(10),np.arange(10)]).T
-    #__y = np.apply_along_axis(lambda x : x * x, 0, np.arange(10))
+    # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
 
-    #__X = np.matrix("0,0;1,1;2,2;3,3;4,4;5,5")
-    #__y = np.apply_along_axis(lambda x : x * x, 0, np.arange(6))
+    # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
-    __X = np.array([np.arange(5)]).T
-    __y = np.arange(5) * 2
+    # """
+    X, y = mltoolbox.sample_from_function(
+        10000, 100, mltoolbox.LinearYHatFunction.f,
+        domain_radius=10,
+        domain_center=0,
+        subdomains_radius=2,
+        error_mean=0,
+        error_std_dev=1,
+        error_coeff=1
+    )
+    # """
 
-    __setup = {
-        "iteration_amount": math.inf
-    }
+    """
+    X = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat")
+    y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
+    """
 
-    __training_setup = {
-        "X": __X,
-        "y": __y,
-        "learning_rate": 0.01,
-        "activation_function": "identity",  # sigmoid, sign, tanh, identity, whatever other name will lead to identity
-        "method": "classic",  # classic, stochastic, batch
-        "batch_size": 10  # matters only for batch method
-    }
+    # X, y = np.array([np.arange(5)]).T, np.arange(5) * 2
 
-    __cluster = model.Cluster(__adjacency_matrix, __training_setup, __setup)
-    __cluster.run()
+    """
+    X = np.array([[1, 12, 14, -2, -25, -27, -9, -10, 24, -17]]).T
+    y = np.array([2, 24, 28, -4, -50, -54, -18, -20, 48, -34])
+    """
 
+    cluster = Cluster(adjmat)
+
+    cluster.setup(
+        X, y, mltoolbox.LinearYHatFunction,
+        max_iter=4000,
+        method="stochastic",
+        batch_size=20,
+        activation_func=None,
+        loss=mltoolbox.SquaredLossFunction,
+        penalty='l2',
+        epsilon = 0.01,
+        alpha=0.0005,
+        learning_rate="constant",
+        metrics="all",
+        shuffle=True,
+        verbose=False
+    )
+
+    cluster.run()
+
+    #np.savetxt("out/clique_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    #np.savetxt("out/clique_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+
+    #np.savetxt("out/cycle_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    #np.savetxt("out/cycle_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+
+    np.savetxt("out/expander_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    np.savetxt("out/expander_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+
+    alpha = cluster.nodes[0].training_task.alpha
+
+    """
+    file = open("out/{}_iterations_time_log".format(graph_name), "w")
+    file.write(cluster.iterations_time_log)
+    file.close()
+    file = open("out/{}_global_mean_squared_error_log".format(graph_name), "w")
+    file.write(cluster.global_mean_squared_error_log)
+    file.close()
+    """
+
+    #"""
+    n_iter = len(cluster.global_mean_squared_error_log)
+    plt.title("MSE over global iterations (α={})".format(alpha))
     plt.xlabel("Iteration")
-    plt.ylabel("Mean Squared Error")
-    # plt.yscale('log')
-    # plt.axis(ymax=0.50)
-    # plt.annotate('Error {}'.format(__cluster.nodes[0].training_model.squared_loss_log[-1]),
-    #   xy=(len(__cluster.nodes[0].training_model.squared_loss_log)/2, 5))
-    plt.plot(list(range(0, len(__cluster.nodes[0].training_model.loss_log))),
-             __cluster.nodes[0].training_model.loss_log)
+    plt.ylabel("MSE")
+    plt.ylim(ymax=50)
+    plt.annotate('MSE = {}'.format(cluster.get_global_mean_squared_error()),
+                 xy=(n_iter / 2, 20))
+    plt.plot(
+        list(range(0, n_iter)),
+        cluster.global_mean_squared_error_log
+    )
     plt.show()
+    #"""
+
+    #"""
+    plt.title("Global iterations over cluster clock (α={})".format(alpha))
+    plt.xlabel("Time (s)")
+    plt.ylabel("Iteration")
+    plt.plot(
+        list(range(0, len(cluster.iterations_time_log))),
+        cluster.iterations_time_log
+    )
+    plt.show()
+    #"""
+
+    """
+    plt.title("Nodes iterations over clock (α={})".format(alpha))
+    plt.xlabel("Time (s)")
+    plt.ylabel("Iteration")
+    for node in cluster.nodes:
+        plt.plot(
+            list(range(0, len(node.log))),
+            node.log
+        )
+    plt.show()
+    """
+
+    #"""
+    plt.title("MSE over time (α={})".format(alpha))
+    plt.xlabel("Time (s)")
+    plt.ylim(ymax=50)
+    plt.ylabel("MSE")
+    plt.plot(
+        cluster.iterations_time_log,
+        cluster.global_mean_squared_error_log
+    )
+    plt.show()
+    #"""
+
+    # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
+
+    # input("Press an key")
 
     # console.stdout.close()
 
+
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    __X, __y = mltoolbox.SampleGenerator.sample_from_function(1000, 100, mltoolbox.linear_function, 1, biased=False)
+    X, y = mltoolbox.sample_from_function(100000, 10, mltoolbox.linear_function, 1, error_std_dev=1,
+                                          error_coeff=0)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
-    cls.fit(__X, __y)
-    print(cls.score(__X, __y))
+    cls.fit(X, y)
+    print(cls.score(X, y))
+
 
 def main2():
-    #__X, __y = mltoolbox.SampleGenerator.sample_from_function(1000, 1, mltoolbox.linear_function, 1, biased=False)
-    __X = np.matrix("2,4,8;4,16,64;3,9,27")
-    __y = [2,8,4.5]
-    cls = linear_model.LinearRegression()
-    cls.fit(__X, __y)
-    print(cls.score(__X, __y))
-    print(cls.predict(np.array([2,4,8]).reshape(1,-1)))
+    X, y = mltoolbox.sample_from_function(1000, 10, mltoolbox.linear_function, 1, error_std_dev=1,
+                                          error_coeff=0)
+    cls = linear_model.SGDRegressor(penalty='none', alpha=0.01, max_iter=1000, shuffle=False, learning_rate='constant')
+    cls.fit(X, y)
+    print(cls.score(X, y))
+    print(cls.predict(np.array([2, 4, 8]).reshape(1, -1)))
 
 
 switch = 0
 
 if __name__ == "__main__":
-    if switch == 0:
-        main()
-    elif switch == 1:
-        main1()
-    elif switch == 2:
-        main2()
+    eval("main{}()".format(switch))

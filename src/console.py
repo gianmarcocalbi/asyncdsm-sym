@@ -16,4 +16,9 @@ class CursesStdout:
         curses.echo()
         curses.endwin()
 
-# stdout = CursesStdout()
+
+stdout = CursesStdout()
+
+def print(str):
+    stdout.screen.addstr("\n"+str)
+    stdout.screen.refresh()
