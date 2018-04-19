@@ -47,18 +47,18 @@ plt.title("Global iterations over cluster clock (α={})".format(alpha))
 plt.xlabel("Time (s)")
 plt.ylabel("Iteration")
 plt.plot(
-    list(range(0, n_iter)),
     clique_iter_log,
+    list(range(0, n_iter)),
     label="clique"
 )
 plt.plot(
-    list(range(0, n_iter)),
     cycle_iter_log,
+    list(range(0, n_iter)),
     label="cycle"
 )
 plt.plot(
-    list(range(0, n_iter)),
     expander_iter_log,
+    list(range(0, n_iter)),
     label="expand"
 )
 plt.legend()

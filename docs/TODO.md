@@ -1,7 +1,7 @@
 # TODOs
 
 ## Highest priority
-- [ ] Introduce time in nodes' task computation.
+- [x] Introduce time in nodes' task computation.
 - [ ] Implement the suggested heavy conditioned function generator.
 - [ ] Output the three plots requested by the advisor.
 - [ ] Simulate with different dependency graphs to show some result.

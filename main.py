@@ -13,14 +13,15 @@ np.random.seed(seed)
 random.seed(seed)
 
 
-def main():
+def main0():
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
-    # adjacency_matrix = GraphGenerator.generate_complete_graph(20)
-    # adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(20, ["i->i+1"])
-    adjacency_matrix = GraphGenerator.generate_d_regular_graph_by_edges(20, ["i->i+1", "i->i-1", "i->i+10"])
-    # adjacency_matrix = np.diag(np.ones(20))
+    n = 20
+    # adjmat, graph_name = GraphGenerator.generate_complete_graph(n), "clique[{}]".format(n)
+    adjmat, graph_name = GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1"]), "cycle[{}]".format(n)
+    # adjmat, graph_name = GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1", "i->i-1", "i->i+{}".format(int(n/2))]), "expander[{}]".format(n)
+    # adjmat, graph_name = np.diag(np.ones(n)), "diag[{}]".format(n)
 
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
 
@@ -50,7 +51,7 @@ def main():
     y = np.array([2, 24, 28, -4, -50, -54, -18, -20, 48, -34])
     """
 
-    cluster = Cluster(adjacency_matrix)
+    cluster = Cluster(adjmat)
 
     cluster.setup(
         X, y, mltoolbox.LinearYHatFunction,
@@ -82,31 +83,39 @@ def main():
     alpha = cluster.nodes[0].training_task.alpha
 
     """
+    file = open("out/{}_iterations_time_log".format(graph_name), "w")
+    file.write(cluster.iterations_time_log)
+    file.close()
+    file = open("out/{}_global_mean_squared_error_log".format(graph_name), "w")
+    file.write(cluster.global_mean_squared_error_log)
+    file.close()
+    """
+
+    #"""
     n_iter = len(cluster.global_mean_squared_error_log)
     plt.title("MSE over global iterations (α={})".format(alpha))
     plt.xlabel("Iteration")
     plt.ylabel("MSE")
     plt.ylim(ymax=50)
     plt.annotate('MSE = {}'.format(cluster.get_global_mean_squared_error()),
-                 xy=(n_iter / 2, 5))
+                 xy=(n_iter / 2, 20))
     plt.plot(
         list(range(0, n_iter)),
         cluster.global_mean_squared_error_log
     )
     plt.show()
-    """
+    #"""
 
-    """
+    #"""
     plt.title("Global iterations over cluster clock (α={})".format(alpha))
     plt.xlabel("Time (s)")
     plt.ylabel("Iteration")
-    plt.ylim(ymax=50)
     plt.plot(
         list(range(0, len(cluster.iterations_time_log))),
         cluster.iterations_time_log
     )
     plt.show()
-    """
+    #"""
 
     """
     plt.title("Nodes iterations over clock (α={})".format(alpha))
@@ -120,17 +129,17 @@ def main():
     plt.show()
     """
 
-    """
+    #"""
     plt.title("MSE over time (α={})".format(alpha))
     plt.xlabel("Time (s)")
-    plt.ylabel("MSE")
     plt.ylim(ymax=50)
+    plt.ylabel("MSE")
     plt.plot(
         cluster.iterations_time_log,
         cluster.global_mean_squared_error_log
     )
     plt.show()
-    """
+    #"""
 
     # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
 
@@ -160,9 +169,4 @@ def main2():
 switch = 0
 
 if __name__ == "__main__":
-    if switch == 0:
-        main()
-    elif switch == 1:
-        main1()
-    elif switch == 2:
-        main2()
+    eval("main{}()".format(switch))
