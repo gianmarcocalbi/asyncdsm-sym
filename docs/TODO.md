@@ -6,6 +6,8 @@
 - [ ] Output the three plots requested by the advisor.
 - [ ] Simulate with different dependency graphs to show some result.
 - [ ] Make time taken by a task depends on size of batch (`1` for SGD, `batch_size` for BGD, `self.N` for GD).
+- [ ] Create plot module.
+- [ ] Implement method to store result on files easily.
 
 ## Very high priority
 - [x] Utilize python curses module instead of classic print for a better output visualization.
