@@ -30,12 +30,11 @@ def main0():
     # """
     X, y = mltoolbox.sample_from_function(
         10000, 100, mltoolbox.LinearYHatFunction.f,
-        domain_radius=10,
-        domain_center=0,
-        subdomains_radius=2,
+        domain_radius=0.5,
+        domain_center=0.5,
         error_mean=0,
         error_std_dev=1,
-        error_coeff=1
+        error_coeff=0.1
     )
     # """
 
@@ -55,7 +54,7 @@ def main0():
 
     cluster.setup(
         X, y, mltoolbox.LinearYHatFunction,
-        max_iter=4000,
+        max_iter=1000,
         method="stochastic",
         batch_size=20,
         activation_func=None,
@@ -77,8 +76,8 @@ def main0():
     # np.savetxt("out/cycle_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
     # np.savetxt("out/cycle_iterations_time_log", cluster.iterations_time_log, delimiter=',')
 
-    np.savetxt("out/expander_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
-    np.savetxt("out/expander_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+    # np.savetxt("out/expander_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    # np.savetxt("out/expander_iterations_time_log", cluster.iterations_time_log, delimiter=',')
 
     alpha = cluster.nodes[0].training_task.alpha
 

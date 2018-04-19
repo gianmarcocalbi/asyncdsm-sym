@@ -2,24 +2,24 @@
 
 ## Highest priority
 - [x] Introduce time in nodes' task computation.
+- [x] Output the three plots requested by the advisor.
+- [x] Simulate with different dependency graphs to show some result.
 - [ ] Implement the suggested heavy conditioned function generator.
-- [ ] Output the three plots requested by the advisor.
-- [ ] Simulate with different dependency graphs to show some result.
 - [ ] Make time taken by a task depends on size of batch (`1` for SGD, `batch_size` for BGD, `self.N` for GD).
-- [ ] Create plot module.
+- [ ] Create plotting module.
 - [ ] Implement method to store result on files easily.
 
 ## Very high priority
 - [x] Utilize python curses module instead of classic print for a better output visualization.
 - [x] Change dict setup to function parameters to avoid too much memory consumption.
-- [ ] Redesign training set generator functions.
+- [x] Redesign training set generator functions.
+- [x] Design better generator function for the training_set.
+- [x] Implement several metrics for evaluate the training stage.
+- [x] Add stop condition in addition to `max_iter` (e.g. error under a certain threshold).
 - [ ] Exploit all parameters of mltoolbox objects that are actually unused.
 - [ ] Implement different kind of loss functions.
-- [ ] Implement several metrics for evaluate the training stage.
-- [ ] Implement plotting system.
-- [ ] Add stop condition in addition to `max_iter` (e.g. error under a certain threshold).
 - [ ] Improve all gradient descent algorithms' performances.
-- [ ] Design better generator function for the training_set.
+- [ ] Comment everything as numpy does.
 
 ## High priority
 - [x] Get rid of all deepcopy functions and consequently improve dataset management.

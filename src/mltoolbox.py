@@ -333,8 +333,8 @@ class SampleGenerator:
         pass
 
 
-def sample_from_function(n_samples, n_features, func, domain_radius=1, domain_center=0,
-                         subdomains_radius=1, error_mean=0, error_std_dev=1, error_coeff=0):
+def sample_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
+                         error_mean=0, error_std_dev=1, error_coeff=0):
     """
     Parameters
     ----------
@@ -351,7 +351,6 @@ def sample_from_function(n_samples, n_features, func, domain_radius=1, domain_ce
         Threshold for samples' domains. If a value of
 
     domain_center : float
-    subdomains_radius : float
     error_mean : float
     error_std_dev : float
     error_coeff : float
@@ -367,24 +366,13 @@ def sample_from_function(n_samples, n_features, func, domain_radius=1, domain_ce
 
     X = []
     y = np.zeros(n_samples)
-    w = np.zeros(n_features)
-    features_domain = []
-
-    for j in range(n_features):
-        feature_j_domain_center = np.random.uniform(
-            domain_center - domain_radius + subdomains_radius,
-            domain_center + domain_radius - subdomains_radius
-        )
-        features_domain.append(
-            (feature_j_domain_center - subdomains_radius, feature_j_domain_center + subdomains_radius)
-        )
-        w[j] = np.random.uniform(0, 1)  # todo: edit this, as it is it doesn't convince me
+    w = np.ones(n_features)
+    K = np.random.uniform(domain_center - domain_radius, domain_center + domain_radius, n_features)
 
     for i in range(n_samples):
         x = np.zeros(n_features)
         for j in range(n_features):
-            x[j] = np.random.uniform(features_domain[j][0], features_domain[j][1])
-            # todo: implement threshold
+            x[j] = np.random.uniform(-K[j] + domain_radius, K[j] + domain_radius)
         X.append(x)
         y[i] = func(x, w) + np.random.normal(error_mean, error_std_dev) * error_coeff
 
