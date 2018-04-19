@@ -378,7 +378,7 @@ def sample_from_function(n_samples, n_features, func, domain_radius=1, domain_ce
         features_domain.append(
             (feature_j_domain_center - subdomains_radius, feature_j_domain_center + subdomains_radius)
         )
-        w[j] = np.random.uniform(0, 1) #todo: edit this, as it is it doesn't convince me
+        w[j] = np.random.uniform(0, 1)  # todo: edit this, as it is it doesn't convince me
 
     for i in range(n_samples):
         x = np.zeros(n_features)

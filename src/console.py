@@ -19,6 +19,7 @@ class CursesStdout:
 
 stdout = CursesStdout()
 
+
 def print(str):
-    stdout.screen.addstr("\n"+str)
+    stdout.screen.addstr("\n" + str)
     stdout.screen.refresh()

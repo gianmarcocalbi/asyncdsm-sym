@@ -8,13 +8,13 @@ from src.graph_generator import GraphGenerator
 from src import mltoolbox
 import matplotlib.pyplot as plt
 
-clique_mse_log = np.loadtxt("out/clique_global_mean_squared_error_log")
-cycle_mse_log = np.loadtxt("out/cycle_global_mean_squared_error_log")
-expander_mse_log = np.loadtxt("out/expander_global_mean_squared_error_log")
+clique_mse_log = np.loadtxt("test_log/clique_global_mean_squared_error_log")
+cycle_mse_log = np.loadtxt("test_log/cycle_global_mean_squared_error_log")
+expander_mse_log = np.loadtxt("test_log/expander_global_mean_squared_error_log")
 
-clique_iter_log = np.loadtxt("out/clique_iterations_time_log")
-cycle_iter_log = np.loadtxt("out/cycle_iterations_time_log")
-expander_iter_log = np.loadtxt("out/expander_iterations_time_log")
+clique_iter_log = np.loadtxt("test_log/clique_iterations_time_log")
+cycle_iter_log = np.loadtxt("test_log/cycle_iterations_time_log")
+expander_iter_log = np.loadtxt("test_log/expander_iterations_time_log")
 
 alpha = "0.0005"
 

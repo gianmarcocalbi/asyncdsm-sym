@@ -61,7 +61,7 @@ def main0():
         activation_func=None,
         loss=mltoolbox.SquaredLossFunction,
         penalty='l2',
-        epsilon = 0.01,
+        epsilon=0.01,
         alpha=0.0005,
         learning_rate="constant",
         metrics="all",
@@ -71,11 +71,11 @@ def main0():
 
     cluster.run()
 
-    #np.savetxt("out/clique_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
-    #np.savetxt("out/clique_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+    # np.savetxt("out/clique_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    # np.savetxt("out/clique_iterations_time_log", cluster.iterations_time_log, delimiter=',')
 
-    #np.savetxt("out/cycle_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
-    #np.savetxt("out/cycle_iterations_time_log", cluster.iterations_time_log, delimiter=',')
+    # np.savetxt("out/cycle_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
+    # np.savetxt("out/cycle_iterations_time_log", cluster.iterations_time_log, delimiter=',')
 
     np.savetxt("out/expander_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
     np.savetxt("out/expander_iterations_time_log", cluster.iterations_time_log, delimiter=',')
@@ -91,7 +91,7 @@ def main0():
     file.close()
     """
 
-    #"""
+    # """
     n_iter = len(cluster.global_mean_squared_error_log)
     plt.title("MSE over global iterations (α={})".format(alpha))
     plt.xlabel("Iteration")
@@ -104,9 +104,9 @@ def main0():
         cluster.global_mean_squared_error_log
     )
     plt.show()
-    #"""
+    # """
 
-    #"""
+    # """
     plt.title("Global iterations over cluster clock (α={})".format(alpha))
     plt.xlabel("Time (s)")
     plt.ylabel("Iteration")
@@ -115,7 +115,7 @@ def main0():
         cluster.iterations_time_log
     )
     plt.show()
-    #"""
+    # """
 
     """
     plt.title("Nodes iterations over clock (α={})".format(alpha))
@@ -129,7 +129,7 @@ def main0():
     plt.show()
     """
 
-    #"""
+    # """
     plt.title("MSE over time (α={})".format(alpha))
     plt.xlabel("Time (s)")
     plt.ylim(ymax=50)
@@ -139,7 +139,7 @@ def main0():
         cluster.global_mean_squared_error_log
     )
     plt.show()
-    #"""
+    # """
 
     # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
 
