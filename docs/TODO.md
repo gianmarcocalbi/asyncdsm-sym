@@ -1,28 +1,29 @@
 # TODOs
 
-## Highest priority
+## Highest priority (**EMERGENCIES**)
+
+## Very high priority
 - [x] Introduce time in nodes' task computation.
 - [x] Output the three plots requested by the advisor.
 - [x] Simulate with different dependency graphs to show some result.
 - [x] Implement the suggested heavy conditioned function generator.
+- [x] Implement method to store result on files easily.
 - [ ] Make time taken by a task depends on size of batch (`1` for SGD, `batch_size` for BGD, `self.N` for GD).
-- [ ] Add header in output files or put them in separate folders.
-- [ ] Implement method to store result on files easily.
+- [ ] Implement the automatic generation of a desc file within `"test_log/test_XXX"` folders which describes the setup of the test.
+- [ ] Fix "stop due to `epsilon`" to work with the actual plotting system.
 
-## Very high priority
-- [x] Utilize python curses module instead of classic print for a better output visualization.
+## High priority
 - [x] Change dict setup to function parameters to avoid too much memory consumption.
 - [x] Redesign training set generator functions.
 - [x] Design better generator function for the training_set.
 - [x] Implement several metrics for evaluate the training stage.
-- [x] Add stop condition in addition to `max_iter` (e.g. error under a certain threshold).
-- [ ] Exploit all parameters of mltoolbox objects that are actually unused.
+- [x] Add stop condition in addition to `max_iter` (e.g. error gets under a certain threshold).
 - [ ] Implement different kind of loss functions.
-- [ ] Improve all gradient descent algorithms' performances.
 - [ ] Comment everything as numpy does.
 
-## High priority
+## Medium priority
 - [x] Get rid of all deepcopy functions and consequently improve dataset management.
+- [ ] Implement `verbose` flag everywhere and in particular in mltoolbox SGD algorithms.
 - [ ] Nice output with ncurses on a new window different from the terminal in which should appear errors and warnings.
 - [ ] Implement error handling.
 - [ ] Try the SGD method with a bigger dataset whose informations are already known (for example accuracy after N steps).
@@ -39,6 +40,9 @@
 
 ## Lowest priority
 - [ ] Graphical interface with PyQt.
+
+## Maybe
+- [ ] Improve all gradient descent algorithms' performances.
 
 ## Discarded
 - [ ] ~~Change everything to SKLearn~~.

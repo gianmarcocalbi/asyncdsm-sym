@@ -143,12 +143,17 @@ class GradientDescentTrainerAbstract(Trainer):
         self.mean_absolute_error_log = []
         self.mean_squared_error_log = []
         self.real_mean_squared_error_log = []
-
+        self.available_metrics = [
+            'score',
+            'mean_absolute_error',
+            'mean_squared_error',
+            "real_mean_squared_error"
+        ]
         self._compute_metrics()
 
     def _compute_metrics(self):
         if self.metrics == "all":
-            self.metrics = ['score', 'mean_absolute_error', 'mean_squared_error', "real_mean_squared_error"]
+            self.metrics = self.available_metrics
         elif isinstance(self.metrics, str):
             self.metrics = [self.metrics]
 

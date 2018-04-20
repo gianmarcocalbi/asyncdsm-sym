@@ -25,6 +25,9 @@ class Cluster:
         if len(y) != X.shape[0]:
             raise Exception("X has different amount of rows w.r.t. y")
 
+        if epsilon is None:
+            epsilon = 0.0
+
         if max_iter is None:
             max_iter = math.inf
         self.max_iter = max_iter
@@ -80,6 +83,63 @@ class Cluster:
             return self.global_real_mean_squared_error_log[index]
         else:
             return math.inf
+
+    def compute_global_score(self):
+        # todo
+        pass
+
+    def compute_global_mean_absolute_error(self):
+        gmae = 0
+        for node in self.nodes:
+            gmae += node.training_task.mean_absolute_error_log[self.iteration]
+        gmae /= len(self.nodes)
+
+        if len(self.global_mean_absolute_error_log) == self.iteration:
+            self.global_mean_absolute_error_log.append(gmae)
+        elif len(self.global_mean_absolute_error_log) == self.iteration + 1:
+            self.global_mean_absolute_error_log[self.iteration] = gmae
+        else:
+            raise Exception('Unexpected global_mean_absolute_error_log size')
+
+        if math.isnan(gmae) or math.isinf(gmae):
+            raise Exception("Computation has diverged to infinite")
+
+    def compute_global_mean_squared_error(self):
+        gmse = 0
+        for node in self.nodes:
+            gmse += node.training_task.mean_squared_error_log[self.iteration]
+        gmse /= len(self.nodes)
+
+        if len(self.global_mean_squared_error_log) == self.iteration:
+            self.global_mean_squared_error_log.append(gmse)
+        elif len(self.global_mean_squared_error_log) == self.iteration + 1:
+            self.global_mean_squared_error_log[self.iteration] = gmse
+        else:
+            raise Exception('Unexpected global_mean_squared_error_log size')
+
+        if math.isnan(gmse) or math.isinf(gmse):
+            raise Exception("Computation has diverged to infinite")
+
+    def compute_global_real_mean_squared_error(self):
+        grmse = 0
+        for node in self.nodes:
+            grmse += node.training_task.real_mean_squared_error_log[self.iteration]
+        grmse /= len(self.nodes)
+
+        if len(self.global_real_mean_squared_error_log) == self.iteration:
+            self.global_real_mean_squared_error_log.append(grmse)
+        elif len(self.global_real_mean_squared_error_log) == self.iteration + 1:
+            self.global_real_mean_squared_error_log[self.iteration] = grmse
+        else:
+            raise Exception('Unexpected global_mean_squared_error_log size')
+
+        if math.isnan(grmse) or math.isinf(grmse):
+            raise Exception("Computation has diverged to infinite")
+
+    def _compute_metrics(self):
+        for metric in self.nodes[0].training_task.metrics:
+            # todo: remove eval!!!
+            eval("self.compute_global_" + metric + "()")
 
     def enqueue_event(self, e):
         """
@@ -150,27 +210,7 @@ class Cluster:
                     if min_iter == self.iteration + 1:
                         self.iterations_time_log.append(-1)
                         self.iterations_time_log[self.iteration] = node.local_clock
-
-                        gmae = 0
-                        gmse = 0
-                        grmse = 0
-                        for _node in self.nodes:
-                            gmae += _node.training_task.mean_absolute_error_log[self.iteration]
-                            gmse += _node.training_task.mean_squared_error_log[self.iteration]
-                            grmse += _node.training_task.real_mean_squared_error_log[self.iteration]
-                        gmae /= len(self.nodes)
-                        gmse /= len(self.nodes)
-                        grmse /= len(self.nodes)
-
-                        self.global_mean_absolute_error_log.append(math.inf)
-                        self.global_mean_absolute_error_log[self.iteration] = gmae
-
-                        self.global_mean_squared_error_log.append(math.inf)
-                        self.global_mean_squared_error_log[self.iteration] = gmse
-
-                        self.global_real_mean_squared_error_log.append(math.inf)
-                        self.global_real_mean_squared_error_log[self.iteration] = grmse
-
+                        self._compute_metrics()
                         self.iteration = min_iter
                     elif min_iter > self.iteration + 1:
                         raise Exception("Unexpected behaviour of cluster distributed dynamics")

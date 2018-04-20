@@ -1,4 +1,4 @@
-import random, math, time
+import random, math, time, os, plotter
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
@@ -7,14 +7,13 @@ from src.model import Cluster
 from src.graph_generator import GraphGenerator
 from src import mltoolbox
 import matplotlib.pyplot as plt
-import os
 
 
 def main0():
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
-    ## BEGIN SETUP
+    ### BEGIN SETUP ###
     n = 20
     seed = 2
     graphs = (
@@ -24,19 +23,22 @@ def main0():
         "diag",
     )
     write_to_file = True
-    sub_folder = "test_A2/"
+    plot_after_write_to_file = True
+    sub_folder = "test_B2/"
+    enable_insta_plot = False
     plots = (
-        # "iter_time",
-        # "mse_iter",
-        # "real-mse_iter",
-        # "mse_time",
-        # "real-mse_time",
+        "iter_time",
+        "mse_iter",
+        "real-mse_iter",
+        "mse_time",
+        "real-mse_time",
     )
-    ## END SETUP
+    ### END SETUP ###
 
     np.random.seed(seed)
     random.seed(seed)
 
+    ### BEGIN ADJACENCY MATRIX GEN ###
     adjmats = []
 
     if "clique" in graphs:
@@ -48,22 +50,25 @@ def main0():
             GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1", "i->i-1", "i->i+{}".format(int(n / 2))]))
     if "diag" in graphs:
         adjmats.append(np.diag(np.ones(n)))
+    ### BEGIN ADJACENCY MATRIX GEN ###
 
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
 
+    ### BEGIN TRAINING SET GEN ###
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
-    """
+    # """
     X, y = mltoolbox.sample_from_function(
-        10000, 100, mltoolbox.LinearYHatFunction.f,
-        domain_radius=0.5,
-        domain_center=0.5,
+        1000, 100, mltoolbox.LinearYHatFunction.f,
+        domain_radius=10,
+        domain_center=0,
         error_mean=0,
         error_std_dev=1,
-        error_coeff=0.1
+        error_coeff=4
     )
-    """
+    # """
 
+    """
     X, y = mltoolbox.sample_from_function_old(
         10000, 100, mltoolbox.LinearYHatFunction.f,
         domain_radius=10,
@@ -73,6 +78,7 @@ def main0():
         error_std_dev=1,
         error_coeff=1
     )
+    """
 
     """
     X = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat")
@@ -85,7 +91,9 @@ def main0():
     X = np.array([[1, 12, 14, -2, -25, -27, -9, -10, 24, -17]]).T
     y = np.array([2, 24, 28, -4, -50, -54, -18, -20, 48, -34])
     """
+    ### BEGIN TRAINING SET GEN ###
 
+    ### BEGIN MAIN STUFFS ###
     for a in range(len(adjmats)):
         adjmat = adjmats[a]
         graph = graphs[a]
@@ -97,14 +105,14 @@ def main0():
 
         cluster.setup(
             X, y, mltoolbox.LinearYHatFunction,
-            max_iter=4000,
+            max_iter=1000,
             method="stochastic",
             batch_size=20,
             activation_func=None,
             loss=mltoolbox.SquaredLossFunction,
             penalty='l2',
-            epsilon=0.01,
-            alpha=0.0005,
+            epsilon=None,
+            alpha=0.0001,
             learning_rate="constant",
             metrics="all",
             shuffle=True,
@@ -136,7 +144,7 @@ def main0():
         alpha = cluster.nodes[0].training_task.alpha
         n_iter = len(cluster.global_mean_squared_error_log)
 
-        if "iter_time" in plots:
+        if "iter_time" in plots and enable_insta_plot:
             plt.title("Global iterations over cluster clock (α={})".format(alpha))
             plt.xlabel("Time (s)")
             plt.ylabel("Iteration")
@@ -146,7 +154,7 @@ def main0():
             )
             plt.show()
 
-        if "mse_iter" in plots:
+        if "mse_iter" in plots and enable_insta_plot:
             plt.title("MSE over global iterations (α={})".format(alpha))
             plt.xlabel("Iteration")
             plt.ylabel("MSE")
@@ -156,11 +164,11 @@ def main0():
             plt.scatter(
                 list(range(0, n_iter)),
                 cluster.global_mean_squared_error_log,
-                s=0.25
+                s=0.1
             )
             plt.show()
 
-        if "real-mse_iter" in plots:
+        if "real-mse_iter" in plots and enable_insta_plot:
             plt.title("Real MSE over global iterations (α={})".format(alpha))
             plt.xlabel("Iteration")
             plt.ylabel("Real MSE")
@@ -170,11 +178,11 @@ def main0():
             plt.scatter(
                 list(range(0, n_iter)),
                 cluster.global_real_mean_squared_error_log,
-                s= 0.25
+                s=0.1
             )
             plt.show()
 
-        if "mse_time" in plots:
+        if "mse_time" in plots and enable_insta_plot:
             plt.title("MSE over time (α={})".format(alpha))
             plt.xlabel("Time (s)")
             plt.ylim(ymax=50)
@@ -185,7 +193,7 @@ def main0():
             )
             plt.show()
 
-        if "real-mse_time" in plots:
+        if "real-mse_time" in plots and enable_insta_plot:
             plt.title("Real MSE over time (α={})".format(alpha))
             plt.xlabel("Time (s)")
             plt.ylim(ymax=50)
@@ -207,6 +215,9 @@ def main0():
             )
         plt.show()
         """
+
+    if write_to_file and plot_after_write_to_file:
+        plotter.main(sub_folder)
 
         # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
 
