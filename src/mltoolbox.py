@@ -399,6 +399,57 @@ def sample_from_function(n_samples, n_features, func, domain_radius=0.5, domain_
     return np.array(X), y
 
 
+def sample_from_function_old(n_samples, n_features, func, domain_radius=1, domain_center=0,
+                             subdomains_radius=1, error_mean=0, error_std_dev=1, error_coeff=0):
+    """
+    Parameters
+    ----------
+    n_samples : int
+        Amount of samples to generate in the training set.
+    n_features : int
+        Amount of feature each sample will have.
+    func : callable
+        Generator function: takes x and return y. Then the sample will be (x,y).
+    domain_radius : float
+        Threshold for samples' domains. If a value of
+    domain_center : float
+    subdomains_radius : float
+    error_mean : float
+    error_std_dev : float
+    error_coeff : float
+    Returns
+    -------
+    X : numpy.ndarray
+        Matrix of samples
+    y : numpy.array
+        Matrix of function values for such samples.
+    """
+
+    X = []
+    y = np.zeros(n_samples)
+    w = np.ones(n_features)
+    features_domain = []
+
+    for j in range(n_features):
+        feature_j_domain_center = np.random.uniform(
+            domain_center - domain_radius + subdomains_radius,
+            domain_center + domain_radius - subdomains_radius
+        )
+        features_domain.append(
+            (feature_j_domain_center - subdomains_radius, feature_j_domain_center + subdomains_radius)
+        )
+
+    for i in range(n_samples):
+        x = np.zeros(n_features)
+        for j in range(n_features):
+            x[j] = np.random.uniform(features_domain[j][0], features_domain[j][1])
+            # todo: implement threshold
+        X.append(x)
+        y[i] = func(x, w) + np.random.normal(error_mean, error_std_dev) * error_coeff
+
+    return np.array(X), y
+
+
 def linear_function(_X, _w):
     return _X.dot(_w)
 

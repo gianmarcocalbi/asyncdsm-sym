@@ -7,28 +7,37 @@ from src.model import Cluster
 from src.graph_generator import GraphGenerator
 from src import mltoolbox
 import matplotlib.pyplot as plt
+import os
 
 
 def main0():
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
+    ## BEGIN SETUP
     n = 20
     seed = 2
+    graphs = (
+        "clique",
+        "cycle",
+        "expand",
+        "diag",
+    )
+    write_to_file = True
+    sub_folder = "test_A2/"
+    plots = (
+        # "iter_time",
+        # "mse_iter",
+        # "real-mse_iter",
+        # "mse_time",
+        # "real-mse_time",
+    )
+    ## END SETUP
+
     np.random.seed(seed)
     random.seed(seed)
-    plot = False
-    write_to_file = True
-    sub_folder = "test2/"
 
     adjmats = []
-    graphs = [
-        "clique"
-        , "cycle"
-        , "expand"
-        , "diag"
-    ]
-    graphs_names = []
 
     if "clique" in graphs:
         adjmats.append(GraphGenerator.generate_complete_graph(n))
@@ -44,7 +53,7 @@ def main0():
 
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
-    # """
+    """
     X, y = mltoolbox.sample_from_function(
         10000, 100, mltoolbox.LinearYHatFunction.f,
         domain_radius=0.5,
@@ -53,7 +62,17 @@ def main0():
         error_std_dev=1,
         error_coeff=0.1
     )
-    # """
+    """
+
+    X, y = mltoolbox.sample_from_function_old(
+        10000, 100, mltoolbox.LinearYHatFunction.f,
+        domain_radius=10,
+        domain_center=0,
+        subdomains_radius=2,
+        error_mean=0,
+        error_std_dev=1,
+        error_coeff=1
+    )
 
     """
     X = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat")
@@ -78,7 +97,7 @@ def main0():
 
         cluster.setup(
             X, y, mltoolbox.LinearYHatFunction,
-            max_iter=1000,
+            max_iter=4000,
             method="stochastic",
             batch_size=20,
             activation_func=None,
@@ -95,6 +114,8 @@ def main0():
         cluster.run()
 
         if write_to_file:
+            if not os.path.exists("test_log/{}".format(sub_folder)):
+                os.makedirs("test_log/{}".format(sub_folder))
             np.savetxt(
                 "test_log/{}{}_global_real_mean_squared_error_log".format(sub_folder, graph),
                 cluster.global_real_mean_squared_error_log,
@@ -111,42 +132,69 @@ def main0():
                 delimiter=','
             )
 
+
         alpha = cluster.nodes[0].training_task.alpha
-
-        """
-        file = open("out/{}_iterations_time_log".format(graph_name), "w")
-        file.write(cluster.iterations_time_log)
-        file.close()
-        file = open("out/{}_global_mean_squared_error_log".format(graph_name), "w")
-        file.write(cluster.global_mean_squared_error_log)
-        file.close()
-        """
-
-        """
         n_iter = len(cluster.global_mean_squared_error_log)
-        plt.title("MSE over global iterations (α={})".format(alpha))
-        plt.xlabel("Iteration")
-        plt.ylabel("MSE")
-        plt.ylim(ymax=50)
-        plt.annotate('MSE = {}'.format(cluster.get_global_mean_squared_error()),
-                     xy=(n_iter / 2, 20))
-        plt.plot(
-            list(range(0, n_iter)),
-            cluster.global_mean_squared_error_log
-        )
-        plt.show()
-        """
 
-        """
-        plt.title("Global iterations over cluster clock (α={})".format(alpha))
-        plt.xlabel("Time (s)")
-        plt.ylabel("Iteration")
-        plt.plot(
-            list(range(0, len(cluster.iterations_time_log))),
-            cluster.iterations_time_log
-        )
-        plt.show()
-        """
+        if "iter_time" in plots:
+            plt.title("Global iterations over cluster clock (α={})".format(alpha))
+            plt.xlabel("Time (s)")
+            plt.ylabel("Iteration")
+            plt.plot(
+                list(range(0, len(cluster.iterations_time_log))),
+                cluster.iterations_time_log
+            )
+            plt.show()
+
+        if "mse_iter" in plots:
+            plt.title("MSE over global iterations (α={})".format(alpha))
+            plt.xlabel("Iteration")
+            plt.ylabel("MSE")
+            plt.ylim(ymax=50)
+            plt.annotate('MSE = {}'.format(cluster.get_global_mean_squared_error()),
+                         xy=(n_iter / 2, 20))
+            plt.scatter(
+                list(range(0, n_iter)),
+                cluster.global_mean_squared_error_log,
+                s=0.25
+            )
+            plt.show()
+
+        if "real-mse_iter" in plots:
+            plt.title("Real MSE over global iterations (α={})".format(alpha))
+            plt.xlabel("Iteration")
+            plt.ylabel("Real MSE")
+            plt.ylim(ymax=50)
+            plt.annotate('MSE = {}'.format(cluster.get_global_real_mean_squared_error()),
+                         xy=(n_iter / 2, 20))
+            plt.scatter(
+                list(range(0, n_iter)),
+                cluster.global_real_mean_squared_error_log,
+                s= 0.25
+            )
+            plt.show()
+
+        if "mse_time" in plots:
+            plt.title("MSE over time (α={})".format(alpha))
+            plt.xlabel("Time (s)")
+            plt.ylim(ymax=50)
+            plt.ylabel("MSE")
+            plt.scatter(
+                cluster.iterations_time_log,
+                cluster.global_mean_squared_error_log
+            )
+            plt.show()
+
+        if "real-mse_time" in plots:
+            plt.title("Real MSE over time (α={})".format(alpha))
+            plt.xlabel("Time (s)")
+            plt.ylim(ymax=50)
+            plt.ylabel("Real MSE")
+            plt.plot(
+                cluster.iterations_time_log,
+                cluster.global_real_mean_squared_error_log
+            )
+            plt.show()
 
         """
         plt.title("Nodes iterations over clock (α={})".format(alpha))
@@ -157,37 +205,6 @@ def main0():
                 list(range(0, len(node.log))),
                 node.log
             )
-        plt.show()
-        """
-
-        """
-        plt.title("MSE over time (α={})".format(alpha))
-        plt.xlabel("Time (s)")
-        plt.ylim(ymax=50)
-        plt.ylabel("MSE")
-        plt.plot(
-            cluster.iterations_time_log,
-            cluster.global_mean_squared_error_log
-        )
-        plt.show()
-        """
-
-        """
-        plt.title("MSE over time (α={})".format(alpha))
-        plt.xlabel("Time (s)")
-        plt.ylim(ymax=50)
-        plt.ylabel("MSE")
-        plt.plot(
-            cluster.iterations_time_log,
-            cluster.global_real_mean_squared_error_log,
-            label="Real MSE"
-        )
-        plt.plot(
-            cluster.iterations_time_log,
-            cluster.global_mean_squared_error_log,
-            label="MSE"
-        )
-        plt.legend()
         plt.show()
         """
 
