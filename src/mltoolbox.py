@@ -142,12 +142,13 @@ class GradientDescentTrainerAbstract(Trainer):
         self.score_log = []
         self.mean_absolute_error_log = []
         self.mean_squared_error_log = []
+        self.real_mean_squared_error_log = []
 
         self._compute_metrics()
 
     def _compute_metrics(self):
         if self.metrics == "all":
-            self.metrics = ['score', 'mean_absolute_error', 'mean_squared_error']
+            self.metrics = ['score', 'mean_absolute_error', 'mean_squared_error', "real_mean_squared_error"]
         elif isinstance(self.metrics, str):
             self.metrics = [self.metrics]
 
@@ -163,6 +164,9 @@ class GradientDescentTrainerAbstract(Trainer):
 
     def get_mean_squared_error(self):
         return self.mean_squared_error_log[-1]
+
+    def get_real_mean_squared_error(self):
+        return self.real_mean_squared_error_log[-1]
 
     def compute_score(self):
         # todo: compute score
@@ -199,6 +203,22 @@ class GradientDescentTrainerAbstract(Trainer):
             raise Exception('Unexpected mean_squared_error_log size')
 
         return mean_squared_error
+
+    def compute_real_mean_squared_error(self):
+        W = np.ones(len(self.W))
+        real_values = self.activation_func(self.y_hat.f(self.X, W))
+        predictions = self.activation_func(self.y_hat.f(self.X, self.W))
+        linear_error = np.absolute(real_values - predictions)
+        real_mean_squared_error = np.sum(np.power(linear_error, 2)) / self.N
+        # real_mean_squared_error -=
+        if len(self.real_mean_squared_error_log) == self.iteration:
+            self.real_mean_squared_error_log.append(real_mean_squared_error)
+        elif len(self.real_mean_squared_error_log) == self.iteration + 1:
+            self.real_mean_squared_error_log[self.iteration] = real_mean_squared_error
+        else:
+            raise Exception('Unexpected real_mean_squared_error_log size')
+
+        return real_mean_squared_error
 
     @abc.abstractmethod
     def step(self):

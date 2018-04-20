@@ -4,9 +4,9 @@
 - [x] Introduce time in nodes' task computation.
 - [x] Output the three plots requested by the advisor.
 - [x] Simulate with different dependency graphs to show some result.
-- [ ] Implement the suggested heavy conditioned function generator.
+- [x] Implement the suggested heavy conditioned function generator.
 - [ ] Make time taken by a task depends on size of batch (`1` for SGD, `batch_size` for BGD, `self.N` for GD).
-- [ ] Create plotting module.
+- [ ] Add header in output files or put them in separate folders.
 - [ ] Implement method to store result on files easily.
 
 ## Very high priority
@@ -43,3 +43,4 @@
 ## Discarded
 - [ ] ~~Change everything to SKLearn~~.
 - [ ] ~~Augment precision in computation by exploiting Decimal module in std library~~.
+- [ ] ~~Create plotting module~~.

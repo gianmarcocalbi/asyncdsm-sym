@@ -15,6 +15,7 @@ class Cluster:
         self.iteration = 0
         self.global_mean_absolute_error_log = []
         self.global_mean_squared_error_log = []
+        self.global_real_mean_squared_error_log = []
         self.epsilon = 0.0
 
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None, loss="hinge",
@@ -71,6 +72,12 @@ class Cluster:
     def get_global_mean_squared_error(self, index=-1):
         if index < len(self.global_mean_squared_error_log) > 0:
             return self.global_mean_squared_error_log[index]
+        else:
+            return math.inf
+
+    def get_global_real_mean_squared_error(self, index=-1):
+        if index < len(self.global_real_mean_squared_error_log) > 0:
+            return self.global_real_mean_squared_error_log[index]
         else:
             return math.inf
 
@@ -146,17 +153,23 @@ class Cluster:
 
                         gmae = 0
                         gmse = 0
+                        grmse = 0
                         for _node in self.nodes:
                             gmae += _node.training_task.mean_absolute_error_log[self.iteration]
                             gmse += _node.training_task.mean_squared_error_log[self.iteration]
+                            grmse += _node.training_task.real_mean_squared_error_log[self.iteration]
                         gmae /= len(self.nodes)
                         gmse /= len(self.nodes)
+                        grmse /= len(self.nodes)
 
                         self.global_mean_absolute_error_log.append(math.inf)
                         self.global_mean_absolute_error_log[self.iteration] = gmae
 
                         self.global_mean_squared_error_log.append(math.inf)
                         self.global_mean_squared_error_log[self.iteration] = gmse
+
+                        self.global_real_mean_squared_error_log.append(math.inf)
+                        self.global_real_mean_squared_error_log[self.iteration] = grmse
 
                         self.iteration = min_iter
                     elif min_iter > self.iteration + 1:

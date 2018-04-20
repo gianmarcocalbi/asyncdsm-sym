@@ -8,20 +8,37 @@ from src.graph_generator import GraphGenerator
 from src import mltoolbox
 import matplotlib.pyplot as plt
 
-seed = 2
-np.random.seed(seed)
-random.seed(seed)
-
 
 def main0():
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
     n = 20
-    # adjmat, graph_name = GraphGenerator.generate_complete_graph(n), "clique[{}]".format(n)
-    adjmat, graph_name = GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1"]), "cycle[{}]".format(n)
-    # adjmat, graph_name = GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1", "i->i-1", "i->i+{}".format(int(n/2))]), "expander[{}]".format(n)
-    # adjmat, graph_name = np.diag(np.ones(n)), "diag[{}]".format(n)
+    seed = 2
+    np.random.seed(seed)
+    random.seed(seed)
+    plot = False
+    write_to_file = True
+    sub_folder = "test2/"
+
+    adjmats = []
+    graphs = [
+        "clique"
+        , "cycle"
+        , "expand"
+        , "diag"
+    ]
+    graphs_names = []
+
+    if "clique" in graphs:
+        adjmats.append(GraphGenerator.generate_complete_graph(n))
+    if "cycle" in graphs:
+        adjmats.append(GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1"]))
+    if "expand" in graphs:
+        adjmats.append(
+            GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1", "i->i-1", "i->i+{}".format(int(n / 2))]))
+    if "diag" in graphs:
+        adjmats.append(np.diag(np.ones(n)))
 
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
 
@@ -50,101 +67,135 @@ def main0():
     y = np.array([2, 24, 28, -4, -50, -54, -18, -20, 48, -34])
     """
 
-    cluster = Cluster(adjmat)
+    for a in range(len(adjmats)):
+        adjmat = adjmats[a]
+        graph = graphs[a]
 
-    cluster.setup(
-        X, y, mltoolbox.LinearYHatFunction,
-        max_iter=1000,
-        method="stochastic",
-        batch_size=20,
-        activation_func=None,
-        loss=mltoolbox.SquaredLossFunction,
-        penalty='l2',
-        epsilon=0.01,
-        alpha=0.0005,
-        learning_rate="constant",
-        metrics="all",
-        shuffle=True,
-        verbose=False
-    )
+        np.random.seed(seed)
+        random.seed(seed)
 
-    cluster.run()
+        cluster = Cluster(adjmat)
 
-    # np.savetxt("out/clique_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
-    # np.savetxt("out/clique_iterations_time_log", cluster.iterations_time_log, delimiter=',')
-
-    # np.savetxt("out/cycle_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
-    # np.savetxt("out/cycle_iterations_time_log", cluster.iterations_time_log, delimiter=',')
-
-    # np.savetxt("out/expander_global_mean_squared_error_log", cluster.global_mean_squared_error_log, delimiter=',')
-    # np.savetxt("out/expander_iterations_time_log", cluster.iterations_time_log, delimiter=',')
-
-    alpha = cluster.nodes[0].training_task.alpha
-
-    """
-    file = open("out/{}_iterations_time_log".format(graph_name), "w")
-    file.write(cluster.iterations_time_log)
-    file.close()
-    file = open("out/{}_global_mean_squared_error_log".format(graph_name), "w")
-    file.write(cluster.global_mean_squared_error_log)
-    file.close()
-    """
-
-    # """
-    n_iter = len(cluster.global_mean_squared_error_log)
-    plt.title("MSE over global iterations (α={})".format(alpha))
-    plt.xlabel("Iteration")
-    plt.ylabel("MSE")
-    plt.ylim(ymax=50)
-    plt.annotate('MSE = {}'.format(cluster.get_global_mean_squared_error()),
-                 xy=(n_iter / 2, 20))
-    plt.plot(
-        list(range(0, n_iter)),
-        cluster.global_mean_squared_error_log
-    )
-    plt.show()
-    # """
-
-    # """
-    plt.title("Global iterations over cluster clock (α={})".format(alpha))
-    plt.xlabel("Time (s)")
-    plt.ylabel("Iteration")
-    plt.plot(
-        list(range(0, len(cluster.iterations_time_log))),
-        cluster.iterations_time_log
-    )
-    plt.show()
-    # """
-
-    """
-    plt.title("Nodes iterations over clock (α={})".format(alpha))
-    plt.xlabel("Time (s)")
-    plt.ylabel("Iteration")
-    for node in cluster.nodes:
-        plt.plot(
-            list(range(0, len(node.log))),
-            node.log
+        cluster.setup(
+            X, y, mltoolbox.LinearYHatFunction,
+            max_iter=1000,
+            method="stochastic",
+            batch_size=20,
+            activation_func=None,
+            loss=mltoolbox.SquaredLossFunction,
+            penalty='l2',
+            epsilon=0.01,
+            alpha=0.0005,
+            learning_rate="constant",
+            metrics="all",
+            shuffle=True,
+            verbose=False
         )
-    plt.show()
-    """
 
-    # """
-    plt.title("MSE over time (α={})".format(alpha))
-    plt.xlabel("Time (s)")
-    plt.ylim(ymax=50)
-    plt.ylabel("MSE")
-    plt.plot(
-        cluster.iterations_time_log,
-        cluster.global_mean_squared_error_log
-    )
-    plt.show()
-    # """
+        cluster.run()
 
-    # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
+        if write_to_file:
+            np.savetxt(
+                "test_log/{}{}_global_real_mean_squared_error_log".format(sub_folder, graph),
+                cluster.global_real_mean_squared_error_log,
+                delimiter=','
+            )
+            np.savetxt(
+                "test_log/{}{}_global_mean_squared_error_log".format(sub_folder, graph),
+                cluster.global_mean_squared_error_log,
+                delimiter=','
+            )
+            np.savetxt(
+                "test_log/{}{}_iterations_time_log".format(sub_folder, graph),
+                cluster.iterations_time_log,
+                delimiter=','
+            )
 
-    # input("Press an key")
+        alpha = cluster.nodes[0].training_task.alpha
 
-    # console.stdout.close()
+        """
+        file = open("out/{}_iterations_time_log".format(graph_name), "w")
+        file.write(cluster.iterations_time_log)
+        file.close()
+        file = open("out/{}_global_mean_squared_error_log".format(graph_name), "w")
+        file.write(cluster.global_mean_squared_error_log)
+        file.close()
+        """
+
+        """
+        n_iter = len(cluster.global_mean_squared_error_log)
+        plt.title("MSE over global iterations (α={})".format(alpha))
+        plt.xlabel("Iteration")
+        plt.ylabel("MSE")
+        plt.ylim(ymax=50)
+        plt.annotate('MSE = {}'.format(cluster.get_global_mean_squared_error()),
+                     xy=(n_iter / 2, 20))
+        plt.plot(
+            list(range(0, n_iter)),
+            cluster.global_mean_squared_error_log
+        )
+        plt.show()
+        """
+
+        """
+        plt.title("Global iterations over cluster clock (α={})".format(alpha))
+        plt.xlabel("Time (s)")
+        plt.ylabel("Iteration")
+        plt.plot(
+            list(range(0, len(cluster.iterations_time_log))),
+            cluster.iterations_time_log
+        )
+        plt.show()
+        """
+
+        """
+        plt.title("Nodes iterations over clock (α={})".format(alpha))
+        plt.xlabel("Time (s)")
+        plt.ylabel("Iteration")
+        for node in cluster.nodes:
+            plt.plot(
+                list(range(0, len(node.log))),
+                node.log
+            )
+        plt.show()
+        """
+
+        """
+        plt.title("MSE over time (α={})".format(alpha))
+        plt.xlabel("Time (s)")
+        plt.ylim(ymax=50)
+        plt.ylabel("MSE")
+        plt.plot(
+            cluster.iterations_time_log,
+            cluster.global_mean_squared_error_log
+        )
+        plt.show()
+        """
+
+        """
+        plt.title("MSE over time (α={})".format(alpha))
+        plt.xlabel("Time (s)")
+        plt.ylim(ymax=50)
+        plt.ylabel("MSE")
+        plt.plot(
+            cluster.iterations_time_log,
+            cluster.global_real_mean_squared_error_log,
+            label="Real MSE"
+        )
+        plt.plot(
+            cluster.iterations_time_log,
+            cluster.global_mean_squared_error_log,
+            label="MSE"
+        )
+        plt.legend()
+        plt.show()
+        """
+
+        # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
+
+        # input("Press an key")
+
+        # console.stdout.close()
 
 
 def main1():
