@@ -9,9 +9,9 @@
 - [x] Implement the suggested heavy conditioned function generator.
 - [x] Implement method to store result on files easily.
 - [x] Implement the automatic generation of a desc file within `"test_log/test_XXX"` folders which describes the setup of the test.
+- [x] Change how MSE is computed.
 - [ ] Make time taken by a task depends on size of batch (`1` for SGD, `batch_size` for BGD, `self.N` for GD).
 - [ ] Fix "stop due to `epsilon`" to work with the actual plotting system.
-- [x] Change how MSE is computed.
 
 ## High priority
 - [x] Change dict setup to function parameters to avoid too much memory consumption.

@@ -1,4 +1,4 @@
-import random, math, time, os, plotter, pickle, shutil
+import random, math, time, os, plotter, pickle, shutil, datetime
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
@@ -16,15 +16,11 @@ def main0():
     ### BEGIN SETUP ###
 
     descriptor = """>>> Test Descriptor File
-Test name
-=========
-alt metrics = False
+Title: test
+Date: {}
+Summary:
 
-Test Description
-================
-sample description
-
-"""
+""".format(str(datetime.datetime.now()))
 
     setup = dict()
 
@@ -193,11 +189,11 @@ verbose = {verbose}
 """.format(**setup)
 
     if save_descriptor:
-        with open("test_log/{}descriptor.txt".format(test_log_sub_folder), "w") as f:
+        with open("test_log/{}_descriptor.txt".format(test_log_sub_folder), "w") as f:
             f.write(descriptor)
 
     if save_setup:
-        with open("test_log/{}setup.pkl".format(test_log_sub_folder), "wb") as f:
+        with open("test_log/{}_setup.pkl".format(test_log_sub_folder), "wb") as f:
             pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
 
     for a in range(len(adjmats)):
