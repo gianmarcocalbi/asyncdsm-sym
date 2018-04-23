@@ -1,4 +1,4 @@
-import random, math, time, os, plotter, pickle
+import random, math, time, os, plotter, pickle, shutil
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
@@ -18,7 +18,7 @@ def main0():
     descriptor = """>>> Test Descriptor File
 Test name
 =========
-test name
+alt metrics = False
 
 Test Description
 ================
@@ -49,7 +49,7 @@ sample description
 
     # CLUSTER SETUP
     setup['yhat'] = mltoolbox.LinearYHatFunction
-    setup['max_iter'] = 100
+    setup['max_iter'] = 2000
     setup['method'] = "stochastic"
     setup['batch_size'] = 20
     setup['activation_func'] = None
@@ -59,13 +59,14 @@ sample description
     setup['alpha'] = alpha = 0.0001
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
+    setup['alt_metrics'] = True
     setup['shuffle'] = True
     setup['verbose'] = False
 
     # OUTPUT SETUP
-    test_log_sub_folder = "test_B3/"
+    write_to_file = False
+    test_log_sub_folder = "test_ALT-metrics=false/"
     overwrite_if_already_exists = False
-    write_to_file = True
     plot_from_file = True
     save_descriptor = True
     save_setup = True
@@ -84,11 +85,12 @@ sample description
 
     if not write_to_file:
         test_log_sub_folder = "temp/{}/".format(int(time.time()))
+        overwrite_if_already_exists = False
     else:
         if test_log_sub_folder[-1] != "/":
             test_log_sub_folder += "/"
 
-    if overwrite_if_already_exists:
+    if not overwrite_if_already_exists:
         c = 0
         tmp_test_log_sub_folder = test_log_sub_folder
         while os.path.exists("test_log/{}".format(tmp_test_log_sub_folder)):
@@ -185,6 +187,7 @@ epsilon = {epsilon}
 alpha = {alpha}
 learning_rate = {learning_rate}
 metrics = {metrics}
+alt_metrics = {alt_metrics}
 shuffle = {shuffle}
 verbose = {verbose}
 """.format(**setup)
@@ -218,11 +221,16 @@ verbose = {verbose}
             alpha=setup['alpha'],
             learning_rate=setup['learning_rate'],
             metrics=setup['metrics'],
+            alt_metrics=setup['alt_metrics'],
             shuffle=setup['shuffle'],
             verbose=setup['verbose']
         )
 
-        cluster.run()
+        try:
+            cluster.run()
+        except:
+            shutil.rmtree("test_log/{}".format(test_log_sub_folder))
+            raise
 
         np.savetxt(
             "test_log/{}{}_global_real_mean_squared_error_log".format(test_log_sub_folder, graph),

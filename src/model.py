@@ -10,16 +10,21 @@ class Cluster:
         self.adjacency_matrix = adjacency_matrix
         self.max_iter = None
         self.clock = 0
-        self.log = []
+        self.X = None
+        self.y = None
+        self.dynamic_log = []
+        self.W_log = []
         self.iterations_time_log = []
         self.iteration = 0
         self.global_mean_absolute_error_log = []
         self.global_mean_squared_error_log = []
         self.global_real_mean_squared_error_log = []
         self.epsilon = 0.0
+        self.alt_metrics = False
 
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None, loss="hinge",
-              penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant", metrics="all", shuffle=True, verbose=False):
+              penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant", metrics="all", alt_metrics=False,
+              shuffle=True, verbose=False):
 
         # if X and y have different sizes then the training set is bad formatted
         if len(y) != X.shape[0]:
@@ -32,6 +37,10 @@ class Cluster:
             max_iter = math.inf
         self.max_iter = max_iter
         self.epsilon = epsilon
+        self.alt_metrics = alt_metrics
+        self.X = X
+        self.X = np.c_[np.ones((X.shape[0])), X]
+        self.y = y
 
         if shuffle:
             Xy = np.c_[X, y]
@@ -53,7 +62,7 @@ class Cluster:
             # instantiate new node for the just-selected subsample
             self.nodes.append(Node(i, node_X, node_y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
                                    learning_rate, metrics, shuffle, verbose))
-            self.log.append([])
+            self.dynamic_log.append([])
 
             # evict the just-already-assigned samples of the training-set
             X = X[node_X_size:]
@@ -65,6 +74,12 @@ class Cluster:
                 if i != j and self.adjacency_matrix[i, j] == 1:
                     self.nodes[j].add_dependency(self.nodes[i])
                     self.nodes[i].add_recipient(self.nodes[j])
+
+    def get_avg_W(self, index=-1):
+        if index < len(self.W_log) > 0:
+            return self.W_log[index]
+        else:
+            raise Exception("No weight vector defined")
 
     def get_global_mean_absolute_error(self, index=-1):
         if index < len(self.global_mean_absolute_error_log) > 0:
@@ -88,11 +103,32 @@ class Cluster:
         # todo
         pass
 
+    def compute_avg_W(self):
+        W = np.zeros(len(self.nodes[0].training_task.W))
+        for node in self.nodes:
+            W += node.training_task.W_log[self.iteration]
+        W /= len(self.nodes)
+
+        if len(self.W_log) == self.iteration:
+            self.W_log.append(W)
+        elif len(self.W_log) == self.iteration + 1:
+            self.W_log[self.iteration] = W
+        else:
+            raise Exception('Unexpected W_log size')
+
     def compute_global_mean_absolute_error(self):
         gmae = 0
-        for node in self.nodes:
-            gmae += node.training_task.mean_absolute_error_log[self.iteration]
-        gmae /= len(self.nodes)
+        if self.alt_metrics:
+            W = self.W_log[self.iteration]
+            N = self.X.shape[0]
+            mltask = self.nodes[0].training_task
+            predictions = mltask.activation_func(mltask.y_hat.f(self.X, W))
+            linear_error = np.absolute(self.y - predictions)
+            gmae = np.sum(linear_error) / N
+        else:
+            for node in self.nodes:
+                gmae += node.training_task.mean_absolute_error_log[self.iteration]
+            gmae /= len(self.nodes)
 
         if len(self.global_mean_absolute_error_log) == self.iteration:
             self.global_mean_absolute_error_log.append(gmae)
@@ -106,9 +142,18 @@ class Cluster:
 
     def compute_global_mean_squared_error(self):
         gmse = 0
-        for node in self.nodes:
-            gmse += node.training_task.mean_squared_error_log[self.iteration]
-        gmse /= len(self.nodes)
+        if self.alt_metrics:
+            W = self.W_log[self.iteration]
+            N = self.X.shape[0]
+            mltask = self.nodes[0].training_task
+            predictions = mltask.activation_func(mltask.y_hat.f(self.X, W))
+            linear_error = np.absolute(self.y - predictions)
+            gmse = np.sum(np.power(linear_error, 2)) / N
+
+        else:
+            for node in self.nodes:
+                gmse += node.training_task.mean_squared_error_log[self.iteration]
+            gmse /= len(self.nodes)
 
         if len(self.global_mean_squared_error_log) == self.iteration:
             self.global_mean_squared_error_log.append(gmse)
@@ -122,9 +167,20 @@ class Cluster:
 
     def compute_global_real_mean_squared_error(self):
         grmse = 0
-        for node in self.nodes:
-            grmse += node.training_task.real_mean_squared_error_log[self.iteration]
-        grmse /= len(self.nodes)
+        if self.alt_metrics:
+            W = self.W_log[self.iteration]
+            real_W = np.ones(len(W))
+            N = self.X.shape[0]
+            mltask = self.nodes[0].training_task
+            real_values = mltask.activation_func(mltask.y_hat.f(self.X, real_W))
+            predictions = mltask.activation_func(mltask.y_hat.f(self.X, W))
+            linear_error = np.absolute(real_values - predictions)
+            grmse = np.sum(np.power(linear_error, 2)) / N
+
+        else:
+            for node in self.nodes:
+                grmse += node.training_task.real_mean_squared_error_log[self.iteration]
+            grmse /= len(self.nodes)
 
         if len(self.global_real_mean_squared_error_log) == self.iteration:
             self.global_real_mean_squared_error_log.append(grmse)
@@ -137,6 +193,7 @@ class Cluster:
             raise Exception("Computation has diverged to infinite")
 
     def _compute_metrics(self):
+        self.compute_avg_W()
         for metric in self.nodes[0].training_task.metrics:
             # todo: remove eval!!!
             eval("self.compute_global_" + metric + "()")
@@ -197,7 +254,7 @@ class Cluster:
                 node = event["node"]
 
                 if node.can_run():
-                    self.log[node._id].append(node.gradient_step())
+                    self.dynamic_log[node._id].append(node.gradient_step())
 
                     # when this node finishes iteration "i", it checks if all the others
                     # have already performed the iteration i-th, if so then the global

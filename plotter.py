@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 def plot_from_files(test_folder=None):
     if test_folder is None:
         test_folder = "temp/1524475119/"
-    avg = None
+    avg = 10
     ymax = None
     yscale = 'log'  # linear or log
     scatter = False
-    points_size = 0.5
+    points_size = 0.2
     graphs = (
         "clique",
         "cycle",

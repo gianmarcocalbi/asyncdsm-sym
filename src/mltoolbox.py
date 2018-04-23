@@ -25,6 +25,7 @@ class Trainer(Task):
         self.X = np.c_[np.ones((X.shape[0])), X]
 
         self.W = np.random.uniform(size=(X.shape[1] + 1,))  # todo: remove "+ 1"?
+        self.W_log = [self.W]
 
         if not activation_func is types.FunctionType:
             if activation_func == "sigmoid":
@@ -215,7 +216,9 @@ class GradientDescentTrainerAbstract(Trainer):
         predictions = self.activation_func(self.y_hat.f(self.X, self.W))
         linear_error = np.absolute(real_values - predictions)
         real_mean_squared_error = np.sum(np.power(linear_error, 2)) / self.N
-        # real_mean_squared_error -=
+
+        # real_mean_squared_error -= variance
+
         if len(self.real_mean_squared_error_log) == self.iteration:
             self.real_mean_squared_error_log.append(real_mean_squared_error)
         elif len(self.real_mean_squared_error_log) == self.iteration + 1:
@@ -241,7 +244,7 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
         loss_f_gradient = self.loss.f_gradient(self.y, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient / self.N
         self.W -= self.alpha * gradient
-
+        self.W_log.append(self.W)
         self.iteration += 1
         self._compute_metrics()
 
@@ -259,7 +262,7 @@ class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
         loss_f_gradient = self.loss.f_gradient(y_pick, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient
         self.W -= self.alpha * gradient
-
+        self.W_log.append(self.W)
         self.iteration += 1
         self._compute_metrics()
 
@@ -285,7 +288,7 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
         loss_f_gradient = self.loss.f_gradient(y_batch, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient / self.batch_size
         self.W -= self.alpha * gradient
-
+        self.W_log.append(self.W)
         self.iteration += 1
         self._compute_metrics()
 
