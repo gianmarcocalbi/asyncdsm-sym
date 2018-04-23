@@ -1,4 +1,4 @@
-import random, math, time, os, plotter
+import random, math, time, os, plotter, pickle
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
@@ -14,19 +14,63 @@ def main0():
     # console.stdout.open()
 
     ### BEGIN SETUP ###
-    n = 20
-    seed = 2
-    graphs = (
+
+    descriptor = """>>> Test Descriptor File
+Test name
+=========
+test name
+
+Test Description
+================
+sample description
+
+"""
+
+    setup = dict()
+
+    setup['seed'] = 2
+    setup['n'] = 100
+    setup['graphs'] = (
         "clique",
         "cycle",
         "expand",
         "diag",
     )
+
+    # TRAINING SET SETUP
+    setup['n_samples'] = 1000
+    setup['n_features'] = 100
+    setup['sample_function'] = mltoolbox.LinearYHatFunction.f
+    setup['domain_radius'] = 10
+    setup['domain_center'] = 0
+    setup['error_mean'] = 0
+    setup['error_std_dev'] = 1
+    setup['error_coeff'] = 4
+
+    # CLUSTER SETUP
+    setup['yhat'] = mltoolbox.LinearYHatFunction
+    setup['max_iter'] = 100
+    setup['method'] = "stochastic"
+    setup['batch_size'] = 20
+    setup['activation_func'] = None
+    setup['loss'] = mltoolbox.SquaredLossFunction
+    setup['penalty'] = 'l2'
+    setup['epsilon'] = None
+    setup['alpha'] = alpha = 0.0001
+    setup['learning_rate'] = "constant"
+    setup['metrics'] = "all"
+    setup['shuffle'] = True
+    setup['verbose'] = False
+
+    # OUTPUT SETUP
+    test_log_sub_folder = "test_B3/"
+    overwrite_if_already_exists = False
     write_to_file = True
-    plot_after_write_to_file = True
-    sub_folder = "test_B2/"
-    enable_insta_plot = False
-    plots = (
+    plot_from_file = True
+    save_descriptor = True
+    save_setup = True
+    instant_plotting = False
+    instant_plots = (
         "iter_time",
         "mse_iter",
         "real-mse_iter",
@@ -35,21 +79,39 @@ def main0():
     )
     ### END SETUP ###
 
-    np.random.seed(seed)
-    random.seed(seed)
+    np.random.seed(setup['seed'])
+    random.seed(setup['seed'])
+
+    if not write_to_file:
+        test_log_sub_folder = "temp/{}/".format(int(time.time()))
+    else:
+        if test_log_sub_folder[-1] != "/":
+            test_log_sub_folder += "/"
+
+    if overwrite_if_already_exists:
+        c = 0
+        tmp_test_log_sub_folder = test_log_sub_folder
+        while os.path.exists("test_log/{}".format(tmp_test_log_sub_folder)):
+            tmp_test_log_sub_folder = test_log_sub_folder[0:-1] + str(c) + "/"
+            c += 1
+        test_log_sub_folder = tmp_test_log_sub_folder
+
+    if not os.path.exists("test_log/{}".format(test_log_sub_folder)):
+        os.makedirs("test_log/{}".format(test_log_sub_folder))
 
     ### BEGIN ADJACENCY MATRIX GEN ###
     adjmats = []
 
-    if "clique" in graphs:
-        adjmats.append(GraphGenerator.generate_complete_graph(n))
-    if "cycle" in graphs:
-        adjmats.append(GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1"]))
-    if "expand" in graphs:
+    if "clique" in setup['graphs']:
+        adjmats.append(GraphGenerator.generate_complete_graph(setup['n']))
+    if "cycle" in setup['graphs']:
+        adjmats.append(GraphGenerator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"]))
+    if "expand" in setup['graphs']:
         adjmats.append(
-            GraphGenerator.generate_d_regular_graph_by_edges(n, ["i->i+1", "i->i-1", "i->i+{}".format(int(n / 2))]))
-    if "diag" in graphs:
-        adjmats.append(np.diag(np.ones(n)))
+            GraphGenerator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1", "i->i-1",
+                                                                          "i->i+{}".format(int(setup['n'] / 2))]))
+    if "diag" in setup['graphs']:
+        adjmats.append(np.diag(np.ones(setup['n'])))
     ### BEGIN ADJACENCY MATRIX GEN ###
 
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
@@ -59,12 +121,12 @@ def main0():
 
     # """
     X, y = mltoolbox.sample_from_function(
-        1000, 100, mltoolbox.LinearYHatFunction.f,
-        domain_radius=10,
-        domain_center=0,
-        error_mean=0,
-        error_std_dev=1,
-        error_coeff=4
+        setup['n_samples'], setup['n_features'], setup['sample_function'],
+        domain_radius=setup['domain_radius'],
+        domain_center=setup['domain_center'],
+        error_mean=setup['error_mean'],
+        error_std_dev=setup['error_std_dev'],
+        error_coeff=setup['error_coeff']
     )
     # """
 
@@ -94,57 +156,93 @@ def main0():
     ### BEGIN TRAINING SET GEN ###
 
     ### BEGIN MAIN STUFFS ###
+    descriptor += """
+
+### BEGIN SETUP ###
+n = {n}
+seed = {seed}
+graphs = {graphs}
+
+# TRAINING SET SETUP
+n_samples = {n_samples}
+n_features = {n_features}
+yhat = {yhat}
+domain_radius = {domain_radius}
+domain_center = {domain_center}
+error_mean = {error_mean}
+error_std_dev = {error_std_dev}
+error_coeff = {error_coeff}
+
+# CLUSTER SETUP
+sample_function = {sample_function}
+max_iter = {max_iter}
+method = {method}
+batch_size = {batch_size}
+activation_func = {activation_func}
+loss = {loss}
+penalty = {penalty}
+epsilon = {epsilon}
+alpha = {alpha}
+learning_rate = {learning_rate}
+metrics = {metrics}
+shuffle = {shuffle}
+verbose = {verbose}
+""".format(**setup)
+
+    if save_descriptor:
+        with open("test_log/{}descriptor.txt".format(test_log_sub_folder), "w") as f:
+            f.write(descriptor)
+
+    if save_setup:
+        with open("test_log/{}setup.pkl".format(test_log_sub_folder), "wb") as f:
+            pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
+
     for a in range(len(adjmats)):
         adjmat = adjmats[a]
-        graph = graphs[a]
+        graph = setup['graphs'][a]
 
-        np.random.seed(seed)
-        random.seed(seed)
+        np.random.seed(setup['seed'])
+        random.seed(setup['seed'])
 
         cluster = Cluster(adjmat)
 
         cluster.setup(
-            X, y, mltoolbox.LinearYHatFunction,
-            max_iter=1000,
-            method="stochastic",
-            batch_size=20,
-            activation_func=None,
-            loss=mltoolbox.SquaredLossFunction,
-            penalty='l2',
-            epsilon=None,
-            alpha=0.0001,
-            learning_rate="constant",
-            metrics="all",
-            shuffle=True,
-            verbose=False
+            X, y, setup['yhat'],
+            max_iter=setup['max_iter'],
+            method=setup['method'],
+            batch_size=setup['batch_size'],
+            activation_func=setup['activation_func'],
+            loss=setup['loss'],
+            penalty=setup['penalty'],
+            epsilon=setup['epsilon'],
+            alpha=setup['alpha'],
+            learning_rate=setup['learning_rate'],
+            metrics=setup['metrics'],
+            shuffle=setup['shuffle'],
+            verbose=setup['verbose']
         )
 
         cluster.run()
 
-        if write_to_file:
-            if not os.path.exists("test_log/{}".format(sub_folder)):
-                os.makedirs("test_log/{}".format(sub_folder))
-            np.savetxt(
-                "test_log/{}{}_global_real_mean_squared_error_log".format(sub_folder, graph),
-                cluster.global_real_mean_squared_error_log,
-                delimiter=','
-            )
-            np.savetxt(
-                "test_log/{}{}_global_mean_squared_error_log".format(sub_folder, graph),
-                cluster.global_mean_squared_error_log,
-                delimiter=','
-            )
-            np.savetxt(
-                "test_log/{}{}_iterations_time_log".format(sub_folder, graph),
-                cluster.iterations_time_log,
-                delimiter=','
-            )
+        np.savetxt(
+            "test_log/{}{}_global_real_mean_squared_error_log".format(test_log_sub_folder, graph),
+            cluster.global_real_mean_squared_error_log,
+            delimiter=','
+        )
+        np.savetxt(
+            "test_log/{}{}_global_mean_squared_error_log".format(test_log_sub_folder, graph),
+            cluster.global_mean_squared_error_log,
+            delimiter=','
+        )
+        np.savetxt(
+            "test_log/{}{}_iterations_time_log".format(test_log_sub_folder, graph),
+            cluster.iterations_time_log,
+            delimiter=','
+        )
 
-
-        alpha = cluster.nodes[0].training_task.alpha
         n_iter = len(cluster.global_mean_squared_error_log)
 
-        if "iter_time" in plots and enable_insta_plot:
+        if "iter_time" in instant_plots and instant_plotting:
             plt.title("Global iterations over cluster clock (α={})".format(alpha))
             plt.xlabel("Time (s)")
             plt.ylabel("Iteration")
@@ -154,7 +252,7 @@ def main0():
             )
             plt.show()
 
-        if "mse_iter" in plots and enable_insta_plot:
+        if "mse_iter" in instant_plots and instant_plotting:
             plt.title("MSE over global iterations (α={})".format(alpha))
             plt.xlabel("Iteration")
             plt.ylabel("MSE")
@@ -168,7 +266,7 @@ def main0():
             )
             plt.show()
 
-        if "real-mse_iter" in plots and enable_insta_plot:
+        if "real-mse_iter" in instant_plots and instant_plotting:
             plt.title("Real MSE over global iterations (α={})".format(alpha))
             plt.xlabel("Iteration")
             plt.ylabel("Real MSE")
@@ -182,7 +280,7 @@ def main0():
             )
             plt.show()
 
-        if "mse_time" in plots and enable_insta_plot:
+        if "mse_time" in instant_plots and instant_plotting:
             plt.title("MSE over time (α={})".format(alpha))
             plt.xlabel("Time (s)")
             plt.ylim(ymax=50)
@@ -193,7 +291,7 @@ def main0():
             )
             plt.show()
 
-        if "real-mse_time" in plots and enable_insta_plot:
+        if "real-mse_time" in instant_plots and instant_plotting:
             plt.title("Real MSE over time (α={})".format(alpha))
             plt.xlabel("Time (s)")
             plt.ylim(ymax=50)
@@ -216,8 +314,8 @@ def main0():
         plt.show()
         """
 
-    if write_to_file and plot_after_write_to_file:
-        plotter.main(sub_folder)
+    if plot_from_file:
+        plotter.plot_from_files(test_log_sub_folder)
 
         # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
 

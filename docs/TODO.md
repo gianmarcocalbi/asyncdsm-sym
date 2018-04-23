@@ -8,8 +8,8 @@
 - [x] Simulate with different dependency graphs to show some result.
 - [x] Implement the suggested heavy conditioned function generator.
 - [x] Implement method to store result on files easily.
-- [ ] Make time taken by a task depends on size of batch (`1` for SGD, `batch_size` for BGD, `self.N` for GD).
 - [ ] Implement the automatic generation of a desc file within `"test_log/test_XXX"` folders which describes the setup of the test.
+- [ ] Make time taken by a task depends on size of batch (`1` for SGD, `batch_size` for BGD, `self.N` for GD).
 - [ ] Fix "stop due to `epsilon`" to work with the actual plotting system.
 
 ## High priority

@@ -9,11 +9,14 @@ from src import mltoolbox
 import matplotlib.pyplot as plt
 
 
-def main(test_folder=None):
+def plot_from_files(test_folder=None):
     if test_folder is None:
-        test_folder = "test_B2/"
-    avg = 10
+        test_folder = "temp/1524475119/"
+    avg = None
     ymax = None
+    yscale = 'log'  # linear or log
+    scatter = False
+    points_size = 0.5
     graphs = (
         "clique",
         "cycle",
@@ -71,12 +74,19 @@ def main(test_folder=None):
         plt.xlabel("Time (s)")
         plt.ylabel("Iteration")
         for graph in graphs:
-            plt.plot(
-                iter_log[graph],
-                list(range(0, n_iter)),
-                label=graph,
-                # s=0.10
-            )
+            if scatter:
+                plt.scatter(
+                    iter_log[graph],
+                    list(range(0, n_iter)),
+                    label=graph,
+                    s=points_size
+                )
+            else:
+                plt.plot(
+                    iter_log[graph],
+                    list(range(0, n_iter)),
+                    label=graph
+                )
         plt.legend()
         plt.show()
 
@@ -84,16 +94,23 @@ def main(test_folder=None):
         plt.title("MSE over global iterations")
         plt.xlabel("Iteration")
         plt.ylabel("MSE")
-        plt.yscale('log')
+        plt.yscale(yscale)
         if not ymax is None:
             plt.ylim(ymax=50)
         for graph in graphs:
-            plt.plot(
-                list(range(0, n_iter)),
-                mse_log[graph],
-                label=graph,
-                # s=0.10
-            )
+            if scatter:
+                plt.scatter(
+                    list(range(0, n_iter)),
+                    mse_log[graph],
+                    label=graph,
+                    s=points_size
+                )
+            else:
+                plt.plot(
+                    list(range(0, n_iter)),
+                    mse_log[graph],
+                    label=graph
+                )
         plt.legend()
         plt.show()
 
@@ -101,16 +118,23 @@ def main(test_folder=None):
         plt.title("Real MSE over global iterations")
         plt.xlabel("Iteration")
         plt.ylabel("Real MSE")
-        plt.yscale('log')
+        plt.yscale(yscale)
         if not ymax is None:
             plt.ylim(ymax=50)
         for graph in graphs:
-            plt.plot(
-                list(range(0, n_iter)),
-                real_mse_log[graph],
-                label=graph,
-                # s=0.10
-            )
+            if scatter:
+                plt.scatter(
+                    list(range(0, n_iter)),
+                    real_mse_log[graph],
+                    label=graph,
+                    s=points_size
+                )
+            else:
+                plt.plot(
+                    list(range(0, n_iter)),
+                    real_mse_log[graph],
+                    label=graph
+                )
         plt.legend()
         plt.show()
 
@@ -118,33 +142,47 @@ def main(test_folder=None):
         plt.title("MSE over time")
         plt.xlabel("Time (s)")
         plt.ylabel("MSE")
-        plt.yscale('log')
+        plt.yscale(yscale)
         if not ymax is None:
             plt.ylim(ymax=50)
         for graph in graphs:
-            plt.plot(
-                iter_log[graph],
-                mse_log[graph],
-                label=graph,
-                # s=0.10
-            )
+            if scatter:
+                plt.scatter(
+                    iter_log[graph],
+                    mse_log[graph],
+                    label=graph,
+                    s=points_size
+                )
+            else:
+                plt.plot(
+                    iter_log[graph],
+                    mse_log[graph],
+                    label=graph
+                )
         plt.legend()
         plt.show()
 
     if "real-mse_time" in plots:
         plt.title("Real MSE over time")
         plt.xlabel("Time (s)")
-        plt.yscale('log')
+        plt.yscale(yscale)
         if not ymax is None:
             plt.ylim(ymax=50)
         plt.ylabel("Real MSE")
         for graph in graphs:
-            plt.plot(
-                iter_log[graph],
-                real_mse_log[graph],
-                label=graph,
-                # s=0.10
-            )
+            if scatter:
+                plt.scatter(
+                    iter_log[graph],
+                    real_mse_log[graph],
+                    label=graph,
+                    s=points_size
+                )
+            else:
+                plt.plot(
+                    iter_log[graph],
+                    real_mse_log[graph],
+                    label=graph
+                )
         plt.legend()
         plt.show()
 
