@@ -362,7 +362,7 @@ class SampleGenerator:
 
 
 def sample_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
-                         error_mean=0, error_std_dev=1, error_coeff=0):
+                         error_mean=0, error_std_dev=1):
     """
     Parameters
     ----------
@@ -402,13 +402,13 @@ def sample_from_function(n_samples, n_features, func, domain_radius=0.5, domain_
         for j in range(n_features):
             x[j] = np.random.uniform(-K[j] + domain_radius, K[j] + domain_radius)
         X.append(x)
-        y[i] = func(x, w) + np.random.normal(error_mean, error_std_dev) * error_coeff
+        y[i] = func(x, w) + np.random.normal(error_mean, error_std_dev)
 
     return np.array(X), y
 
 
 def sample_from_function_old(n_samples, n_features, func, domain_radius=1, domain_center=0,
-                             subdomains_radius=1, error_mean=0, error_std_dev=1, error_coeff=0):
+                             subdomains_radius=1, error_mean=0, error_std_dev=1):
     """
     Parameters
     ----------
@@ -453,7 +453,7 @@ def sample_from_function_old(n_samples, n_features, func, domain_radius=1, domai
             x[j] = np.random.uniform(features_domain[j][0], features_domain[j][1])
             # todo: implement threshold
         X.append(x)
-        y[i] = func(x, w) + np.random.normal(error_mean, error_std_dev) * error_coeff
+        y[i] = func(x, w) + np.random.normal(error_mean, error_std_dev)
 
     return np.array(X), y
 

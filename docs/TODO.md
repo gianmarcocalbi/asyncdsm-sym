@@ -12,6 +12,8 @@
 - [x] Change how MSE is computed.
 - [ ] Make time taken by a task depends on size of batch (`1` for SGD, `batch_size` for BGD, `self.N` for GD).
 - [ ] Fix "stop due to `epsilon`" to work with the actual plotting system.
+- [ ] Getting started with Jupiter Notebook.
+- [ ] Add parse flags to plotter in order to have a fast plotting method.
 
 ## High priority
 - [x] Change dict setup to function parameters to avoid too much memory consumption.

@@ -15,6 +15,7 @@ def main0():
 
     ### BEGIN SETUP ###
 
+    # descriptor text placed at the beginning of _descriptor.txt file within the test folder
     descriptor = """>>> Test Descriptor File
 Title: test
 Date: {}
@@ -36,16 +37,15 @@ Summary:
     # TRAINING SET SETUP
     setup['n_samples'] = 1000
     setup['n_features'] = 100
-    setup['sample_function'] = mltoolbox.LinearYHatFunction.f
     setup['domain_radius'] = 10
     setup['domain_center'] = 0
     setup['error_mean'] = 0
     setup['error_std_dev'] = 1
-    setup['error_coeff'] = 4
+    setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
-    setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['max_iter'] = 2000
+    setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "stochastic"
     setup['batch_size'] = 20
     setup['activation_func'] = None
@@ -55,18 +55,18 @@ Summary:
     setup['alpha'] = alpha = 0.0001
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
-    setup['alt_metrics'] = True
+    setup['alt_metrics'] = False
     setup['shuffle'] = True
     setup['verbose'] = False
 
     # OUTPUT SETUP
-    write_to_file = False
-    test_log_sub_folder = "test_ALT-metrics=false/"
-    overwrite_if_already_exists = False
-    plot_from_file = True
-    save_descriptor = True
-    save_setup = True
-    instant_plotting = False
+    write_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    test_log_sub_folder = "test_ALT-metrics=false"  # test folder inside test_log/
+    overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
+    plot_from_file = True  # run plotter upon finishing
+    save_descriptor = True  # create _descriptor.txt file
+    save_setup = True  # save setup object dump in order to restore it for run the same simulation
+    instant_plotting = False  # instantly plot single simulations results
     instant_plots = (
         "iter_time",
         "mse_iter",
@@ -80,13 +80,19 @@ Summary:
     random.seed(setup['seed'])
 
     if not write_to_file:
+        # if you don't want to store the file permanently they are however placed inside temp folder
+        # in order to use them for a short and limited period of time (temp folder may be deleted manually)
         test_log_sub_folder = "temp/{}/".format(int(time.time()))
         overwrite_if_already_exists = False
     else:
+        # adjust path's formatting
         if test_log_sub_folder[-1] != "/":
             test_log_sub_folder += "/"
+        if test_log_sub_folder[0] == "/":
+            test_log_sub_folder = test_log_sub_folder[1:]
 
     if not overwrite_if_already_exists:
+        # determine a name for the new folder such that it doesn't coincide with any other folder
         c = 0
         tmp_test_log_sub_folder = test_log_sub_folder
         while os.path.exists("test_log/{}".format(tmp_test_log_sub_folder)):
@@ -94,23 +100,26 @@ Summary:
             c += 1
         test_log_sub_folder = tmp_test_log_sub_folder
 
+    # create dir
     if not os.path.exists("test_log/{}".format(test_log_sub_folder)):
         os.makedirs("test_log/{}".format(test_log_sub_folder))
 
     ### BEGIN ADJACENCY MATRIX GEN ###
-    adjmats = []
+    adjmats = {}
 
-    if "clique" in setup['graphs']:
-        adjmats.append(GraphGenerator.generate_complete_graph(setup['n']))
-    if "cycle" in setup['graphs']:
-        adjmats.append(GraphGenerator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"]))
-    if "expand" in setup['graphs']:
-        adjmats.append(
-            GraphGenerator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1", "i->i-1",
-                                                                          "i->i+{}".format(int(setup['n'] / 2))]))
-    if "diag" in setup['graphs']:
-        adjmats.append(np.diag(np.ones(setup['n'])))
-    ### BEGIN ADJACENCY MATRIX GEN ###
+    for g in setup['graphs']:
+        if g == "clique":
+            adjmats[g] = GraphGenerator.generate_complete_graph(setup['n'])
+        if g == "cycle":
+            adjmats[g] = GraphGenerator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"])
+        if g == "expand":
+            adjmats[g] = GraphGenerator.generate_d_regular_graph_by_edges(
+                setup['n'],
+                ["i->i+1", "i->i-1", "i->i+{}".format(int(setup['n'] / 2))]
+            )
+        if g == "diag":
+            adjmats[g] = np.diag(np.ones(setup['n']))
+    ### END ADJACENCY MATRIX GEN ###
 
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
 
@@ -123,8 +132,7 @@ Summary:
         domain_radius=setup['domain_radius'],
         domain_center=setup['domain_center'],
         error_mean=setup['error_mean'],
-        error_std_dev=setup['error_std_dev'],
-        error_coeff=setup['error_coeff']
+        error_std_dev=setup['error_std_dev']
     )
     # """
 
@@ -154,8 +162,9 @@ Summary:
     ### BEGIN TRAINING SET GEN ###
 
     ### BEGIN MAIN STUFFS ###
-    descriptor += """
 
+    # Fill descriptor with setup dictionary
+    descriptor += """
 ### BEGIN SETUP ###
 n = {n}
 seed = {seed}
@@ -169,7 +178,6 @@ domain_radius = {domain_radius}
 domain_center = {domain_center}
 error_mean = {error_mean}
 error_std_dev = {error_std_dev}
-error_coeff = {error_coeff}
 
 # CLUSTER SETUP
 sample_function = {sample_function}
@@ -188,18 +196,19 @@ shuffle = {shuffle}
 verbose = {verbose}
 """.format(**setup)
 
+    # save descriptor file
     if save_descriptor:
         with open("test_log/{}_descriptor.txt".format(test_log_sub_folder), "w") as f:
             f.write(descriptor)
 
+    # save setup object dump
     if save_setup:
         with open("test_log/{}_setup.pkl".format(test_log_sub_folder), "wb") as f:
             pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
 
-    for a in range(len(adjmats)):
-        adjmat = adjmats[a]
-        graph = setup['graphs'][a]
-
+    # simulation for each adjacency matrix in adjmats array
+    for graph, adjmat in adjmats.items():
+        # set the seed again (each simulation must perform on the same cluster setup)
         np.random.seed(setup['seed'])
         random.seed(setup['seed'])
 
@@ -225,9 +234,12 @@ verbose = {verbose}
         try:
             cluster.run()
         except:
+            # if the cluster throws an exception then delete the folder created to host its output files
+            # the most common exception in cluster.run() is thrown when the SGD computation diverges
             shutil.rmtree("test_log/{}".format(test_log_sub_folder))
             raise
 
+        # create output log files
         np.savetxt(
             "test_log/{}{}_global_real_mean_squared_error_log".format(test_log_sub_folder, graph),
             cluster.global_real_mean_squared_error_log,
@@ -246,6 +258,7 @@ verbose = {verbose}
 
         n_iter = len(cluster.global_mean_squared_error_log)
 
+        ## BEGIN INSTANT PLOTS ##
         if "iter_time" in instant_plots and instant_plotting:
             plt.title("Global iterations over cluster clock (α={})".format(alpha))
             plt.xlabel("Time (s)")
@@ -317,30 +330,26 @@ verbose = {verbose}
             )
         plt.show()
         """
+        ## INSTANT PLOTS END ##
 
     if plot_from_file:
         plotter.plot_from_files(test_log_sub_folder)
-
-        # console.print("Score: {}".format(cluster.nodes[0].training_model.score()))
-
-        # input("Press an key")
 
         # console.stdout.close()
 
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    X, y = mltoolbox.sample_from_function(100000, 10, mltoolbox.linear_function, 1, error_std_dev=1,
-                                          error_coeff=0)
+    X, y = mltoolbox.sample_from_function(100000, 10, mltoolbox.linear_function, 1, error_std_dev=1)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
     cls.fit(X, y)
     print(cls.score(X, y))
 
 
 def main2():
-    X, y = mltoolbox.sample_from_function(1000, 10, mltoolbox.linear_function, 1, error_std_dev=1,
-                                          error_coeff=0)
-    cls = linear_model.SGDRegressor(penalty='none', alpha=0.01, max_iter=1000, shuffle=False, learning_rate='constant')
+    X, y = mltoolbox.sample_from_function(1000, 10, mltoolbox.linear_function, 1, error_std_dev=1,)
+    cls = linear_model.SGDRegressor(penalty='none', alpha=0.01, max_iter=1000, shuffle=False,
+                                    learning_rate='constant')
     cls.fit(X, y)
     print(cls.score(X, y))
     print(cls.predict(np.array([2, 4, 8]).reshape(1, -1)))

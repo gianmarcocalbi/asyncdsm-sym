@@ -4,28 +4,95 @@ from src import mltoolbox
 
 
 class Cluster:
+    """
+
+    """
     def __init__(self, adjacency_matrix):
-        self.future_event_list = {}
-        self.nodes = []
+        """
+        Parameters
+        ----------
+        adjacency_matrix : ndarray
+            Adjacency matrix of the dependency graph.
+        """
+        self.future_event_list = {}  # FEL of the discrete event simulator
+        self.nodes = []  # computational unites (nodes) list
         self.adjacency_matrix = adjacency_matrix
         self.max_iter = None
         self.clock = 0
-        self.X = None
-        self.y = None
-        self.dynamic_log = []
-        self.W_log = []
-        self.iterations_time_log = []
         self.iteration = 0
-        self.global_mean_absolute_error_log = []
-        self.global_mean_squared_error_log = []
-        self.global_real_mean_squared_error_log = []
-        self.epsilon = 0.0
-        self.alt_metrics = False
+        self.X = None  # keep whole training set examples
+        self.y = None  # keep whole training set target function values
+        self.dynamic_log = []  # log containing for each iteration i a pair (t0_i, tf_i)
+        self.W_log = []  # log 'iteration i-th' => value of weight vector at iteration i-th
+        self.iterations_time_log = []  # 'iteration i-th' => clock value at which i-th iteration has been completed
+        self.global_mean_absolute_error_log = []  # 'iteration' => global MAE
+        self.global_mean_squared_error_log = []  # 'iteration' => global MSE
+        self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
+        self.epsilon = 0.0  # acceptance threshold
+        self.alt_metrics = False  # use alternative metrics (almost obsolete)
 
-    def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None, loss="hinge",
-              penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant", metrics="all", alt_metrics=False,
-              shuffle=True, verbose=False):
+    def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None,
+              loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
+              metrics="all", alt_metrics=False, shuffle=True, verbose=False):
+        """Cluster setup.
 
+        Parameters
+        ----------
+        X : ndarray of float
+            Training set samples.
+
+        y : array of float
+            Training set sample target function values.
+
+        y_hat : class inheriting from YHatFunctionAbstract
+            Class inherited from YHatFunctionAbstract.
+
+        method : 'classic', 'stochastic' or 'batch', optional
+            Method used to minimize error function.
+
+        max_iter : int, None or math.inf, optional
+            Maximum number of iteration after which the cluster terminates.
+            None and math.inf indicates that the cluster will never stops due to
+            iterations number.
+
+        batch_size : int, optional
+            Batch size only taken into account for method = 'batch'.
+
+        activation_func : None or function, optional
+            Activation function applied to normalized output of target function or y hat.
+
+        loss : class inheriting from LossFunctionAbstract, optional
+
+        penalty : str, optional
+            Penalty applied to avoid overfitting (actually not used at the moment).
+
+        epsilon : float, optional
+            Error acceptance threshold under which the cluster terminates the execution.
+
+        alpha : float, optional
+            Gradient descent step size alpha coefficient.
+
+        learning_rate : str, optional
+            Learning rate type (actually not exploited yet).
+
+        metrics : str or list of str, optional
+            Choose any in ['all', 'score', 'mean_absolute_error', 'mean_squared_error', real_mean_squared_error']
+            or 'all'.
+
+        alt_metrics : bool, optional
+            Use old MSE computation method.
+
+        shuffle : bool, optional
+            True if the cluster may shuffle the training set before splitting it (always suggested).
+
+        verbose : bool, optional
+            Not exploited yet.
+
+        Returns
+        -------
+        None
+
+        """
         # if X and y have different sizes then the training set is bad formatted
         if len(y) != X.shape[0]:
             raise Exception("X has different amount of rows w.r.t. y")
@@ -118,7 +185,7 @@ class Cluster:
 
     def compute_global_mean_absolute_error(self):
         gmae = 0
-        if self.alt_metrics:
+        if not self.alt_metrics:
             W = self.W_log[self.iteration]
             N = self.X.shape[0]
             mltask = self.nodes[0].training_task
@@ -142,7 +209,7 @@ class Cluster:
 
     def compute_global_mean_squared_error(self):
         gmse = 0
-        if self.alt_metrics:
+        if not self.alt_metrics:
             W = self.W_log[self.iteration]
             N = self.X.shape[0]
             mltask = self.nodes[0].training_task
@@ -167,7 +234,7 @@ class Cluster:
 
     def compute_global_real_mean_squared_error(self):
         grmse = 0
-        if self.alt_metrics:
+        if not self.alt_metrics:
             W = self.W_log[self.iteration]
             real_W = np.ones(len(W))
             N = self.X.shape[0]

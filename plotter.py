@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 def plot_from_files(test_folder=None):
     if test_folder is None:
         test_folder = "temp/1524475119/"
+
     avg = 10
     ymax = None
     yscale = 'log'  # linear or log
@@ -31,6 +32,12 @@ def plot_from_files(test_folder=None):
         "mse_time",
         "real-mse_time",
     )
+
+    if test_folder[-1] != "/":
+        test_folder += "/"
+
+    if test_folder[0] == "/":
+        test_folder = test_folder[1:]
 
     mse_log = {}
     real_mse_log = {}
