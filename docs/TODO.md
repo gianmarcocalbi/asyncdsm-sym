@@ -14,6 +14,7 @@
 - [ ] Fix "stop due to `epsilon`" to work with the actual plotting system.
 - [ ] Getting started with Jupiter Notebook.
 - [ ] Add parse flags to plotter in order to have a fast plotting method.
+- [ ] Plotter auto-detects which graphs to plot basing on the logs prefixes in test log folder.  
 
 ## High priority
 - [x] Change dict setup to function parameters to avoid too much memory consumption.

@@ -343,6 +343,15 @@ class LinearYHatFunction(YHatFunctionAbstract):
         return X
 
 
+class ParaboloidYHatFunction(YHatFunctionAbstract):
+    @staticmethod
+    def f(X, W):
+        return np.power(X, 2).dot(W)
+
+    @staticmethod
+    def f_gradient(X, W):
+        return np.power(X, 2)
+
 def sigmoid(x):
     return 1.0 / (1 + np.exp(-x))
 

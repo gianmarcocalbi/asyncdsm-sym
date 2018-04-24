@@ -1,32 +1,26 @@
-import random, math, time
 import numpy as np
-from sklearn.datasets.samples_generator import make_blobs
-from sklearn.preprocessing import normalize
-from sklearn import linear_model
-from src.model import Cluster
-from src.graph_generator import GraphGenerator
-from src import mltoolbox
 import matplotlib.pyplot as plt
 
 
 def plot_from_files(test_folder=None):
     if test_folder is None:
-        test_folder = "temp/1524475119/"
+        test_folder = "temp/_2/"
 
-    avg = 10
+    avg = None
     ymax = None
     yscale = 'log'  # linear or log
-    scatter = False
-    points_size = 0.2
+    scatter = True
+    points_size = 0.5
     graphs = (
         "clique",
         "cycle",
-        "expand",
-        "diag",
+        "diam-expander",
+        "diagonal",
+        # "star",
     )
 
     plots = (
-        # "iter_time",
+        "iter_time",
         "mse_iter",
         "real-mse_iter",
         "mse_time",
@@ -195,4 +189,4 @@ def plot_from_files(test_folder=None):
 
 
 if __name__ == "__main__":
-    main()
+    plot_from_files()

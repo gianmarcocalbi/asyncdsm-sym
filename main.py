@@ -4,8 +4,7 @@ from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
 from sklearn import linear_model
 from src.model import Cluster
-from src.graph_generator import GraphGenerator
-from src import mltoolbox
+from src import mltoolbox, graph_generator
 import matplotlib.pyplot as plt
 
 
@@ -25,26 +24,29 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = 2
-    setup['n'] = 100
-    setup['graphs'] = (
-        "clique",
-        "cycle",
-        "expand",
-        "diag",
-    )
+    setup['seed'] = int(time.time() * 10000)
+    setup['n'] = 20
+    setup['graphs'] = {
+        "clique": graph_generator.generate_complete_graph(setup['n']),
+        "cycle": graph_generator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"]),
+        "diam-expander": graph_generator.generate_d_regular_graph_by_edges(
+            setup['n'],
+            ["i->i+1", "i->i-1", "i->i+{}".format(int(setup['n'] / 2))]),
+        # "diagonal": np.diag(np.ones(setup['n'])),
+        "star": graph_generator.generate_graph_by_edges(setup['n'], ["i->0", "0->i"])
+    }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 1000
-    setup['n_features'] = 100
-    setup['domain_radius'] = 10
-    setup['domain_center'] = 0
+    setup['n_samples'] = 10000
+    setup['n_features'] = 200
+    setup['domain_radius'] = 5
+    setup['domain_center'] = 5
     setup['error_mean'] = 0
     setup['error_std_dev'] = 1
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
-    setup['max_iter'] = 2000
+    setup['max_iter'] = 200
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "stochastic"
     setup['batch_size'] = 20
@@ -61,8 +63,8 @@ Summary:
 
     # OUTPUT SETUP
     write_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_log_sub_folder = "test_ALT-metrics=false"  # test folder inside test_log/
-    overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
+    test_log_sub_folder = "temp/_2/"  # test folder inside test_log/
+    overwrite_if_already_exists = True  # overwrite the folder if it already exists or create a different one otherwise
     plot_from_file = True  # run plotter upon finishing
     save_descriptor = True  # create _descriptor.txt file
     save_setup = True  # save setup object dump in order to restore it for run the same simulation
@@ -82,7 +84,7 @@ Summary:
     if not write_to_file:
         # if you don't want to store the file permanently they are however placed inside temp folder
         # in order to use them for a short and limited period of time (temp folder may be deleted manually)
-        test_log_sub_folder = "temp/{}/".format(int(time.time()))
+        test_log_sub_folder = "temp/{}/".format(int(time.time() * 1000))
         overwrite_if_already_exists = False
     else:
         # adjust path's formatting
@@ -104,21 +106,33 @@ Summary:
     if not os.path.exists("test_log/{}".format(test_log_sub_folder)):
         os.makedirs("test_log/{}".format(test_log_sub_folder))
 
-    ### BEGIN ADJACENCY MATRIX GEN ###
-    adjmats = {}
+    def delete_test_dir():
+        shutil.rmtree("test_log/{}".format(test_log_sub_folder))
 
+    ### BEGIN ADJACENCY MATRIX GEN ###
+    """
+    adjmats = {}
     for g in setup['graphs']:
-        if g == "clique":
-            adjmats[g] = GraphGenerator.generate_complete_graph(setup['n'])
-        if g == "cycle":
-            adjmats[g] = GraphGenerator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"])
-        if g == "expand":
-            adjmats[g] = GraphGenerator.generate_d_regular_graph_by_edges(
-                setup['n'],
-                ["i->i+1", "i->i-1", "i->i+{}".format(int(setup['n'] / 2))]
-            )
-        if g == "diag":
-            adjmats[g] = np.diag(np.ones(setup['n']))
+        if not isinstance(g, str):
+            if isinstance(g, np.ndarray):
+                pass
+            else:
+                delete_test_dir()
+                raise Exception("Unknown dependency graph {} of type {}".format(str(g), str(type(g))))
+        else:
+            if g == "clique":
+                adjmats[g] = GraphGenerator.generate_complete_graph(setup['n'])
+            if g == "cycle":
+                adjmats[g] = GraphGenerator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"])
+            if g == "expand":
+                adjmats[g] = GraphGenerator.generate_d_regular_graph_by_edges(
+                    setup['n'],
+                    ["i->i+1", "i->i-1", "i->i+{}".format(int(setup['n'] / 2))]
+                )
+            if g == "diag":
+                adjmats[g] = np.diag(np.ones(setup['n']))
+    """
+
     ### END ADJACENCY MATRIX GEN ###
 
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
@@ -198,16 +212,16 @@ verbose = {verbose}
 
     # save descriptor file
     if save_descriptor:
-        with open("test_log/{}_descriptor.txt".format(test_log_sub_folder), "w") as f:
+        with open("test_log/{}.descriptor.txt".format(test_log_sub_folder), "w") as f:
             f.write(descriptor)
 
     # save setup object dump
     if save_setup:
-        with open("test_log/{}_setup.pkl".format(test_log_sub_folder), "wb") as f:
+        with open("test_log/{}.setup.pkl".format(test_log_sub_folder), "wb") as f:
             pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
 
     # simulation for each adjacency matrix in adjmats array
-    for graph, adjmat in adjmats.items():
+    for graph, adjmat in setup['graphs'].items():
         # set the seed again (each simulation must perform on the same cluster setup)
         np.random.seed(setup['seed'])
         random.seed(setup['seed'])
@@ -236,7 +250,7 @@ verbose = {verbose}
         except:
             # if the cluster throws an exception then delete the folder created to host its output files
             # the most common exception in cluster.run() is thrown when the SGD computation diverges
-            shutil.rmtree("test_log/{}".format(test_log_sub_folder))
+            delete_test_dir()
             raise
 
         # create output log files
@@ -347,7 +361,7 @@ def main1():
 
 
 def main2():
-    X, y = mltoolbox.sample_from_function(1000, 10, mltoolbox.linear_function, 1, error_std_dev=1,)
+    X, y = mltoolbox.sample_from_function(1000, 10, mltoolbox.linear_function, 1, error_std_dev=1, )
     cls = linear_model.SGDRegressor(penalty='none', alpha=0.01, max_iter=1000, shuffle=False,
                                     learning_rate='constant')
     cls.fit(X, y)
