@@ -4,23 +4,24 @@ import matplotlib.pyplot as plt
 
 def plot_from_files(test_folder=None):
     if test_folder is None:
-        test_folder = "temp/_2/"
+        test_folder = "temp/1524577565772/"
 
     avg = None
     ymax = None
     yscale = 'log'  # linear or log
-    scatter = True
+    scatter = False
     points_size = 0.5
     graphs = (
-        "clique",
+        #"clique",
         "cycle",
         "diam-expander",
-        "diagonal",
-        # "star",
+        "root-expander",
+        #"diagonal",
+        #"star",
     )
 
     plots = (
-        "iter_time",
+        #"iter_time",
         "mse_iter",
         "real-mse_iter",
         "mse_time",

@@ -24,29 +24,32 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = int(time.time() * 10000)
+    setup['seed'] = int(time.time())
     setup['n'] = 20
     setup['graphs'] = {
-        "clique": graph_generator.generate_complete_graph(setup['n']),
+        #"clique": graph_generator.generate_complete_graph(setup['n']),
         "cycle": graph_generator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"]),
         "diam-expander": graph_generator.generate_d_regular_graph_by_edges(
             setup['n'],
             ["i->i+1", "i->i-1", "i->i+{}".format(int(setup['n'] / 2))]),
-        # "diagonal": np.diag(np.ones(setup['n'])),
-        "star": graph_generator.generate_graph_by_edges(setup['n'], ["i->0", "0->i"])
+        "root-expander" : graph_generator.generate_d_regular_graph_by_edges(
+            setup['n'],
+            ["i->i+1", "i->i+{}".format(int(math.sqrt(setup['n'])))]),
+        #"diagonal": np.diag(np.ones(setup['n'])),
+        #"star": graph_generator.generate_graph_by_edges(setup['n'], ["i->0", "0->i"])
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 10000
-    setup['n_features'] = 200
+    setup['n_samples'] = 20
+    setup['n_features'] = 100
     setup['domain_radius'] = 5
-    setup['domain_center'] = 5
+    setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1
+    setup['error_std_dev'] = 2
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
-    setup['max_iter'] = 200
+    setup['max_iter'] = 1000
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "stochastic"
     setup['batch_size'] = 20
@@ -63,7 +66,7 @@ Summary:
 
     # OUTPUT SETUP
     write_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_log_sub_folder = "temp/_2/"  # test folder inside test_log/
+    test_log_sub_folder = "temp/test_002/"  # test folder inside test_log/
     overwrite_if_already_exists = True  # overwrite the folder if it already exists or create a different one otherwise
     plot_from_file = True  # run plotter upon finishing
     save_descriptor = True  # create _descriptor.txt file

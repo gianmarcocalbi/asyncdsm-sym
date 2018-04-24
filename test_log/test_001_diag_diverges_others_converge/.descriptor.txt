@@ -1,0 +1,35 @@
+>>> Test Descriptor File
+Title: test
+Date: 2018-04-24 11:44:15.011733
+Summary:
+
+
+### BEGIN SETUP ###
+n = 20
+seed = 2
+graphs = ('clique', 'cycle', 'expand', 'diag')
+
+# TRAINING SET SETUP
+n_samples = 10000
+n_features = 100
+yhat = <class 'src.mltoolbox.ParaboloidYHatFunction'>
+domain_radius = 5
+domain_center = 5
+error_mean = 0
+error_std_dev = 0.2
+
+# CLUSTER SETUP
+sample_function = <function ParaboloidYHatFunction.f at 0x7ff738e96f28>
+max_iter = 2000
+method = stochastic
+batch_size = 20
+activation_func = None
+loss = <class 'src.mltoolbox.SquaredLossFunction'>
+penalty = l2
+epsilon = None
+alpha = 1e-05
+learning_rate = constant
+metrics = all
+alt_metrics = False
+shuffle = True
+verbose = False
