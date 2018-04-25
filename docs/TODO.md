@@ -17,6 +17,7 @@
 - [ ] Plotter auto-detects which graphs to plot basing on the logs prefixes in test log folder.
 - [ ] Fix trailing segment after plotting averaged metrics obtained from a simulation which ended due to `max_time`.  
 - [ ] Test SGD correctness with Leon Bottou suggestions.
+- [ ] Add new cluster parameter to set lambda ratio and distribution of the time taken by each node to perform its task. 
 
 ## High priority
 - [x] Change dict setup to function parameters to avoid too much memory consumption.

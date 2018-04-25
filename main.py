@@ -28,7 +28,7 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = int(time.time())
+    setup['seed'] = 1524664320 #int(time.time())
     setup['n'] = 10
     setup['graphs'] = {
         "clique": graph_generator.generate_complete_graph(setup['n']),
@@ -45,7 +45,7 @@ Summary:
 
     # TRAINING SET SETUP
     setup['n_samples'] = 1000
-    setup['n_features'] = 1000
+    setup['n_features'] = 100
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
@@ -53,8 +53,8 @@ Summary:
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
-    setup['max_iter'] = 500
-    setup['max_time'] = None  # seconds
+    setup['max_iter'] = None
+    setup['max_time'] = 20000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "stochastic"
     setup['batch_size'] = 20
@@ -62,7 +62,7 @@ Summary:
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
     setup['epsilon'] = None
-    setup['alpha'] = alpha = 0.00001
+    setup['alpha'] = alpha = 1e-06
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
     setup['alt_metrics'] = False
@@ -74,13 +74,13 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_002"  # test folder inside test_log/
+    test_subfolder = "test_002_1000samples100features"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = True  # overwrite the folder if it already exists or create a different one otherwise
     plot_from_file = True  # run plotter upon finishing
-    save_plot_to_file = False
+    save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
     save_setup = True  # save setup object dump in order to restore it for run the same simulation
     instant_plotting = False  # instantly plot single simulations results

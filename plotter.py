@@ -13,7 +13,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         if not os.path.exists(plot_folder_path):
             os.makedirs(plot_folder_path)
 
-    avg = None
+    avg = 10
     ymax = None
     yscale = 'log'  # linear or log
     scatter = False
@@ -44,7 +44,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         real_mse_log[graph] = np.loadtxt("{}/{}_global_real_mean_squared_error_log".format(test_folder_path, graph))
         iter_log[graph] = np.loadtxt("{}/{}_iterations_time_log".format(test_folder_path, graph))
 
-    if not avg is None:
+    if not avg is None and not avg is 0:
         avg_real_mse_log = {}
         avg_mse_log = {}
         for graph in graphs:
