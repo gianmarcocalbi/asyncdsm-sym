@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import os, argparse
 
 
 def plot_from_files(test_folder_path=None, save_to_test_folder=False):
@@ -207,11 +207,40 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         else:
             plt.show()
 
+
 def get_last_temp_test_path():
     subdirs_list = os.listdir("./test_log/temp/")
     if len(subdirs_list) == 0:
         return ""
     return os.path.normpath(os.path.join("test_log", "temp", str(max(subdirs_list))))
 
+
 if __name__ == "__main__":
-    plot_from_files()
+    # argparse setup
+    parser = argparse.ArgumentParser(
+        description='Plotter'
+    )
+
+    parser.add_argument(
+        '-t', '--test_path',
+        action='store',
+        default=None,
+        required=False,
+        help='Test from which load logs to',
+        dest='test_path'
+    )
+
+    parser.add_argument(
+        '-s', '--save',
+        action='store_true',
+        default=False,
+        required=False,
+        help='Specify whether save to file or not',
+        dest='s_flag'
+    )
+    args = parser.parse_args()
+
+    plot_from_files(
+        args.test_path,
+        args.s_flag
+    )
