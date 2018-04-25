@@ -22,12 +22,16 @@ Summary:
 
 """.format(str(datetime.datetime.now()))
 
+    setup_from_file = False
+    setup_folder_path = plotter.get_last_temp_test_path()
+    setup_file_path = os.path.join(setup_folder_path, ".setup.pkl")
+
     setup = dict()
 
     setup['seed'] = int(time.time())
-    setup['n'] = 20
+    setup['n'] = 10
     setup['graphs'] = {
-        #"clique": graph_generator.generate_complete_graph(setup['n']),
+        "clique": graph_generator.generate_complete_graph(setup['n']),
         "cycle": graph_generator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"]),
         "diam-expander": graph_generator.generate_d_regular_graph_by_edges(
             setup['n'],
@@ -35,21 +39,22 @@ Summary:
         "root-expander" : graph_generator.generate_d_regular_graph_by_edges(
             setup['n'],
             ["i->i+1", "i->i+{}".format(int(math.sqrt(setup['n'])))]),
-        #"diagonal": np.diag(np.ones(setup['n'])),
+        "diagonal": np.diag(np.ones(setup['n'])),
         #"star": graph_generator.generate_graph_by_edges(setup['n'], ["i->0", "0->i"])
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 20
+    setup['n_samples'] = 1000
     setup['n_features'] = 100
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 2
+    setup['error_std_dev'] = 1
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
-    setup['max_iter'] = 1000
+    setup['max_iter'] = 500
+    setup['max_time'] = None  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "stochastic"
     setup['batch_size'] = 20
@@ -64,11 +69,18 @@ Summary:
     setup['shuffle'] = True
     setup['verbose'] = False
 
+    if setup_from_file:
+        with open(setup_file_path, 'rb') as setup_file:
+            setup = pickle.load(setup_file)
+
     # OUTPUT SETUP
-    write_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_log_sub_folder = "temp/test_002/"  # test folder inside test_log/
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    test_root = "test_log"
+    test_subfolder = "test_002"  # test folder inside test_log/
+    temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = True  # overwrite the folder if it already exists or create a different one otherwise
     plot_from_file = True  # run plotter upon finishing
+    save_plot_to_file = False
     save_descriptor = True  # create _descriptor.txt file
     save_setup = True  # save setup object dump in order to restore it for run the same simulation
     instant_plotting = False  # instantly plot single simulations results
@@ -84,33 +96,31 @@ Summary:
     np.random.seed(setup['seed'])
     random.seed(setup['seed'])
 
-    if not write_to_file:
+    if not save_test_to_file:
         # if you don't want to store the file permanently they are however placed inside temp folder
         # in order to use them for a short and limited period of time (temp folder may be deleted manually)
-        test_log_sub_folder = "temp/{}/".format(int(time.time() * 1000))
+        test_subfolder = os.path.join("temp", temp_test_subfolder)
         overwrite_if_already_exists = False
-    else:
-        # adjust path's formatting
-        if test_log_sub_folder[-1] != "/":
-            test_log_sub_folder += "/"
-        if test_log_sub_folder[0] == "/":
-            test_log_sub_folder = test_log_sub_folder[1:]
+
+    test_path = os.path.normpath(os.path.join(test_root, test_subfolder))
 
     if not overwrite_if_already_exists:
         # determine a name for the new folder such that it doesn't coincide with any other folder
         c = 0
-        tmp_test_log_sub_folder = test_log_sub_folder
-        while os.path.exists("test_log/{}".format(tmp_test_log_sub_folder)):
-            tmp_test_log_sub_folder = test_log_sub_folder[0:-1] + str(c) + "/"
+        tmp_test_path = test_path
+        while os.path.exists(tmp_test_path):
+            tmp_test_path = test_path + ".conflict." + str(c)
             c += 1
-        test_log_sub_folder = tmp_test_log_sub_folder
+        test_path = tmp_test_path
+
+    test_path = os.path.normpath(test_path)
 
     # create dir
-    if not os.path.exists("test_log/{}".format(test_log_sub_folder)):
-        os.makedirs("test_log/{}".format(test_log_sub_folder))
+    if not os.path.exists(test_path):
+        os.makedirs(test_path)
 
     def delete_test_dir():
-        shutil.rmtree("test_log/{}".format(test_log_sub_folder))
+        shutil.rmtree(test_path)
 
     ### BEGIN ADJACENCY MATRIX GEN ###
     """
@@ -199,6 +209,7 @@ error_std_dev = {error_std_dev}
 # CLUSTER SETUP
 sample_function = {sample_function}
 max_iter = {max_iter}
+max_time = {max_time}
 method = {method}
 batch_size = {batch_size}
 activation_func = {activation_func}
@@ -215,12 +226,12 @@ verbose = {verbose}
 
     # save descriptor file
     if save_descriptor:
-        with open("test_log/{}.descriptor.txt".format(test_log_sub_folder), "w") as f:
+        with open(os.path.join(test_path, '.descriptor.txt'), "w") as f:
             f.write(descriptor)
 
     # save setup object dump
     if save_setup:
-        with open("test_log/{}.setup.pkl".format(test_log_sub_folder), "wb") as f:
+        with open(os.path.join(test_path, '.setup.pkl'), "wb") as f:
             pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
 
     # simulation for each adjacency matrix in adjmats array
@@ -234,6 +245,7 @@ verbose = {verbose}
         cluster.setup(
             X, y, setup['yhat'],
             max_iter=setup['max_iter'],
+            max_time=setup['max_time'],
             method=setup['method'],
             batch_size=setup['batch_size'],
             activation_func=setup['activation_func'],
@@ -258,17 +270,17 @@ verbose = {verbose}
 
         # create output log files
         np.savetxt(
-            "test_log/{}{}_global_real_mean_squared_error_log".format(test_log_sub_folder, graph),
+            os.path.join(test_path, "{}_global_real_mean_squared_error_log".format(graph)),
             cluster.global_real_mean_squared_error_log,
             delimiter=','
         )
         np.savetxt(
-            "test_log/{}{}_global_mean_squared_error_log".format(test_log_sub_folder, graph),
+            os.path.join(test_path, "{}_global_mean_squared_error_log".format(graph)),
             cluster.global_mean_squared_error_log,
             delimiter=','
         )
         np.savetxt(
-            "test_log/{}{}_iterations_time_log".format(test_log_sub_folder, graph),
+            os.path.join(test_path, "{}_iterations_time_log".format(graph)),
             cluster.iterations_time_log,
             delimiter=','
         )
@@ -350,7 +362,7 @@ verbose = {verbose}
         ## INSTANT PLOTS END ##
 
     if plot_from_file:
-        plotter.plot_from_files(test_log_sub_folder)
+        plotter.plot_from_files(test_path, save_plot_to_file)
 
         # console.stdout.close()
 

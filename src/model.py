@@ -7,6 +7,7 @@ class Cluster:
     """
 
     """
+
     def __init__(self, adjacency_matrix):
         """
         Parameters
@@ -18,6 +19,7 @@ class Cluster:
         self.nodes = []  # computational unites (nodes) list
         self.adjacency_matrix = adjacency_matrix
         self.max_iter = None
+        self.max_time = None
         self.clock = 0
         self.iteration = 0
         self.X = None  # keep whole training set examples
@@ -31,7 +33,7 @@ class Cluster:
         self.epsilon = 0.0  # acceptance threshold
         self.alt_metrics = False  # use alternative metrics (almost obsolete)
 
-    def setup(self, X, y, y_hat, method="stochastic", max_iter=None, batch_size=5, activation_func=None,
+    def setup(self, X, y, y_hat, method="stochastic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
               metrics="all", alt_metrics=False, shuffle=True, verbose=False):
         """Cluster setup.
@@ -54,6 +56,11 @@ class Cluster:
             Maximum number of iteration after which the cluster terminates.
             None and math.inf indicates that the cluster will never stops due to
             iterations number.
+
+        max_time : int, None or math.inf, optional
+            Maximum clock time value after which the cluster terminates.
+            None and math.inf indicates that the cluster will never stops due to
+            time.
 
         batch_size : int, optional
             Batch size only taken into account for method = 'batch'.
@@ -95,14 +102,23 @@ class Cluster:
         """
         # if X and y have different sizes then the training set is bad formatted
         if len(y) != X.shape[0]:
-            raise Exception("X has different amount of rows w.r.t. y")
+            raise Exception("X has different amount of rows than y ({} != {})".format(X.shape[0], len(y)))
+
+        if epsilon is max_iter is max_time is None:
+            warnings.warn("None of epsilon, max_iter and max_time is set, the Cluster will never stop but due to a"
+                          "KeyboardInterrupt (CTRL+C). Be careful!")
 
         if epsilon is None:
             epsilon = 0.0
 
         if max_iter is None:
             max_iter = math.inf
+
+        if max_time is None:
+            max_time = math.inf
+
         self.max_iter = max_iter
+        self.max_time = max_time
         self.epsilon = epsilon
         self.alt_metrics = alt_metrics
         self.X = X
@@ -351,16 +367,31 @@ class Cluster:
                     # this node needs
                     node.set_local_clock(max_local_clock)
 
+                # Print node's informations
+                print("Node: {} | iter: {} | meanSqError: {}".format(
+                    node._id,
+                    node.iteration,
+                    node.training_task.get_mean_squared_error())
+                )
+
                 # check for the stop condition
-                stop_condition = True
-                for _node in self.nodes:
-                    if _node.iteration < self.max_iter:
-                        stop_condition = False
-                        break
+                stop_condition = False
+                if self.iteration >= self.max_iter:
+                    stop_condition = True
+                    print("Cluster stopped due to global iteration (={}) being equal to max_iter (={})".format(
+                        self.iteration, self.max_iter))
+
+                if self.clock >= self.max_time:
+                    stop_condition = True
+                    print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
+                          format(self.clock, self.max_time))
 
                 if self.get_global_mean_squared_error() <= self.epsilon:
                     stop_condition = True
-                    print("Cluster stopped due to error being less than or equal to epsilon")
+                    print("Cluster stopped due to error (={}) being less than or equal to epsilon (={})".format(
+                        self.get_global_mean_squared_error(),
+                        self.epsilon
+                    ))
 
                 # enqueue the next event for current node
                 if not stop_condition:
@@ -371,23 +402,19 @@ class Cluster:
                     }
                     self.enqueue_event(new_event)
 
+                """
                 _depstr = ""
                 for _dep in node.dependencies:
                     if _dep.get_local_clock_by_iteration(node.iteration) > node.iteration:
                         _depstr += str(_dep._id)
 
-                """console.stdout.screen.addstr(node._id, 0,
+                console.stdout.screen.addstr(node._id, 0,
                                              "Node: {} | iter: {} | error: {} | score: {} | wait for: {}".format(
                                                  node._id,
                                                  node.iteration,
                                                  node.training_task.squared_loss(),
                                                  node.training_task.score(), _depstr))
                 """
-                print("Node: {} | iter: {} | meanSqError: {}".format(
-                    node._id,
-                    node.iteration,
-                    node.training_task.get_mean_squared_error())
-                )
             elif event["type"] == "":
                 pass
             else:
