@@ -1,4 +1,4 @@
-import random, math, time, os, plotter, pickle, shutil, datetime
+import random, math, time, os, plotter, pickle, shutil, datetime, pprint
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
@@ -28,7 +28,7 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = 1524664320 #int(time.time())
+    setup['seed'] = int(time.time())
     setup['n'] = 10
     setup['graphs'] = {
         "clique": graph_generator.generate_complete_graph(setup['n']),
@@ -40,7 +40,7 @@ Summary:
             setup['n'],
             ["i->i+1", "i->i+{}".format(int(math.sqrt(setup['n'])))]),
         "diagonal": np.diag(np.ones(setup['n'])),
-        #"star": graph_generator.generate_graph_by_edges(setup['n'], ["i->0", "0->i"])
+        "star": graph_generator.generate_graph_by_edges(setup['n'], ["i->0", "0->i"])
     }
 
     # TRAINING SET SETUP
@@ -49,19 +49,19 @@ Summary:
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1
+    setup['error_std_dev'] = 0
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
-    setup['max_iter'] = None
-    setup['max_time'] = 20000  # seconds
+    setup['max_iter'] = 200
+    setup['max_time'] = None  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "stochastic"
     setup['batch_size'] = 20
     setup['activation_func'] = None
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
-    setup['epsilon'] = None
+    setup['epsilon'] = 0.01
     setup['alpha'] = alpha = 1e-06
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
@@ -74,11 +74,12 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_002_1000samples100features"  # test folder inside test_log/
+    test_subfolder = "test_002_100ksamples100features_noiseless_100k-max_time"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
-    overwrite_if_already_exists = True  # overwrite the folder if it already exists or create a different one otherwise
+    overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
+    delete_folder_on_errors = False
     plot_from_file = True  # run plotter upon finishing
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
@@ -120,7 +121,8 @@ Summary:
         os.makedirs(test_path)
 
     def delete_test_dir():
-        shutil.rmtree(test_path)
+        if delete_folder_on_errors:
+            shutil.rmtree(test_path)
 
     ### BEGIN ADJACENCY MATRIX GEN ###
     """
@@ -190,12 +192,21 @@ Summary:
 
     ### BEGIN MAIN STUFFS ###
 
+    # save setup object dump
+    if save_setup:
+        with open(os.path.join(test_path, '.setup.pkl'), "wb") as f:
+            pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
+
+
+    setup['string_graphs'] = pprint.PrettyPrinter(indent=4).pformat(setup['graphs']).replace('array([', 'np.array([')
+
+
     # Fill descriptor with setup dictionary
     descriptor += """
 ### BEGIN SETUP ###
 n = {n}
 seed = {seed}
-graphs = {graphs}
+graphs = {string_graphs}
 
 # TRAINING SET SETUP
 n_samples = {n_samples}
@@ -228,11 +239,6 @@ verbose = {verbose}
     if save_descriptor:
         with open(os.path.join(test_path, '.descriptor.txt'), "w") as f:
             f.write(descriptor)
-
-    # save setup object dump
-    if save_setup:
-        with open(os.path.join(test_path, '.setup.pkl'), "wb") as f:
-            pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
 
     # simulation for each adjacency matrix in adjmats array
     for graph, adjmat in setup['graphs'].items():
