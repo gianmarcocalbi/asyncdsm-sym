@@ -35,26 +35,26 @@ Summary:
         "cycle": graph_generator.generate_d_regular_graph_by_edges(setup['n'], ["i->i+1"]),
         "diam-expander": graph_generator.generate_d_regular_graph_by_edges(
             setup['n'],
-            ["i->i+1", "i->i-1", "i->i+{}".format(int(setup['n'] / 2))]),
-        "root-expander" : graph_generator.generate_d_regular_graph_by_edges(
+            ["i->i+1", "i->i+{}".format(int(setup['n'] / 2))]),
+        "root-expander": graph_generator.generate_d_regular_graph_by_edges(
             setup['n'],
             ["i->i+1", "i->i+{}".format(int(math.sqrt(setup['n'])))]),
         "diagonal": np.diag(np.ones(setup['n'])),
-        "star": graph_generator.generate_graph_by_edges(setup['n'], ["i->0", "0->i"])
+        # "star": graph_generator.generate_graph_by_edges(setup['n'], ["i->0", "0->i"])
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 1000
+    setup['n_samples'] = 100
     setup['n_features'] = 100
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 0
+    setup['error_std_dev'] = 1
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
-    setup['max_iter'] = 200
-    setup['max_time'] = None  # seconds
+    setup['max_iter'] = None
+    setup['max_time'] = 10000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "stochastic"
     setup['batch_size'] = 20
@@ -74,13 +74,13 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_002_100ksamples100features_noiseless_100k-max_time"  # test folder inside test_log/
+    test_subfolder = "test_003_100samples"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = False
-    plot_from_file = True  # run plotter upon finishing
+    plot_from_file = True  # run plotter.py upon finishing
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
     save_setup = True  # save setup object dump in order to restore it for run the same simulation
@@ -197,9 +197,7 @@ Summary:
         with open(os.path.join(test_path, '.setup.pkl'), "wb") as f:
             pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
 
-
     setup['string_graphs'] = pprint.PrettyPrinter(indent=4).pformat(setup['graphs']).replace('array([', 'np.array([')
-
 
     # Fill descriptor with setup dictionary
     descriptor += """
@@ -211,16 +209,16 @@ graphs = {string_graphs}
 # TRAINING SET SETUP
 n_samples = {n_samples}
 n_features = {n_features}
-yhat = {yhat}
+sample_function = {sample_function}
 domain_radius = {domain_radius}
 domain_center = {domain_center}
 error_mean = {error_mean}
 error_std_dev = {error_std_dev}
 
 # CLUSTER SETUP
-sample_function = {sample_function}
 max_iter = {max_iter}
 max_time = {max_time}
+yhat = {yhat}
 method = {method}
 batch_size = {batch_size}
 activation_func = {activation_func}

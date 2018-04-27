@@ -13,10 +13,10 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         if not os.path.exists(plot_folder_path):
             os.makedirs(plot_folder_path)
 
-    avg = None
+    avg = 10
     ymax = None
     yscale = 'log'  # linear or log
-    scatter = True
+    scatter = False
     points_size = 0.5
     graphs = (
         "clique",
@@ -24,7 +24,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         "diam-expander",
         "root-expander",
         "diagonal",
-        "star",
+        #"star",
     )
 
     plots = (
@@ -90,7 +90,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "iter_time.png"))
+            plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
             plt.close()
         else:
             plt.show()
@@ -118,7 +118,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "mse_iter.png"))
+            plt.savefig(os.path.join(plot_folder_path, "2_mse_iter.png"))
             plt.close()
         else:
             plt.show()
@@ -146,7 +146,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "real-mse_iter.png"))
+            plt.savefig(os.path.join(plot_folder_path, "2_real-mse_iter.png"))
             plt.close()
         else:
             plt.show()
@@ -174,7 +174,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "mse_time.png"))
+            plt.savefig(os.path.join(plot_folder_path, "3_mse_time.png"))
             plt.close()
         else:
             plt.show()
@@ -202,7 +202,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "real-mse_time.png"))
+            plt.savefig(os.path.join(plot_folder_path, "3_real-mse_time.png"))
             plt.close()
         else:
             plt.show()
