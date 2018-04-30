@@ -13,7 +13,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         if not os.path.exists(plot_folder_path):
             os.makedirs(plot_folder_path)
 
-    avg = 10
+    avg = None
     ymax = None
     yscale = 'log'  # linear or log
     scatter = False

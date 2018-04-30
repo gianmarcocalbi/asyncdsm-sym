@@ -44,7 +44,7 @@ Summary:
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 100
+    setup['n_samples'] = 100000
     setup['n_features'] = 100
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
@@ -56,7 +56,7 @@ Summary:
     setup['max_iter'] = None
     setup['max_time'] = 10000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
-    setup['method'] = "stochastic"
+    setup['method'] = "classic"
     setup['batch_size'] = 20
     setup['activation_func'] = None
     setup['loss'] = mltoolbox.SquaredLossFunction
@@ -76,7 +76,7 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_003_100samples"  # test folder inside test_log/
+    test_subfolder = "test_003_100ksamples_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = False
