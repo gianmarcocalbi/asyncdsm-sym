@@ -368,11 +368,12 @@ class Cluster:
                     node.set_local_clock(max_local_clock)
 
                 # Print node's informations
-                print("Node: {} | iter: {} | meanSqError: {}".format(
+                print("Node: {} | iter: {} | time: {} | meanSqError: {}".format(
                     node._id,
                     node.iteration,
-                    node.training_task.get_mean_squared_error())
-                )
+                    str(int(node.local_clock)),
+                    str(int(node.training_task.get_mean_squared_error() * 100)/100)
+                ))
 
                 # check for the stop condition
                 stop_condition = False

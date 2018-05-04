@@ -34,7 +34,6 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         "real-mse_iter",
         "mse_time",
         "real-mse_time",
-
         #"iter-lb_time",
     )
 
