@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os, argparse
+from src.functions import *
 
 
 def plot_from_files(test_folder_path=None, save_to_test_folder=False):
@@ -24,7 +25,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         "diam-expander",
         "root-expander",
         "diagonal",
-        #"star",
+        # "star",
     )
 
     plots = (
@@ -33,6 +34,8 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         "real-mse_iter",
         "mse_time",
         "real-mse_time",
+
+        #"iter-lb_time",
     )
 
     mse_log = {}
@@ -88,6 +91,52 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                     list(range(0, n_iter)),
                     label=graph
                 )
+        plt.legend()
+        if save_to_test_folder:
+            plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
+            plt.close()
+        else:
+            plt.show()
+
+    if "iter-lb_time" in plots:
+        plt.title("Global iterations over cluster clock")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Iteration")
+        for graph in graphs:
+            n_iter = len(mse_log[graph])
+            p = None
+            if scatter:
+                p = plt.scatter(
+                    iter_log[graph],
+                    list(range(0, n_iter)),
+                    label=graph,
+                    s=points_size
+                )
+            else:
+                p = plt.plot(
+                    iter_log[graph],
+                    list(range(0, n_iter)),
+                    label=graph
+                )
+
+            n = 10
+            k = -1
+            if graph == "clique":
+                k = n-1
+            elif graph == "diam-expander" or graph == "root-expander":
+                k = 2
+            elif graph == "diagonal":
+                k = 0
+            elif graph == "cycle":
+                k = 1
+
+            plt.plot(
+                list(range(0, int(iter_log[graph][-1]))),
+                iteration_speed_lower_bound(1, k, list(range(0, int(iter_log[graph][-1])))),
+                #label="{} LB".format(graph),
+                color=p[-1].get_color(),
+                linestyle=':'
+            )
         plt.legend()
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
