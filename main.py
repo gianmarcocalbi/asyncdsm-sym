@@ -14,6 +14,7 @@ def main0():
 
     ### BEGIN SETUP ###
 
+    begin_time = time.time()
     # descriptor text placed at the beginning of _descriptor.txt file within the test folder
     descriptor = """>>> Test Descriptor File
 Title: test
@@ -44,7 +45,7 @@ Summary:
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 4000
+    setup['n_samples'] = 10000
     setup['n_features'] = 100
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
@@ -54,7 +55,7 @@ Summary:
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 20000  # seconds
+    setup['max_time'] = 10000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -65,7 +66,7 @@ Summary:
     setup['alpha'] = alpha = 1e-06
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
-    setup['alt_metrics'] = True
+    setup['alt_metrics'] = False
     setup['shuffle'] = True
     setup['verbose'] = False
 
@@ -76,12 +77,12 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_003_10ksamples_redo_classic"  # test folder inside test_log/
+    test_subfolder = "test_004_100ksamples500ktime_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
-    delete_folder_on_errors = False
+    delete_folder_on_errors = True
     plot_from_file = True  # run plotter.py upon finishing
-    save_plot_to_file = False
+    save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
     save_setup = True  # save setup object dump in order to restore it for run the same simulation
     instant_plotting = False  # instantly plot single simulations results
@@ -90,7 +91,7 @@ Summary:
         "mse_iter",
         "real-mse_iter",
         "mse_time",
-        "real-mse_time",
+        "real-mse_ time",
     )
     ### END SETUP ###
 
@@ -366,6 +367,10 @@ verbose = {verbose}
         plt.show()
         """
         ## INSTANT PLOTS END ##
+
+    if save_descriptor:
+        with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
+            f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
     if plot_from_file:
         plotter.plot_from_files(test_path, save_plot_to_file)

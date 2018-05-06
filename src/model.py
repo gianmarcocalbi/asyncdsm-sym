@@ -1,6 +1,7 @@
 import copy, math, random, time, types, sys, warnings
 import numpy as np
 from src import mltoolbox
+from src.functions import *
 
 
 class Cluster:
@@ -367,13 +368,37 @@ class Cluster:
                     # this node needs
                     node.set_local_clock(max_local_clock)
 
+                output = ""
+
+                if not self.max_time is None:
+                    output += "Time: ({}/{}) ".format(int(self.clock * 100)/100, self.max_time)
+
+                if not self.max_iter is None:
+                    output += "Iter: ({}/{}) ".format(self.iteration, self.max_iter)
+
+                try:
+                    mse = str(int(self.get_global_mean_squared_error() * 100)/100)
+                except OverflowError:
+                    mse = str(self.get_global_mean_squared_error())
+
+                try:
+                    rmse = str(int(self.get_global_mean_squared_error() * 100)/100)
+                except OverflowError:
+                    rmse = str(self.get_global_mean_squared_error())
+
+                output += "MSE={} RMSE={}".format(mse, rmse)
+
+                sys.stdout.write('\x1b[2K')
+                sys.stdout.write(output + "\r")
+                sys.stdout.flush()
+
                 # Print node's informations
-                print("Node: {} | iter: {} | time: {} | meanSqError: {}".format(
+                """print("Node: {} | iter: {} | time: {} | meanSqError: {}".format(
                     node._id,
                     node.iteration,
                     str(int(node.local_clock)),
                     str(int(node.training_task.get_mean_squared_error() * 100)/100)
-                ))
+                ))"""
 
                 # check for the stop condition
                 stop_condition = False
@@ -403,26 +428,12 @@ class Cluster:
                     }
                     self.enqueue_event(new_event)
 
-                """
-                _depstr = ""
-                for _dep in node.dependencies:
-                    if _dep.get_local_clock_by_iteration(node.iteration) > node.iteration:
-                        _depstr += str(_dep._id)
-
-                console.stdout.screen.addstr(node._id, 0,
-                                             "Node: {} | iter: {} | error: {} | score: {} | wait for: {}".format(
-                                                 node._id,
-                                                 node.iteration,
-                                                 node.training_task.squared_loss(),
-                                                 node.training_task.score(), _depstr))
-                """
             elif event["type"] == "":
                 pass
             else:
                 pass
 
             event = self.dequeue_event()
-            # console.stdout.screen.refresh()
 
 
 class Node:
