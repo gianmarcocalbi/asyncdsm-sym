@@ -481,3 +481,6 @@ def rosenbrock_function(_X, _w):
     for i in range(0, n - 1):
         v += 100 * (_X[i + 1] - _X[i] ** 2) + (1 - _X[i]) ** 2
     return v
+
+def estimate_beta(_X, _y):
+    return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)
