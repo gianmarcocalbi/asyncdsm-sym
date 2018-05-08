@@ -86,18 +86,15 @@ def generate_complete_graph(N):
     return np.ones((N, N))
 
 
-def generate_d_regular_graph_by_degree(N, k):
-
-    if N <= 1 or k <= 0:
+def generate_d_regular_graph_by_degree(N, K):
+    if N <= 1 or K <= 0:
         edges = []
     else:
         edges = ["i->i+1"]
-        # todo: restart from here
-        # "i->i+1", "i->i+{}".format(int(n / 4)), "i->i+{}".format(int(n / 2)), "i->i+{}".format(int(3 * n / 4))]
-
+        for i in range(K-1):
+            edges.append("i->i+{}".format(int((i + 1) * N / K)))
 
     return generate_d_regular_graph_by_edges(N, edges)
-
 
 
 def generate_expander_graph(N, degree):
