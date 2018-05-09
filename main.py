@@ -27,18 +27,12 @@ DIAM_EXP_B = lambda n: graph_generator.generate_d_regular_graph_by_edges(
     n,
     ["i->i+1", "i->i-1", "i->i+{}".format(int(n / 2))])
 
-# degree = 4
-CUSTOM = lambda n : graph_generator.generate_d_regular_graph_by_edges(
-    n,
-    ["i->i+1", "i->i+{}".format(int(n / 4)), "i->i+{}".format(int(n / 2)), "i->i+{}".format(int(3 * n / 4))]
-)
-
-# degree = 5
-
 # degree = n
 STAR = lambda n: graph_generator.generate_graph_by_edges(n, ["i->0", "0->i"])
 CLIQUE = lambda n: graph_generator.generate_complete_graph(n)
 
+# regular
+REGULAR = lambda n, k: graph_generator.generate_d_regular_graph_by_degree(n, k)
 
 
 def main0():
@@ -63,18 +57,24 @@ Summary:
     setup = dict()
 
     setup['seed'] = int(time.time())
-    setup['n'] = 10
+    setup['n'] = 100
+
+    # 1,2,3,4,8, 20, 50,100
     setup['graphs'] = {
-        "diagonal": DIAGONAL(setup['n']),
-        "clique": CLIQUE(setup['n']),
-        "cycle": CYCLE(setup['n']),
-        "diam-expander": DIAM_EXP(setup['n']),
-        "root-expander": ROOT_EXP(setup['n']),
+        # "diagonal": DIAGONAL(setup['n']),
+        "cycle": CYCLE(setup['n']),  # degree = 1
+        "diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        "3-regular": REGULAR(setup['n'], 3),  # degree = 3
+        "4-regular": REGULAR(setup['n'], 4),  # degree = 4
+        "8-regular": REGULAR(setup['n'], 8),  # degree = 8
+        "20-regular": REGULAR(setup['n'], 20),  # degree = 20
+        "50-regular": REGULAR(setup['n'], 50),  # degree = 50
+        "clique": CLIQUE(setup['n']), # degree = n
         # "star": STAR(setup['n']),
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 1000
+    setup['n_samples'] = 10000
     setup['n_features'] = 100
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
@@ -84,7 +84,7 @@ Summary:
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 1000000  # seconds
+    setup['max_time'] = 10000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -106,7 +106,7 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_004_1ksamples1mtime_classic"  # test folder inside test_log/
+    test_subfolder = "test_004_degVSvel10ksamples10ktime_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
@@ -274,7 +274,7 @@ verbose = {verbose}
         np.random.seed(setup['seed'])
         random.seed(setup['seed'])
 
-        cluster = Cluster(adjmat)
+        cluster = Cluster(adjmat, graph_name=graph)
 
         cluster.setup(
             X, y, setup['yhat'],
@@ -319,7 +319,7 @@ verbose = {verbose}
             delimiter=','
         )
 
-        # if graph == "diagonal"
+        print("Logs of {} simulation created at {}".format(graph, test_path))
 
         n_iter = len(cluster.global_mean_squared_error_log)
 

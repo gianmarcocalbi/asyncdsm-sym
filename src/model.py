@@ -9,13 +9,14 @@ class Cluster:
 
     """
 
-    def __init__(self, adjacency_matrix):
+    def __init__(self, adjacency_matrix, graph_name="undefined"):
         """
         Parameters
         ----------
         adjacency_matrix : ndarray
             Adjacency matrix of the dependency graph.
         """
+        self.graph_name = graph_name
         self.future_event_list = {}  # FEL of the discrete event simulator
         self.nodes = []  # computational unites (nodes) list
         self.adjacency_matrix = adjacency_matrix
@@ -368,7 +369,7 @@ class Cluster:
                     # this node needs
                     node.set_local_clock(max_local_clock)
 
-                output = ""
+                output = "[{}] >>> ".format(self.graph_name.upper())
 
                 if not self.max_time is None:
                     output += "Time: ({}/{}) ".format(int(self.clock * 100)/100, self.max_time)
@@ -404,17 +405,17 @@ class Cluster:
                 stop_condition = False
                 if self.iteration >= self.max_iter:
                     stop_condition = True
-                    print("Cluster stopped due to global iteration (={}) being equal to max_iter (={})".format(
+                    print("Cluster stopped due to global iteration ({}) being equal to max_iter ({})".format(
                         self.iteration, self.max_iter))
 
                 if self.clock >= self.max_time:
                     stop_condition = True
-                    print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
+                    print("Cluster stopped due to global clock ({}) being grater than or equal to max_time ({})".
                           format(self.clock, self.max_time))
 
                 if self.get_global_mean_squared_error() <= self.epsilon:
                     stop_condition = True
-                    print("Cluster stopped due to error (={}) being less than or equal to epsilon (={})".format(
+                    print("Cluster stopped due to error ({}) being less than or equal to epsilon ({})".format(
                         self.get_global_mean_squared_error(),
                         self.epsilon
                     ))

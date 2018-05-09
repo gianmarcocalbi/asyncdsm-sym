@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, argparse
+import os, argparse, warnings
 from src.functions import *
 
 
@@ -19,14 +19,18 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
     yscale = 'log'  # linear or log
     scatter = False
     points_size = 0.5
-    graphs = (
-        "clique",
+    graphs = [
+        # "diagonal",
         "cycle",
         "diam-expander",
-        "root-expander",
-        "diagonal",
+        "3-regular",
+        "4-regular",
+        "8-regular",
+        "20-regular",
+        "50-regular",
+        "clique",
         # "star",
-    )
+    ]
 
     plots = (
         "iter_time",
@@ -34,17 +38,35 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         "real-mse_iter",
         "mse_time",
         "real-mse_time",
-        #"iter-lb_time",
+        "iter-lb_time",
     )
+
+    n=100
+    degrees = {
+        "diagonal" : 0,
+        "cycle" : 1,
+        "diam-expander" : 2,
+        "3-regular" : 3,
+        "4-regular" : 4,
+        "8-regular" : 8,
+        "20-regular" : 20,
+        "50-regular" : 50,
+        "clique" : n-1,
+        "star" : n-1,
+    }
 
     mse_log = {}
     real_mse_log = {}
     iter_log = {}
 
-    for graph in graphs:
-        mse_log[graph] = np.loadtxt("{}/{}_global_mean_squared_error_log".format(test_folder_path, graph))
-        real_mse_log[graph] = np.loadtxt("{}/{}_global_real_mean_squared_error_log".format(test_folder_path, graph))
-        iter_log[graph] = np.loadtxt("{}/{}_iterations_time_log".format(test_folder_path, graph))
+    for graph in graphs[:]:
+        try:
+            mse_log[graph] = np.loadtxt("{}/{}_global_mean_squared_error_log".format(test_folder_path, graph))
+            real_mse_log[graph] = np.loadtxt("{}/{}_global_real_mean_squared_error_log".format(test_folder_path, graph))
+            iter_log[graph] = np.loadtxt("{}/{}_iterations_time_log".format(test_folder_path, graph))
+        except OSError:
+            warnings.warn('Graph "{}" not found in folder {}'.format(graph, test_folder_path))
+            graphs.remove(graph)
 
     if not avg is None and not avg is 0:
         avg_real_mse_log = {}
@@ -118,21 +140,10 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                     label=graph
                 )
 
-            n = 10
-            k = -1
-            if graph == "clique":
-                k = n-1
-            elif graph == "diam-expander" or graph == "root-expander":
-                k = 2
-            elif graph == "diagonal":
-                k = 0
-            elif graph == "cycle":
-                k = 1
-
             plt.plot(
                 list(range(0, int(iter_log[graph][-1]))),
-                iteration_speed_lower_bound(1, k, list(range(0, int(iter_log[graph][-1])))),
-                #label="{} LB".format(graph),
+                iteration_speed_lower_bound(1, degrees[graph], list(range(0, int(iter_log[graph][-1])))),
+                # label="{} LB".format(graph),
                 color=p[-1].get_color(),
                 linestyle=':'
             )
