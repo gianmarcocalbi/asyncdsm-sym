@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, argparse, warnings
+import os, argparse, warnings, glob
 from src.functions import *
 
 
@@ -19,8 +19,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
     yscale = 'log'  # linear or log
     scatter = False
     points_size = 0.5
-    graphs = [
-        # "diagonal",
+
+    old_graphs = [
+        "diagonal",
         "cycle",
         "diam-expander",
         "3-regular",
@@ -29,7 +30,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         "20-regular",
         "50-regular",
         "clique",
-        # "star",
+        "star",
     ]
 
     plots = (
@@ -43,17 +44,27 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
 
     n=100
     degrees = {
-        "diagonal" : 0,
-        "cycle" : 1,
-        "diam-expander" : 2,
-        "3-regular" : 3,
-        "4-regular" : 4,
-        "8-regular" : 8,
-        "20-regular" : 20,
-        "50-regular" : 50,
-        "clique" : n-1,
-        "star" : n-1,
+    #    "0_diagonal" : 0,
+    #    "1_cycle" : 1,
+    #    "2_diam-expander" : 2,
+    #    "3_regular" : 3,
+    #    "4_regular" : 4,
+    #    "8_regular" : 8,
+    #    "20_regular" : 20,
+    #    "50_regular" : 50,
+    #    "n-1_clique" : n-1,
+    #    "n-1_star" : n-1,
     }
+
+    graphs = []
+    for g in glob.glob("{}/*_global_mean_squared_error_log*".format(test_folder_path)):
+        g_deg, g_label = g.split("/")[-1].split("_")[0:2]
+        g_name = g_deg + "_" + g_label
+        degrees[g_name] = eval(g_deg)
+        graphs.append(g_name)
+
+    if len(graphs) == 0:
+        graphs = old_graphs[:]
 
     mse_log = {}
     real_mse_log = {}

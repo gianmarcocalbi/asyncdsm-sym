@@ -243,7 +243,10 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
         y_hat_f_gradient = self.y_hat.f_gradient(self.X, self.y)
         loss_f_gradient = self.loss.f_gradient(self.y, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient / self.N
+
         self.W -= self.alpha * gradient
+        # self.W = estimate_beta(self.X, self.y)
+
         self.W_log.append(self.W)
         self.iteration += 1
         self._compute_metrics()
@@ -351,6 +354,7 @@ class ParaboloidYHatFunction(YHatFunctionAbstract):
     @staticmethod
     def f_gradient(X, W):
         return np.power(X, 2)
+
 
 def sigmoid(x):
     return 1.0 / (1 + np.exp(-x))
@@ -482,5 +486,8 @@ def rosenbrock_function(_X, _w):
         v += 100 * (_X[i + 1] - _X[i] ** 2) + (1 - _X[i]) ** 2
     return v
 
+
 def estimate_beta(_X, _y):
+    # _X = np.delete(_X, 1, axis=1)
+    # return np.concatenate(([1], np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)))
     return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)

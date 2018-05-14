@@ -61,16 +61,16 @@ Summary:
 
     # 1,2,3,4,8, 20, 50,100
     setup['graphs'] = {
-        # "diagonal": DIAGONAL(setup['n']),
-        "cycle": CYCLE(setup['n']),  # degree = 1
-        "diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        "3-regular": REGULAR(setup['n'], 3),  # degree = 3
-        "4-regular": REGULAR(setup['n'], 4),  # degree = 4
-        "8-regular": REGULAR(setup['n'], 8),  # degree = 8
-        "20-regular": REGULAR(setup['n'], 20),  # degree = 20
-        "50-regular": REGULAR(setup['n'], 50),  # degree = 50
-        "clique": CLIQUE(setup['n']), # degree = n
-        # "star": STAR(setup['n']),
+        # "0_diagonal": DIAGONAL(setup['n']),
+        "1_cycle": CYCLE(setup['n']),  # degree = 1
+        "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        "3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        "n-1_clique": CLIQUE(setup['n']), # degree = n
+        # "n-1_star": STAR(setup['n']),
     }
 
     # TRAINING SET SETUP
@@ -106,7 +106,7 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_004_degVSvel10ksamples10ktime_classic"  # test folder inside test_log/
+    test_subfolder = "test_004_velVSdeg10ksamples10ktime_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True

@@ -339,7 +339,7 @@ class Cluster:
                 node = event["node"]
 
                 if node.can_run():
-                    self.dynamic_log[node._id].append(node.gradient_step())
+                    self.dynamic_log[node.get_id()].append(node.step())
 
                     # when this node finishes iteration "i", it checks if all the others
                     # have already performed the iteration i-th, if so then the global
@@ -395,7 +395,7 @@ class Cluster:
 
                 # Print node's informations
                 """print("Node: {} | iter: {} | time: {} | meanSqError: {}".format(
-                    node._id,
+                    node.get_id(),
                     node.iteration,
                     str(int(node.local_clock)),
                     str(int(node.training_task.get_mean_squared_error() * 100)/100)
@@ -511,6 +511,9 @@ class Node:
                 verbose
             )
 
+    def get_id(self):
+        return self._id
+
     def set_dependencies(self, dependencies):
         """
         Set the node's dependencies.
@@ -527,7 +530,7 @@ class Node:
         :return: None
         """
         self.dependencies.append(dependency)
-        self.buffer[dependency._id] = []
+        self.buffer[dependency.get_id()] = []
 
     def add_recipient(self, recipient):
         """
@@ -571,47 +574,12 @@ class Node:
         return self.buffer[dependency_node_id].pop(0)
 
     def step(self):
-        """
-        Perform a single step (iteration) of the computation task. Actually this
-        method just performs a time.sleep() that lasts for a time distributed
-        following Exp(0.5).
-        :return: None
-        """
-
-        """
-        t0 = time.perf_counter()
-        time.sleep(random.expovariate(0.5))
-        t = time.perf_counter()
-        self.local_clock += t - t0
-        self.iteration += 1
-        """
-        t0 = self.local_clock
-        tf = t0 + random.expovariate(0.5)
-        self.local_clock = tf
-        self.iteration += 1
-        self.log.append(self.local_clock)
-        print("node ({0}) advanced to iteration #{1}".format(self._id, self.iteration))
-        return [t0, tf]
-
-    def gradient_step(self):
-        """
-        Perform a single step of the gradient descent method.
-        :return: a list containing [clock_before, clock_after] w.r.t. the computation
-        """
         # useful vars for estimate the time taken by the computation
         t0 = self.local_clock
         # get the counter before the computation starts
         # c0 = time.perf_counter()
 
-        # avg internal self.W vector with W incoming from dependencies
-        if self.iteration > 0:
-            self.avg_weight_with_dependencies()
-
-        # compute the gradient descent step
-        self.training_task.step()
-
-        # broadcast the obtained value to all node's recipients
-        self.broadcast_weight_to_recipients()
+        self.gradient_step()
 
         # get the counter after the computation has ended
         # cf = time.perf_counter()
@@ -626,7 +594,21 @@ class Node:
         self.iteration += 1
         self.log.append(self.local_clock)
 
-        return [t0, tf]
+
+    def gradient_step(self):
+        """
+        Perform a single step of the gradient descent method.
+        :return: a list containing [clock_before, clock_after] w.r.t. the computation
+        """
+        # avg internal self.W vector with W incoming from dependencies
+        if self.iteration > 0:
+            self.avg_weight_with_dependencies()
+
+        # compute the gradient descent step
+        self.training_task.step()
+
+        # broadcast the obtained value to all node's recipients
+        self.broadcast_weight_to_recipients()
 
     def avg_weight_with_dependencies(self):
         """
@@ -636,7 +618,7 @@ class Node:
         if len(self.dependencies) > 0:
             W = self.training_task.W
             for dep in self.dependencies:
-                W = W + self.dequeue_weight(dep._id)
+                W = W + self.dequeue_weight(dep.get_id())
             self.training_task.W = W / (len(self.dependencies) + 1)
 
     def broadcast_weight_to_recipients(self):
@@ -646,7 +628,7 @@ class Node:
         :return: None
         """
         for recipient in self.recipients:
-            recipient.enqueue_weight(self._id, self.training_task.W)
+            recipient.enqueue_weight(self.get_id(), self.training_task.W)
 
     def can_run(self):
         """

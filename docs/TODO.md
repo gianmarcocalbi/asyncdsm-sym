@@ -31,7 +31,7 @@
 ## Medium priority
 - [x] Get rid of all deepcopy functions and consequently improve dataset management.
 - [ ] Implement `verbose` flag everywhere and in particular in mltoolbox SGD algorithms.
-- [ ] Nice output with ncurses on a new window different from the terminal in which should appear errors and warnings.
+
 - [ ] Implement error handling.
 - [ ] Try the SGD method with a bigger dataset whose informations are already known (for example accuracy after N steps).
 - [ ] Add validation.
@@ -55,3 +55,4 @@
 - [ ] ~~Change everything to SKLearn~~.
 - [ ] ~~Augment precision in computation by exploiting Decimal module in std library~~.
 - [ ] ~~Create plotting module~~.
+- [ ] ~~Nice output with ncurses on a new window different from the terminal in which should appear errors and warnings~~.
