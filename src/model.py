@@ -405,16 +405,19 @@ class Cluster:
                 stop_condition = False
                 if self.iteration >= self.max_iter:
                     stop_condition = True
+                    print(output)
                     print("Cluster stopped due to global iteration ({}) being equal to max_iter ({})".format(
                         self.iteration, self.max_iter))
 
                 if self.clock >= self.max_time:
                     stop_condition = True
+                    print(output)
                     print("Cluster stopped due to global clock ({}) being grater than or equal to max_time ({})".
                           format(self.clock, self.max_time))
 
                 if self.get_global_mean_squared_error() <= self.epsilon:
                     stop_condition = True
+                    print(output)
                     print("Cluster stopped due to error ({}) being less than or equal to epsilon ({})".format(
                         self.get_global_mean_squared_error(),
                         self.epsilon

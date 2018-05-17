@@ -59,16 +59,16 @@ Summary:
     setup['seed'] = int(time.time())
     setup['n'] = 100
 
-    # 1,2,3,4,8, 20, 50,100
     setup['graphs'] = {
-        # "0_diagonal": DIAGONAL(setup['n']),
-        "1_cycle": CYCLE(setup['n']),  # degree = 1
-        "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
-        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        "0_diagonal": DIAGONAL(setup['n']),
+        #"1_cycle": CYCLE(setup['n']),  # degree = 1
+        #"2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        #"2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
+        #"3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        #"4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        #"8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        #"20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        #"50_regular": REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']), # degree = n
         # "n-1_star": STAR(setup['n']),
     }
@@ -84,18 +84,18 @@ Summary:
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 10000  # seconds
+    setup['max_time'] = 200000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
     setup['activation_func'] = None
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
-    setup['epsilon'] = 0.01
-    setup['alpha'] = alpha = 1e-06
+    setup['epsilon'] = None
+    setup['alpha'] = alpha = 1e-04
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
-    setup['alt_metrics'] = False
+    setup['alt_metrics'] = True
     setup['shuffle'] = True
     setup['verbose'] = False
 
@@ -106,7 +106,7 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_004_velVSdeg10ksamples10ktime_classic"  # test folder inside test_log/
+    test_subfolder = "test_004_1e-4alphaALTmetrics10ksamples10ktime_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
@@ -201,7 +201,7 @@ Summary:
         domain_radius=10,
         domain_center=0,
         subdomains_radius=2,
-        error_mean=0,
+        error_mean=0, 
         error_std_dev=1,
         error_coeff=1
     )
