@@ -106,7 +106,7 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_004_1e-4alphaALTmetrics10ksamples10ktime_classic"  # test folder inside test_log/
+    test_subfolder = "test_004_1e-4alphaALTmetrics10ksamples2mtimeDiagClique_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
