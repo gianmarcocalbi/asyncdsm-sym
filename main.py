@@ -150,6 +150,7 @@ Summary:
     if not os.path.exists(test_path):
         os.makedirs(test_path)
 
+    # define function to delete test folder (in case of errors)
     def delete_test_dir():
         if delete_folder_on_errors:
             shutil.rmtree(test_path)
@@ -268,7 +269,7 @@ verbose = {verbose}
         with open(os.path.join(test_path, '.descriptor.txt'), "w") as f:
             f.write(descriptor)
 
-    # simulation for each adjacency matrix in adjmats array
+    # simulation for each adjacency matrix in setup['graphs'] dict
     for graph, adjmat in setup['graphs'].items():
         # set the seed again (each simulation must perform on the same cluster setup)
         np.random.seed(setup['seed'])

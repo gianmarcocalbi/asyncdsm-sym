@@ -87,6 +87,21 @@ def generate_complete_graph(N):
 
 
 def generate_d_regular_graph_by_degree(N, K):
+    """
+    Generate a regular graph with N vertices and degree K with homogeneous expansion.
+
+    Parameters
+    ----------
+    N : int
+        Amount of nodes in the graph.
+    K : int
+        Graph's degree.
+
+    Returns
+    -------
+    numpy multidimensional array of bit
+
+    """
     if N <= 1 or K <= 0:
         edges = []
     else:

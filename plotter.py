@@ -6,7 +6,6 @@ from src.functions import *
 
 def plot_from_files(test_folder_path=None, save_to_test_folder=False):
     if test_folder_path is None:
-        test_folder_path = os.path.join("test_name")
         test_folder_path = get_last_temp_test_path()
 
     plot_folder_path = os.path.join(test_folder_path, "plot")
@@ -57,9 +56,14 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
     }
 
     graphs = []
+    # loop on that pattern to find all graphs in this test's folder
     for g in glob.glob("{}/*_global_mean_squared_error_log*".format(test_folder_path)):
+        # take the degree and the name of the graph
+        # since logs are formatted as {deg}_{name}_{*}
         g_deg, g_label = g.split("/")[-1].split("_")[0:2]
         g_name = g_deg + "_" + g_label
+
+        # eval is needed to evaluate degrees containing "n"
         degrees[g_name] = eval(g_deg)
         graphs.append(g_name)
 
@@ -79,6 +83,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
             warnings.warn('Graph "{}" not found in folder {}'.format(graph, test_folder_path))
             graphs.remove(graph)
 
+    # moving average of plot's points
     if not avg is None and not avg is 0:
         avg_real_mse_log = {}
         avg_mse_log = {}
