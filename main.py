@@ -63,13 +63,13 @@ Summary:
         "0_diagonal": DIAGONAL(setup['n']),
         #"1_cycle": CYCLE(setup['n']),  # degree = 1
         #"2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        #"2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        #"3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        #"4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        #"8_regular": REGULAR(setup['n'], 8),  # degree = 8
-        #"20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        #"50_regular": REGULAR(setup['n'], 50),  # degree = 50
-        "n-1_clique": CLIQUE(setup['n']), # degree = n
+        # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
+        # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        #"n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
@@ -79,12 +79,12 @@ Summary:
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1
+    setup['error_std_dev'] = 2
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 200000  # seconds
+    setup['max_time'] = 10000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -95,23 +95,25 @@ Summary:
     setup['alpha'] = alpha = 1e-04
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
-    setup['alt_metrics'] = True
+    setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
+    setup['time_distr_func'] = random.expovariate
+    setup['time_distr_rate'] = 0
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
     test_subfolder = "test_004_1e-4alphaALTmetrics10ksamples2mtimeDiagClique_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
     plot_from_file = True  # run plotter.py upon finishing
-    save_plot_to_file = True
+    save_plot_to_file = False
     save_descriptor = True  # create _descriptor.txt file
     save_setup = True  # save setup object dump in order to restore it for run the same simulation
     instant_plotting = False  # instantly plot single simulations results
@@ -259,9 +261,11 @@ epsilon = {epsilon}
 alpha = {alpha}
 learning_rate = {learning_rate}
 metrics = {metrics}
-alt_metrics = {alt_metrics}
+metrics_type = {metrics_type}
 shuffle = {shuffle}
 verbose = {verbose}
+time_distr_func = {time_distr_func}
+time_distr_rate = {time_distr_rate}
 """.format(**setup)
 
     # save descriptor file
@@ -290,7 +294,7 @@ verbose = {verbose}
             alpha=setup['alpha'],
             learning_rate=setup['learning_rate'],
             metrics=setup['metrics'],
-            alt_metrics=setup['alt_metrics'],
+            metrics_type=setup['metrics_type'],
             shuffle=setup['shuffle'],
             verbose=setup['verbose']
         )

@@ -26,6 +26,9 @@ class Cluster:
         self.iteration = 0
         self.X = None  # keep whole training set examples
         self.y = None  # keep whole training set target function values
+        self.y_hat = None
+        self.loss = None
+        self.activation_func = None
         self.dynamic_log = []  # log containing for each iteration i a pair (t0_i, tf_i)
         self.W_log = []  # log 'iteration i-th' => value of weight vector at iteration i-th
         self.iterations_time_log = []  # 'iteration i-th' => clock value at which i-th iteration has been completed
@@ -33,11 +36,11 @@ class Cluster:
         self.global_mean_squared_error_log = []  # 'iteration' => global MSE
         self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
         self.epsilon = 0.0  # acceptance threshold
-        self.alt_metrics = False  # use alternative metrics (almost obsolete)
+        self.metrics_type = 0  # use alternative metrics (almost obsolete)
 
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
-              metrics="all", alt_metrics=False, shuffle=True, verbose=False):
+              metrics="all", metrics_type=0, shuffle=True, verbose=False, time_distr_func = random.expovariate, time_distr_rate=1):
         """Cluster setup.
 
         Parameters
@@ -88,8 +91,8 @@ class Cluster:
             Choose any in ['all', 'score', 'mean_absolute_error', 'mean_squared_error', real_mean_squared_error']
             or 'all'.
 
-        alt_metrics : bool, optional
-            Use old MSE computation method.
+        metrics_type : int, optional
+            0 : normal metric, 1 : alt metric, 2 : new alt metric.
 
         shuffle : bool, optional
             True if the cluster may shuffle the training set before splitting it (always suggested).
@@ -122,10 +125,27 @@ class Cluster:
         self.max_iter = max_iter
         self.max_time = max_time
         self.epsilon = epsilon
-        self.alt_metrics = alt_metrics
+        self.metrics_type = metrics_type
         self.X = X
         self.X = np.c_[np.ones((X.shape[0])), X]
         self.y = y
+        self.y_hat = y_hat
+        self.loss = loss
+
+        if activation_func is None:
+            activation_func = "identity"
+
+        if not activation_func is types.FunctionType:
+            if activation_func == "sigmoid":
+                activation_func = mltoolbox.sigmoid
+            elif activation_func == "sign":
+                activation_func = np.sign
+            elif activation_func == "tanh":
+                activation_func = np.tanh
+            else:
+                activation_func = lambda x: x
+
+        self.activation_func = activation_func
 
         if shuffle:
             Xy = np.c_[X, y]
@@ -146,7 +166,7 @@ class Cluster:
 
             # instantiate new node for the just-selected subsample
             self.nodes.append(Node(i, node_X, node_y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                                   learning_rate, metrics, shuffle, verbose))
+                                   learning_rate, metrics, shuffle, verbose, time_distr_func, time_distr_rate))
             self.dynamic_log.append([])
 
             # evict the just-already-assigned samples of the training-set
@@ -191,29 +211,38 @@ class Cluster:
     def compute_avg_W(self):
         W = np.zeros(len(self.nodes[0].training_task.W))
         for node in self.nodes:
-            W += node.training_task.W_log[self.iteration]
+            W += node.training_task.W_log[self.iteration+1]
         W /= len(self.nodes)
 
         if len(self.W_log) == self.iteration:
-            self.W_log.append(W)
+            self.W_log.append(np.copy(W))
         elif len(self.W_log) == self.iteration + 1:
-            self.W_log[self.iteration] = W
+            self.W_log[self.iteration] = np.copy(W)
         else:
             raise Exception('Unexpected W_log size')
 
     def compute_global_mean_absolute_error(self):
         gmae = 0
-        if not self.alt_metrics:
-            W = self.W_log[self.iteration]
-            N = self.X.shape[0]
-            mltask = self.nodes[0].training_task
-            predictions = mltask.activation_func(mltask.y_hat.f(self.X, W))
-            linear_error = np.absolute(self.y - predictions)
-            gmae = np.sum(linear_error) / N
-        else:
+        if self.metrics_type == 1:
             for node in self.nodes:
                 gmae += node.training_task.mean_absolute_error_log[self.iteration]
             gmae /= len(self.nodes)
+        elif self.metrics_type == 2:
+            for node in self.nodes:
+                gmae += mltoolbox.compute_mae(
+                    node.training_task.W_log[self.iteration],
+                    self.X,
+                    self.y,
+                    self.activation_func,
+                    self.y_hat.f
+                )
+            gmae /= len(self.nodes)
+        else:
+            W = self.W_log[self.iteration]
+            N = self.X.shape[0]
+            predictions = self.activation_func(self.y_hat.f(self.X, W))
+            linear_error = np.absolute(self.y - predictions)
+            gmae = np.sum(linear_error) / N
 
         if len(self.global_mean_absolute_error_log) == self.iteration:
             self.global_mean_absolute_error_log.append(gmae)
@@ -227,18 +256,28 @@ class Cluster:
 
     def compute_global_mean_squared_error(self):
         gmse = 0
-        if not self.alt_metrics:
-            W = self.W_log[self.iteration]
-            N = self.X.shape[0]
-            mltask = self.nodes[0].training_task
-            predictions = mltask.activation_func(mltask.y_hat.f(self.X, W))
-            linear_error = np.absolute(self.y - predictions)
-            gmse = np.sum(np.power(linear_error, 2)) / N
-
-        else:
+        if self.metrics_type == 1:
             for node in self.nodes:
                 gmse += node.training_task.mean_squared_error_log[self.iteration]
             gmse /= len(self.nodes)
+        elif self.metrics_type == 2:
+            for node in self.nodes:
+                gmse += mltoolbox.compute_mse(
+                    node.training_task.W_log[self.iteration],
+                    self.X,
+                    self.y,
+                    self.activation_func,
+                    self.y_hat.f
+                )
+            gmse /= len(self.nodes)
+        else:
+            gmse = mltoolbox.compute_mse(
+                self.W_log[self.iteration],
+                self.X,
+                self.y,
+                self.activation_func,
+                self.y_hat.f
+            )
 
         if len(self.global_mean_squared_error_log) == self.iteration:
             self.global_mean_squared_error_log.append(gmse)
@@ -252,20 +291,35 @@ class Cluster:
 
     def compute_global_real_mean_squared_error(self):
         grmse = 0
-        if not self.alt_metrics:
-            W = self.W_log[self.iteration]
-            real_W = np.ones(len(W))
-            N = self.X.shape[0]
-            mltask = self.nodes[0].training_task
-            real_values = mltask.activation_func(mltask.y_hat.f(self.X, real_W))
-            predictions = mltask.activation_func(mltask.y_hat.f(self.X, W))
-            linear_error = np.absolute(real_values - predictions)
-            grmse = np.sum(np.power(linear_error, 2)) / N
 
-        else:
+        if self.metrics_type == 1:
             for node in self.nodes:
                 grmse += node.training_task.real_mean_squared_error_log[self.iteration]
             grmse /= len(self.nodes)
+
+        elif self.metrics_type == 2:
+            for node in self.nodes:
+                grmse += mltoolbox.compute_mse(
+                    node.training_task.W_log[self.iteration],
+                    self.X,
+                    self.y,
+                    self.activation_func,
+                    self.y_hat.f
+                )
+            grmse /= len(self.nodes)
+
+        else:
+            W = self.W_log[self.iteration]
+            real_W = np.ones(len(W))
+            real_values = self.activation_func(self.y_hat.f(self.X, real_W))
+
+            grmse = mltoolbox.compute_mse(
+                W,
+                self.X,
+                real_values,
+                self.activation_func,
+                self.y_hat.f
+            )
 
         if len(self.global_real_mean_squared_error_log) == self.iteration:
             self.global_real_mean_squared_error_log.append(grmse)
@@ -354,6 +408,14 @@ class Cluster:
                         self.iterations_time_log[self.iteration] = node.local_clock
                         self._compute_metrics()
                         self.iteration = min_iter
+
+                        """max_error = -math.inf
+                        for _node in self.nodes:
+                            node_error = _node.training_task.mean_squared_error_log[self.iteration]
+                            if node_error > max_error:
+                                max_error = node_error
+                        print("MAX ERROR: {}".format(max_error))"""
+
                     elif min_iter > self.iteration + 1:
                         raise Exception("Unexpected behaviour of cluster distributed dynamics")
                 else:
@@ -372,18 +434,18 @@ class Cluster:
                 output = "[{}] >>> ".format(self.graph_name.upper())
 
                 if not self.max_time is None:
-                    output += "Time: ({}/{}) ".format(int(self.clock * 100)/100, self.max_time)
+                    output += "Time: ({}/{}) ".format(int(self.clock * 100) / 100, self.max_time)
 
                 if not self.max_iter is None:
                     output += "Iter: ({}/{}) ".format(self.iteration, self.max_iter)
 
                 try:
-                    mse = str(int(self.get_global_mean_squared_error() * 100)/100)
+                    mse = str(int(self.get_global_mean_squared_error() * 100) / 100)
                 except OverflowError:
                     mse = str(self.get_global_mean_squared_error())
 
                 try:
-                    rmse = str(int(self.get_global_mean_squared_error() * 100)/100)
+                    rmse = str(int(self.get_global_mean_squared_error() * 100) / 100)
                 except OverflowError:
                     rmse = str(self.get_global_mean_squared_error())
 
@@ -446,31 +508,20 @@ class Node:
     """
 
     def __init__(self, _id, X, y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                 learning_rate, metrics, shuffle, verbose):
+                 learning_rate, metrics, shuffle, verbose, time_distr_func, time_distr_rate):
         self._id = _id  # id number of the node
         self.dependencies = []  # list of node dependencies
         self.recipients = []
         self.local_clock = 0.0  # local internal clock (float)
         self.iteration = 0  # current iteration
         self.log = [0.0]  # log indexed as "iteration" -> "completion clock"
+        self.time_distr_func = time_distr_func
+        self.time_distr_rate = time_distr_rate
 
         # buffer of incoming weights from dependencies
         # it store a queue for each dependency. Such queue can be accessed by
         # addressing the id of the node: "dependency_id" -> dep_queue.
         self.buffer = {}
-
-        if activation_func is None:
-            activation_func = "identity"
-
-        if not activation_func is types.FunctionType:
-            if activation_func == "sigmoid":
-                activation_func = mltoolbox.sigmoid
-            elif activation_func == "sign":
-                activation_func = np.sign
-            elif activation_func == "tanh":
-                activation_func = np.tanh
-            else:
-                activation_func = lambda x: x
 
         # instantiate training model for the node
         if method == "stochastic":
@@ -586,7 +637,7 @@ class Node:
 
         # get the counter after the computation has ended
         # cf = time.perf_counter()
-        dt = random.expovariate(1)  # todo: temp
+        dt = self.time_distr_func(self.time_distr_rate) # todo: temp
 
         # computes the clock when the computation has finished
         # tf = t0 + cf - c0
@@ -596,7 +647,6 @@ class Node:
 
         self.iteration += 1
         self.log.append(self.local_clock)
-
 
     def gradient_step(self):
         """
@@ -621,7 +671,7 @@ class Node:
         if len(self.dependencies) > 0:
             W = self.training_task.W
             for dep in self.dependencies:
-                W = W + self.dequeue_weight(dep.get_id())
+                W += self.dequeue_weight(dep.get_id())
             self.training_task.W = W / (len(self.dependencies) + 1)
 
     def broadcast_weight_to_recipients(self):
@@ -631,7 +681,7 @@ class Node:
         :return: None
         """
         for recipient in self.recipients:
-            recipient.enqueue_weight(self.get_id(), self.training_task.W)
+            recipient.enqueue_weight(self.get_id(), np.copy(self.training_task.W))
 
     def can_run(self):
         """

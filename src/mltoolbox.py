@@ -25,7 +25,7 @@ class Trainer(Task):
         self.X = np.c_[np.ones((X.shape[0])), X]
 
         self.W = np.random.uniform(size=(X.shape[1] + 1,))  # todo: remove "+ 1"?
-        self.W_log = [self.W]
+        self.W_log = [np.copy(self.W)]
 
         if not activation_func is types.FunctionType:
             if activation_func == "sigmoid":
@@ -247,7 +247,7 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
         self.W -= self.alpha * gradient
         # self.W = estimate_beta(self.X, self.y)
 
-        self.W_log.append(self.W)
+        self.W_log.append(np.copy(self.W))
         self.iteration += 1
         self._compute_metrics()
 
@@ -265,7 +265,7 @@ class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
         loss_f_gradient = self.loss.f_gradient(y_pick, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient
         self.W -= self.alpha * gradient
-        self.W_log.append(self.W)
+        self.W_log.append(np.copy(self.W))
         self.iteration += 1
         self._compute_metrics()
 
@@ -291,7 +291,7 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
         loss_f_gradient = self.loss.f_gradient(y_batch, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient / self.batch_size
         self.W -= self.alpha * gradient
-        self.W_log.append(self.W)
+        self.W_log.append(np.copy(self.W))
         self.iteration += 1
         self._compute_metrics()
 
@@ -491,3 +491,17 @@ def estimate_beta(_X, _y):
     # _X = np.delete(_X, 1, axis=1)
     # return np.concatenate(([1], np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)))
     return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)
+
+
+def compute_mse(W, X, y, activation_func, y_hat_func):
+    N = X.shape[0]
+    predictions = activation_func(y_hat_func(X, W))
+    linear_error = np.absolute(y - predictions)
+    return np.sum(np.power(linear_error, 2)) / N
+
+
+def compute_mae(W, X, y, activation_func, y_hat_func):
+    N = X.shape[0]
+    predictions = activation_func(y_hat_func(X, W))
+    linear_error = np.absolute(y - predictions)
+    return np.sum(linear_error) / N

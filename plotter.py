@@ -33,26 +33,40 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
     ]
 
     plots = (
-        "iter_time",
+        #"iter_time",
         "mse_iter",
         "real-mse_iter",
-        "mse_time",
-        "real-mse_time",
-        "iter-lb_time",
+        #"mse_time",
+        #"real-mse_time",
+        #"iter-lb_time",
     )
 
-    n=100
+    n = 100
     degrees = {
-    #    "0_diagonal" : 0,
-    #    "1_cycle" : 1,
-    #    "2_diam-expander" : 2,
-    #    "3_regular" : 3,
-    #    "4_regular" : 4,
-    #    "8_regular" : 8,
-    #    "20_regular" : 20,
-    #    "50_regular" : 50,
-    #    "n-1_clique" : n-1,
-    #    "n-1_star" : n-1,
+        #    "0_diagonal" : 0,
+        #    "1_cycle" : 1,
+        #    "2_diam-expander" : 2,
+        #    "3_regular" : 3,
+        #    "4_regular" : 4,
+        #    "8_regular" : 8,
+        #    "20_regular" : 20,
+        #    "50_regular" : 50,
+        #    "n-1_clique" : n-1,
+        #    "n-1_star" : n-1,
+    }
+
+    colors = {
+        "0_diagonal": '#ba2eff',  # pink/purple
+        "1_cycle": '#ffc300',  # orange
+        "2_diam-expander": '#009713',  # green
+        "2_root-expander": '#BB0016',  # red
+        "3_regular": '#7ec2a0ff',
+        "4_regular": '#97a853ff',
+        "8_regular": '#c7bd30ff',
+        "20_regular": '#a57a00ff',
+        "50_regular": '#6b5c32ff',
+        "n-1_clique": '#1537dfff',  # blue
+        "n-1_star": '#F8FE21',  # yellow
     }
 
     graphs = []
@@ -120,13 +134,15 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                     iter_log[graph],
                     list(range(0, n_iter)),
                     label=graph,
-                    s=points_size
+                    s=points_size,
+                    color=colors[graph]
                 )
             else:
                 plt.plot(
                     iter_log[graph],
                     list(range(0, n_iter)),
-                    label=graph
+                    label=graph,
+                    color=colors[graph]
                 )
         plt.legend()
         if save_to_test_folder:
@@ -147,13 +163,15 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                     iter_log[graph],
                     list(range(0, n_iter)),
                     label=graph,
-                    s=points_size
+                    s=points_size,
+                    color=colors[graph]
                 )
             else:
                 p = plt.plot(
                     iter_log[graph],
                     list(range(0, n_iter)),
-                    label=graph
+                    label=graph,
+                    color=colors[graph]
                 )
 
             plt.plot(
@@ -183,13 +201,15 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                     list(range(0, len(mse_log[graph]))),
                     mse_log[graph],
                     label=graph,
+                    color=colors[graph],
                     s=points_size
                 )
             else:
                 plt.plot(
                     list(range(0, len(mse_log[graph]))),
                     mse_log[graph],
-                    label=graph
+                    label=graph,
+                    color=colors[graph]
                 )
         plt.legend()
         if save_to_test_folder:
@@ -211,13 +231,15 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                     list(range(0, len(real_mse_log[graph]))),
                     real_mse_log[graph],
                     label=graph,
+                    color=colors[graph],
                     s=points_size
                 )
             else:
                 plt.plot(
                     list(range(0, len(real_mse_log[graph]))),
                     real_mse_log[graph],
-                    label=graph
+                    label=graph,
+                    color=colors[graph]
                 )
         plt.legend()
         if save_to_test_folder:
@@ -239,13 +261,15 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                     iter_log[graph],
                     mse_log[graph],
                     label=graph,
+                    color=colors[graph],
                     s=points_size
                 )
             else:
                 plt.plot(
                     iter_log[graph],
                     mse_log[graph],
-                    label=graph
+                    label=graph,
+                    color=colors[graph]
                 )
         plt.legend()
         if save_to_test_folder:
@@ -267,13 +291,15 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
                     iter_log[graph],
                     real_mse_log[graph],
                     label=graph,
+                    color=colors[graph],
                     s=points_size
                 )
             else:
                 plt.plot(
                     iter_log[graph],
                     real_mse_log[graph],
-                    label=graph
+                    label=graph,
+                    color=colors[graph]
                 )
         plt.legend()
         if save_to_test_folder:
