@@ -31,7 +31,7 @@ class Cluster:
         self.activation_func = None
         self.dynamic_log = []  # log containing for each iteration i a pair (t0_i, tf_i)
         self.W_log = []  # log 'iteration i-th' => value of weight vector at iteration i-th
-        self.iterations_time_log = []  # 'iteration i-th' => clock value at which i-th iteration has been completed
+        self.iterations_time_log = [0.0]  # 'iteration i-th' => clock value at which i-th iteration has been completed
         self.global_mean_absolute_error_log = []  # 'iteration' => global MAE
         self.global_mean_squared_error_log = []  # 'iteration' => global MSE
         self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
@@ -180,6 +180,8 @@ class Cluster:
                     self.nodes[j].add_dependency(self.nodes[i])
                     self.nodes[i].add_recipient(self.nodes[j])
 
+        self._compute_metrics()
+
     def get_avg_W(self, index=-1):
         if index < len(self.W_log) > 0:
             return self.W_log[index]
@@ -211,13 +213,13 @@ class Cluster:
     def compute_avg_W(self):
         W = np.zeros(len(self.nodes[0].training_task.W))
         for node in self.nodes:
-            W += node.training_task.W_log[self.iteration+1]
+            W += node.training_task.W_log[self.iteration]
         W /= len(self.nodes)
 
         if len(self.W_log) == self.iteration:
-            self.W_log.append(np.copy(W))
+            self.W_log.append(W)
         elif len(self.W_log) == self.iteration + 1:
-            self.W_log[self.iteration] = np.copy(W)
+            self.W_log[self.iteration] = W
         else:
             raise Exception('Unexpected W_log size')
 
@@ -404,10 +406,10 @@ class Cluster:
                         if _node.iteration < min_iter:
                             min_iter = _node.iteration
                     if min_iter == self.iteration + 1:
+                        self.iteration += 1
                         self.iterations_time_log.append(-1)
                         self.iterations_time_log[self.iteration] = node.local_clock
                         self._compute_metrics()
-                        self.iteration = min_iter
 
                         """max_error = -math.inf
                         for _node in self.nodes:
@@ -669,7 +671,7 @@ class Node:
         :return: None
         """
         if len(self.dependencies) > 0:
-            W = self.training_task.W
+            W = np.copy(self.training_task.W)
             for dep in self.dependencies:
                 W += self.dequeue_weight(dep.get_id())
             self.training_task.W = W / (len(self.dependencies) + 1)

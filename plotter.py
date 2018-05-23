@@ -4,7 +4,7 @@ import os, argparse, warnings, glob
 from src.functions import *
 
 
-def plot_from_files(test_folder_path=None, save_to_test_folder=False):
+def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_plot=True):
     if test_folder_path is None:
         test_folder_path = get_last_temp_test_path()
 
@@ -33,11 +33,11 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
     ]
 
     plots = (
-        #"iter_time",
+        "iter_time",
         "mse_iter",
         "real-mse_iter",
-        #"mse_time",
-        #"real-mse_time",
+        "mse_time",
+        "real-mse_time",
         #"iter-lb_time",
     )
 
@@ -148,7 +148,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
             plt.close()
-        else:
+        if instant_plot:
             plt.show()
 
     if "iter-lb_time" in plots:
@@ -185,7 +185,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
             plt.close()
-        else:
+        if instant_plot:
             plt.show()
 
     if "mse_iter" in plots:
@@ -215,7 +215,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "2_mse_iter.png"))
             plt.close()
-        else:
+        if instant_plot:
             plt.show()
 
     if "real-mse_iter" in plots:
@@ -245,7 +245,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "2_real-mse_iter.png"))
             plt.close()
-        else:
+        if instant_plot:
             plt.show()
 
     if "mse_time" in plots:
@@ -275,7 +275,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False):
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "3_mse_time.png"))
             plt.close()
-        else:
+        if instant_plot:
             plt.show()
 
     if "real-mse_time" in plots:
@@ -339,9 +339,11 @@ if __name__ == "__main__":
         help='Specify whether save to file or not',
         dest='s_flag'
     )
+
     args = parser.parse_args()
 
     plot_from_files(
         args.test_path,
-        args.s_flag
+        args.s_flag,
+        not args.s_flag
     )

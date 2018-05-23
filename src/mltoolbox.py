@@ -24,6 +24,7 @@ class Trainer(Task):
         # bias inserted as w0 = (1,...,1)
         self.X = np.c_[np.ones((X.shape[0])), X]
 
+        #self.W = np.zeros(X.shape[1] + 1)
         self.W = np.random.uniform(size=(X.shape[1] + 1,))  # todo: remove "+ 1"?
         self.W_log = [np.copy(self.W)]
 
