@@ -8,6 +8,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
     if test_folder_path is None:
         test_folder_path = get_last_temp_test_path()
 
+    if not os.path.exists(test_folder_path):
+        raise Exception("Folder {} doesn't exist".format(test_folder_path))
+
     plot_folder_path = os.path.join(test_folder_path, "plot")
     if save_to_test_folder:
         if not os.path.exists(plot_folder_path):
@@ -147,9 +150,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
         plt.legend()
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
-            plt.close()
         if instant_plot:
             plt.show()
+        plt.close()
 
     if "iter-lb_time" in plots:
         plt.title("Global iterations over cluster clock")
@@ -184,9 +187,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
         plt.legend()
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
-            plt.close()
         if instant_plot:
             plt.show()
+        plt.close()
 
     if "mse_iter" in plots:
         plt.title("MSE over global iterations")
@@ -214,9 +217,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
         plt.legend()
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "2_mse_iter.png"))
-            plt.close()
         if instant_plot:
             plt.show()
+        plt.close()
 
     if "real-mse_iter" in plots:
         plt.title("Real MSE over global iterations")
@@ -244,9 +247,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
         plt.legend()
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "2_real-mse_iter.png"))
-            plt.close()
         if instant_plot:
             plt.show()
+        plt.close()
 
     if "mse_time" in plots:
         plt.title("MSE over time")
@@ -274,9 +277,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
         plt.legend()
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "3_mse_time.png"))
-            plt.close()
         if instant_plot:
             plt.show()
+        plt.close()
 
     if "real-mse_time" in plots:
         plt.title("Real MSE over time")
@@ -304,9 +307,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
         plt.legend()
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "3_real-mse_time.png"))
-            plt.close()
-        else:
+        if instant_plot:
             plt.show()
+        plt.close()
 
 
 def get_last_temp_test_path():

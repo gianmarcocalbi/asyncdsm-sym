@@ -46,7 +46,7 @@ def main0():
     descriptor = """>>> Test Descriptor File
 Title: test
 Date: {}
-Summary:
+Summary: x point are taken uniformly in [0,1], so with men 0.5 
 
 """.format(str(datetime.datetime.now()))
 
@@ -56,7 +56,7 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = 1526556375 # int(time.time())
+    setup['seed'] = int(time.time())
     setup['n'] = 100
 
     setup['graphs'] = {
@@ -83,8 +83,8 @@ Summary:
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     # CLUSTER SETUP
-    setup['max_iter'] = None
-    setup['max_time'] = 10000  # seconds
+    setup['max_iter'] = 20
+    setup['max_time'] = None  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -108,7 +108,7 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_005_1e-6alpha10ksamples10ktimeDiagCyclCliq_classic"  # test folder inside test_log/
+    test_subfolder = "test_005_1e-6alpha10ksamples10ktimeXin0-2DiagCyclCliq_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H:%M:%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
