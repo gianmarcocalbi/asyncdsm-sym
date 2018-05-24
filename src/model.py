@@ -1,4 +1,4 @@
-import copy, math, random, time, types, sys, warnings
+import copy, math, random, time, types, sys, warnings, tqdm
 import numpy as np
 from src import mltoolbox
 from src.functions import *
@@ -384,11 +384,12 @@ class Cluster:
                 'node': _node
             })
 
+        #bar = tqdm.tqdm(total=self.max_time)
         stop_condition = False  # todo: stop condition (tolerance)
         event = self.dequeue_event()
         while not stop_condition and not event is None:
             # console.stdout.screen.clrtoeol()
-
+            prev_clock = self.clock
             self.clock = event["time"]
 
             if event["type"] == "node_step":
@@ -433,6 +434,7 @@ class Cluster:
                     # this node needs
                     node.set_local_clock(max_local_clock)
 
+                output = ""
                 output = "[{}] >>> ".format(self.graph_name.upper())
 
                 if not self.max_time is None:
@@ -456,6 +458,8 @@ class Cluster:
                 sys.stdout.write('\x1b[2K')
                 sys.stdout.write(output + "\r")
                 sys.stdout.flush()
+
+                #bar.update(int((self.clock - prev_clock) * 100) / 100)
 
                 # Print node's informations
                 """print("Node: {} | iter: {} | time: {} | meanSqError: {}".format(

@@ -46,7 +46,7 @@ def main0():
     descriptor = """>>> Test Descriptor File
 Title: test
 Date: {}
-Summary: x point are taken uniformly in [0,1], so with men 0.5 
+Summary: 
 
 """.format(str(datetime.datetime.now()))
 
@@ -84,7 +84,7 @@ Summary: x point are taken uniformly in [0,1], so with men 0.5
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 10000  # seconds
+    setup['max_time'] = 1000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -92,7 +92,7 @@ Summary: x point are taken uniformly in [0,1], so with men 0.5
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
     setup['epsilon'] = None
-    setup['alpha'] = 1e-06
+    setup['alpha'] = 1e-04
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
     setup['metrics_type'] = 0
@@ -108,12 +108,12 @@ Summary: x point are taken uniformly in [0,1], so with men 0.5
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_005_1e-6alpha10ktimeXin0-1DiagCyclCliq_classic"  # test folder inside test_log/
+    test_subfolder = "test_005_1e-4alpha10ktimeXin0-0DiagCyclCliq_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
     plot_from_file = True  # run plotter.py upon finishing
-    instant_plot = True  # instantly plot single simulations results
+    instant_plot = False  # instantly plot single simulations results
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
     save_setup = True  # save setup object dump in order to restore it for run the same simulation

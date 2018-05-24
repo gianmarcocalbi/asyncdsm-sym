@@ -1,0 +1,61 @@
+>>> Test Descriptor File
+Title: test
+Date: 2018-05-24 14:54:35.629365
+Summary: 
+
+
+### BEGIN SETUP ###
+n = 100
+seed = 1527166475
+graphs = {   '0_diagonal': np.array([[1., 0., 0., ..., 0., 0., 0.],
+       [0., 1., 0., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 0., 0.],
+       [0., 0., 0., ..., 0., 1., 0.],
+       [0., 0., 0., ..., 0., 0., 1.]]),
+    '1_cycle': np.array([[1., 1., 0., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 1., 0.],
+       [0., 0., 0., ..., 0., 1., 1.],
+       [1., 0., 0., ..., 0., 0., 1.]]),
+    'n-1_clique': np.array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]])}
+
+# TRAINING SET SETUP
+n_samples = 10000
+n_features = 100
+sample_function = <function LinearYHatFunction.f at 0x7f58d0535a60>
+domain_radius = 5
+domain_center = 0
+error_mean = 0
+error_std_dev = 1
+
+# CLUSTER SETUP
+max_iter = None
+max_time = 1000
+yhat = <class 'src.mltoolbox.LinearYHatFunction'>
+method = classic
+batch_size = 20
+activation_func = None
+loss = <class 'src.mltoolbox.SquaredLossFunction'>
+penalty = l2
+epsilon = None
+alpha = 0.0001
+learning_rate = constant
+metrics = all
+metrics_type = 0
+shuffle = True
+verbose = False
+time_distr_func = <bound method Random.expovariate of <random.Random object at 0x563d495068c8>>
+time_distr_rate = 1
+
+
+# duration (hh:mm:ss): 00:01:35
