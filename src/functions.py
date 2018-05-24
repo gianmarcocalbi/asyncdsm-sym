@@ -1,5 +1,8 @@
 import math, sys
 
+def iteration_speed_lower_bound_new():
+    pass
+
 
 def iteration_speed_lower_bound(l, k, time_arr):
     """

@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, argparse, warnings, glob
+import os, argparse, warnings, glob, pickle
 from src.functions import *
 
 
@@ -91,11 +91,18 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
     real_mse_log = {}
     iter_log = {}
 
+    try :
+        with open("{}/setup.pkl".format(test_folder_path), 'rb') as setup_file:
+            setup = pickle.load(setup_file)
+    except:
+        raise
+
     for graph in graphs[:]:
         try:
             mse_log[graph] = np.loadtxt("{}/{}_global_mean_squared_error_log".format(test_folder_path, graph))
             real_mse_log[graph] = np.loadtxt("{}/{}_global_real_mean_squared_error_log".format(test_folder_path, graph))
             iter_log[graph] = np.loadtxt("{}/{}_iterations_time_log".format(test_folder_path, graph))
+
         except OSError:
             warnings.warn('Graph "{}" not found in folder {}'.format(graph, test_folder_path))
             graphs.remove(graph)

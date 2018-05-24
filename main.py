@@ -34,6 +34,10 @@ CLIQUE = lambda n: graph_generator.generate_complete_graph(n)
 # regular
 REGULAR = lambda n, k: graph_generator.generate_d_regular_graph_by_degree(n, k)
 
+# statistic distributions
+EXPONENTIAL = lambda rate: random.expovariate(rate)
+UNIFORM = lambda b: random.uniform(0, b)
+PARETO = lambda shape: random.paretovariate(shape)
 
 def main0():
     # console.stdout.screen = stdscr
@@ -62,7 +66,7 @@ Summary:
     setup['graphs'] = {
         "0_diagonal": DIAGONAL(setup['n']),
         "1_cycle": CYCLE(setup['n']),  # degree = 1
-        #"2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        # "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
         # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
         # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
@@ -98,8 +102,8 @@ Summary:
     setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_func'] = random.expovariate
-    setup['time_distr_rate'] = 1
+    setup['time_distr_func'] = EXPONENTIAL
+    setup['time_distr_param'] = 1  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
@@ -232,7 +236,7 @@ metrics_type = {metrics_type}
 shuffle = {shuffle}
 verbose = {verbose}
 time_distr_func = {time_distr_func}
-time_distr_rate = {time_distr_rate}
+time_distr_param = {time_distr_param}
 """.format(**setup)
 
     # save descriptor file

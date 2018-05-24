@@ -40,7 +40,7 @@ class Cluster:
 
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
-              metrics="all", metrics_type=0, shuffle=True, verbose=False, time_distr_func = random.expovariate, time_distr_rate=1):
+              metrics="all", metrics_type=0, shuffle=True, verbose=False, time_distr_func = random.expovariate, time_distr_param=1):
         """Cluster setup.
 
         Parameters
@@ -166,7 +166,7 @@ class Cluster:
 
             # instantiate new node for the just-selected subsample
             self.nodes.append(Node(i, node_X, node_y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                                   learning_rate, metrics, shuffle, verbose, time_distr_func, time_distr_rate))
+                                   learning_rate, metrics, shuffle, verbose, time_distr_func, time_distr_param))
             self.dynamic_log.append([])
 
             # evict the just-already-assigned samples of the training-set
@@ -514,7 +514,7 @@ class Node:
     """
 
     def __init__(self, _id, X, y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                 learning_rate, metrics, shuffle, verbose, time_distr_func, time_distr_rate):
+                 learning_rate, metrics, shuffle, verbose, time_distr_func, time_distr_param):
         self._id = _id  # id number of the node
         self.dependencies = []  # list of node dependencies
         self.recipients = []
@@ -522,7 +522,7 @@ class Node:
         self.iteration = 0  # current iteration
         self.log = [0.0]  # log indexed as "iteration" -> "completion clock"
         self.time_distr_func = time_distr_func
-        self.time_distr_rate = time_distr_rate
+        self.time_distr_param = time_distr_param
 
         # buffer of incoming weights from dependencies
         # it store a queue for each dependency. Such queue can be accessed by
@@ -643,7 +643,7 @@ class Node:
 
         # get the counter after the computation has ended
         # cf = time.perf_counter()
-        dt = self.time_distr_func(self.time_distr_rate) # todo: temp
+        dt = self.time_distr_func(self.time_distr_param) # todo: temp
 
         # computes the clock when the computation has finished
         # tf = t0 + cf - c0
