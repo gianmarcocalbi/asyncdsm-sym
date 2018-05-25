@@ -4,7 +4,7 @@ from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
 from sklearn import linear_model
 from src.model import Cluster
-from src import mltoolbox, graph_generator
+from src import mltoolbox, graph_generator, statistics
 import matplotlib.pyplot as plt
 
 # degree = 0
@@ -34,10 +34,6 @@ CLIQUE = lambda n: graph_generator.generate_complete_graph(n)
 # regular
 REGULAR = lambda n, k: graph_generator.generate_d_regular_graph_by_degree(n, k)
 
-# statistic distributions
-EXPONENTIAL = lambda rate: random.expovariate(rate)
-UNIFORM = lambda b: random.uniform(0, b)
-PARETO = lambda shape: random.paretovariate(shape)
 
 def main0():
     # console.stdout.screen = stdscr
@@ -73,7 +69,7 @@ Summary:
         # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
         # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
-        "n-1_clique": CLIQUE(setup['n']),  # degree = n
+        #"n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
@@ -88,7 +84,7 @@ Summary:
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 1000  # seconds
+    setup['max_time'] = 10000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -102,7 +98,7 @@ Summary:
     setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_func'] = EXPONENTIAL
+    setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = 1  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
 
     if setup_from_file:
@@ -110,17 +106,16 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
     test_subfolder = "test_005_1e-4alpha10ktimeXin0-1DiagCyclCliq_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
     plot_from_file = True  # run plotter.py upon finishing
-    instant_plot = False  # instantly plot single simulations results
+    instant_plot = True  # instantly plot single simulations results
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
-    save_setup = True  # save setup object dump in order to restore it for run the same simulation
     ### END SETUP ###
 
     np.random.seed(setup['seed'])
@@ -197,9 +192,8 @@ Summary:
     ### BEGIN MAIN STUFFS ###
 
     # save setup object dump
-    if save_setup:
-        with open(os.path.join(test_path, '.setup.pkl'), "wb") as f:
-            pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
+    with open(os.path.join(test_path, '.setup.pkl'), "wb") as f:
+        pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
 
     setup['string_graphs'] = pprint.PrettyPrinter(indent=4).pformat(setup['graphs']).replace('array([', 'np.array([')
 
@@ -235,7 +229,7 @@ metrics = {metrics}
 metrics_type = {metrics_type}
 shuffle = {shuffle}
 verbose = {verbose}
-time_distr_func = {time_distr_func}
+time_distr_class = {time_distr_class}
 time_distr_param = {time_distr_param}
 """.format(**setup)
 
@@ -267,7 +261,9 @@ time_distr_param = {time_distr_param}
             metrics=setup['metrics'],
             metrics_type=setup['metrics_type'],
             shuffle=setup['shuffle'],
-            verbose=setup['verbose']
+            verbose=setup['verbose'],
+            time_distr_class=setup['time_distr_class'],
+            time_distr_param=setup['time_distr_param']
         )
 
         try:

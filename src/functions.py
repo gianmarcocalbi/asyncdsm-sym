@@ -1,6 +1,6 @@
-import math, sys
+import math, sys, random
 
-def iteration_speed_lower_bound_new():
+def iteration_speed_lower_bound_new(distr_name, param):
     pass
 
 
@@ -38,3 +38,4 @@ def progress(current_progress, total_progress, bar_length=50, text_before='', te
 
     sys.stdout.write('{}[{}] {}% {}\r'.format(text_before, bar, percents, text_after))
     sys.stdout.flush()
+

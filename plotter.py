@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os, argparse, warnings, glob, pickle
 from src.functions import *
+from src import statistics
 
 
 def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_plot=True):
@@ -36,12 +37,12 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
     ]
 
     plots = (
-        "iter_time",
-        "mse_iter",
-        "real-mse_iter",
-        "mse_time",
-        "real-mse_time",
-        #"iter-lb_time",
+        # "iter_time",
+        # "mse_iter",
+        # "real-mse_iter",
+        # "mse_time",
+        # "real-mse_time",
+        "iter-lb_time",
     )
 
     n = 100
@@ -91,8 +92,8 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
     real_mse_log = {}
     iter_log = {}
 
-    try :
-        with open("{}/setup.pkl".format(test_folder_path), 'rb') as setup_file:
+    try:
+        with open("{}/.setup.pkl".format(test_folder_path), 'rb') as setup_file:
             setup = pickle.load(setup_file)
     except:
         raise
@@ -167,9 +168,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
         plt.ylabel("Iteration")
         for graph in graphs:
             n_iter = len(mse_log[graph])
-            p = None
+            curves = None
             if scatter:
-                p = plt.scatter(
+                curves = plt.scatter(
                     iter_log[graph],
                     list(range(0, n_iter)),
                     label=graph,
@@ -177,20 +178,39 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
                     color=colors[graph]
                 )
             else:
-                p = plt.plot(
+                curves = plt.plot(
                     iter_log[graph],
                     list(range(0, n_iter)),
                     label=graph,
                     color=colors[graph]
                 )
 
-            plt.plot(
-                list(range(0, int(iter_log[graph][-1]))),
-                iteration_speed_lower_bound(1, degrees[graph], list(range(0, int(iter_log[graph][-1])))),
-                # label="{} LB".format(graph),
-                color=p[-1].get_color(),
-                linestyle=':'
-            )
+            try:
+                p_x = list(range(0, int(iter_log[graph][-1])))
+                p_y = []
+                lb_slope = statistics.single_iteration_velocity_lower_bound(
+                    setup['time_distr_class'],
+                    setup['time_distr_param'],
+                    degrees[graph]
+                )
+                for x in range(len(p_x)):
+                    p_y.append(x * lb_slope)
+
+                plt.plot(
+                    p_x,
+                    p_y,
+                    # label="{} LB".format(graph),
+                    color=curves[-1].get_color(),
+                    linestyle=':'
+                )
+            except KeyError:
+                plt.plot(
+                    list(range(0, int(iter_log[graph][-1]))),
+                    iteration_speed_lower_bound(1, degrees[graph], list(range(0, int(iter_log[graph][-1])))),
+                    # label="{} LB".format(graph),
+                    color=curves[-1].get_color(),
+                    linestyle=':'
+                )
         plt.legend()
         if save_to_test_folder:
             plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
