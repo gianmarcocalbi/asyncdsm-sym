@@ -1,9 +1,15 @@
 import math, sys, random, abc
 
 
-def single_iteration_velocity_lower_bound(distr_class, distr_param, degree):
-    E_X = distr_class.mean(distr_param)
-    E_Z = eval("MaxOf" + distr_class.__name__).mean(distr_param, k=degree)
+def single_iteration_velocity_lower_bound(degree, distr_class, *distr_param):
+    try :
+        E_X = distr_class.mean(distr_param)
+        new_distr_param = distr_param
+    except TypeError:
+        E_X = distr_class.mean(distr_param[0])
+        new_distr_param = distr_param[0]
+
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(new_distr_param, k=degree)
     return 1 / (E_X + E_Z)
 
 

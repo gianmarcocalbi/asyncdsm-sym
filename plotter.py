@@ -189,9 +189,9 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
                 p_x = list(range(0, int(iter_log[graph][-1])))
                 p_y = []
                 lb_slope = statistics.single_iteration_velocity_lower_bound(
+                    degrees[graph],
                     setup['time_distr_class'],
-                    setup['time_distr_param'],
-                    degrees[graph]
+                    setup['time_distr_param']
                 )
                 for x in range(len(p_x)):
                     p_y.append(x * lb_slope)

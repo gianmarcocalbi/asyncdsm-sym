@@ -62,14 +62,14 @@ Summary:
     setup['graphs'] = {
         "0_diagonal": DIAGONAL(setup['n']),
         "1_cycle": CYCLE(setup['n']),  # degree = 1
-        # "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
+        "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
         # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
         # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
         # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
         # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
-        #"n-1_clique": CLIQUE(setup['n']),  # degree = n
+        "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
@@ -84,7 +84,7 @@ Summary:
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 10000  # seconds
+    setup['max_time'] = 1000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -98,8 +98,8 @@ Summary:
     setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_class'] = statistics.ExponentialDistribution
-    setup['time_distr_param'] = 1  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
+    setup['time_distr_class'] = statistics.UniformDistribution
+    setup['time_distr_param'] = 2  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
