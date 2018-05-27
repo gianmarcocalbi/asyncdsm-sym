@@ -1,8 +1,22 @@
 import math, sys, random, abc
+from scipy import integrate
+import numpy as np
 
 
-def single_iteration_velocity_lower_bound(degree, distr_class, *distr_param):
-    try :
+def single_iteration_velocity_residual_lifetime_lower_bound(degree, distr_class, *distr_param):
+    try:
+        E_X = distr_class.mean(distr_param)
+        new_distr_param = distr_param
+    except TypeError:
+        E_X = distr_class.mean(distr_param[0])
+        new_distr_param = distr_param[0]
+
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(new_distr_param, k=degree)
+    return 1 / (E_X + E_Z)
+
+
+def single_iteration_velocity_memoryless_lower_bound(degree, distr_class, *distr_param):
+    try:
         E_X = distr_class.mean(distr_param)
         new_distr_param = distr_param
     except TypeError:
@@ -47,6 +61,21 @@ class ExponentialDistribution(DistributionAbstract):
 
 
 class UniformDistribution(DistributionAbstract):
+    @staticmethod
+    def F_X(x, *args):
+        a, b = UniformDistribution.get_interval_extremes(*args)
+        if x <= a:
+            return 0
+        elif a < x < b:
+            return (x - a) / (b - a)
+        else:
+            return 1
+
+    @staticmethod
+    def F_res_X(x, *args):
+        a, b = UniformDistribution.get_interval_extremes(*args)
+        return (a ** 2 - 2 * b * x + x ** 2) / (a ** 2 - b ** 2)
+
     @staticmethod
     def sample(*args):
         a, b = UniformDistribution.get_interval_extremes(*args)
@@ -116,6 +145,11 @@ class MaxOfUniformDistribution(DistributionAbstract):
     def mean(*args, k=1):
         a, b = UniformDistribution.get_interval_extremes(*args)
         return (a + b * k) / (k + 1)
+
+    @staticmethod
+    def residual_time_mean(*args, k=1):
+        integrand = lambda x: 1 - UniformDistribution.F_res_X(x, *args) ** k
+        return 1 / UniformDistribution.mean(*args) * integrate.quad(integrand, 0, np.inf)[0]
 
     @staticmethod
     def variance(*args, k=1):

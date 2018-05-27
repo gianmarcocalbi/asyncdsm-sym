@@ -1,8 +1,3 @@
+from src import statistics
 
-def f(a, *b):
-    print(a)
-    print(b)
-    print(c)
-
-f(1,2,3)
-f(1,2,2,3)
+print(statistics.MaxOfUniformDistribution.residual_time_mean(0, 2, k=1))
