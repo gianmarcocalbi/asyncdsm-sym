@@ -41,7 +41,7 @@ class Cluster:
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
               metrics="all", metrics_type=0, shuffle=True, verbose=False,
-              time_distr_class=statistics.ExponentialDistribution, time_distr_param=1.0):
+              time_distr_class=statistics.ExponentialDistribution, time_distr_param=()):
         """Cluster setup.
 
         Parameters
@@ -104,8 +104,8 @@ class Cluster:
         time_distr_class : class, optional
             Statistic distribution class from src.statistics.
 
-        time_distr_param : float, optional
-            Param to pass to distribution sample method.
+        time_distr_param : list, optional
+            Params' list to pass to distribution sample method.
 
         Returns
         -------
@@ -529,6 +529,8 @@ class Node:
         self.iteration = 0  # current iteration
         self.log = [0.0]  # log indexed as "iteration" -> "completion clock"
         self.time_distr_class = time_distr_class
+        if not type(time_distr_param) in (list, tuple,):
+            time_distr_param = [time_distr_param]
         self.time_distr_param = time_distr_param
 
         # buffer of incoming weights from dependencies
@@ -650,7 +652,7 @@ class Node:
 
         # get the counter after the computation has ended
         # cf = time.perf_counter()
-        dt = self.time_distr_class.sample(self.time_distr_param)  # todo: temp
+        dt = self.time_distr_class.sample(*self.time_distr_param)  # todo: temp
         #dt = random.uniform(0,2)
 
         # computes the clock when the computation has finished

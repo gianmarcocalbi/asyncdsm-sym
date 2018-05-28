@@ -1,3 +1,3 @@
 from src import statistics
 
-print(statistics.single_iteration_velocity_residual_lifetime_lower_bound(1, statistics.UniformDistribution, 0, 2))
+print(statistics.MaxOfType2ParetoDistribution.residual_time_mean(3,sigma=2,k=51))
