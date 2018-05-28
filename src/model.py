@@ -650,8 +650,8 @@ class Node:
 
         # get the counter after the computation has ended
         # cf = time.perf_counter()
-        #dt = self.time_distr_class.sample(self.time_distr_param)  # todo: temp
-        dt = random.uniform(0,2)
+        dt = self.time_distr_class.sample(self.time_distr_param)  # todo: temp
+        #dt = random.uniform(0,2)
 
         # computes the clock when the computation has finished
         # tf = t0 + cf - c0

@@ -1,3 +1,3 @@
 from src import statistics
 
-print(statistics.MaxOfUniformDistribution.residual_time_mean(0, 2, k=1))
+print(statistics.single_iteration_velocity_residual_lifetime_lower_bound(1, statistics.UniformDistribution, 0, 2))

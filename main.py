@@ -63,12 +63,12 @@ Summary:
         "0_diagonal": DIAGONAL(setup['n']),
         "1_cycle": CYCLE(setup['n']),  # degree = 1
         "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
+        # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
         # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
-        # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
@@ -98,17 +98,17 @@ Summary:
     setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_class'] = statistics.UniformDistribution
-    setup['time_distr_param'] = 2  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
+    setup['time_distr_class'] = statistics.Type2ParetoDistribution
+    setup['time_distr_param'] = 3  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_005_1e-4alpha10ktimeXin0-1DiagCyclCliq_classic"  # test folder inside test_log/
+    test_subfolder = "test_005_pareto2sigma1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
