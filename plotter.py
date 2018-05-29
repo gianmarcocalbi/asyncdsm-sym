@@ -37,12 +37,23 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
     ]
 
     plots = (
-        # "iter_time",
-        # "mse_iter",
-        # "real-mse_iter",
-        # "mse_time",
-        # "real-mse_time",
-        "iter-lb_time",
+        #"iter_time",
+        #"avg-iter_time",
+
+        #"iter-lb_time",
+        #"avg-iter-lb_time",
+
+        #"iter-ub_time",
+        "avg-iter-ub_time",
+
+        #"mse_iter",
+        #"real-mse_iter",
+
+        #"mse_time",
+        #"real-mse_time",
+
+        #"iter-vel_degree",
+        #"iter-vel-err_degree",
     )
 
     n = 100
@@ -91,6 +102,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
     mse_log = {}
     real_mse_log = {}
     iter_log = {}
+    avg_iter_log = {}
 
     try:
         with open("{}/.setup.pkl".format(test_folder_path), 'rb') as setup_file:
@@ -103,6 +115,8 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
             mse_log[graph] = np.loadtxt("{}/{}_global_mean_squared_error_log".format(test_folder_path, graph))
             real_mse_log[graph] = np.loadtxt("{}/{}_global_real_mean_squared_error_log".format(test_folder_path, graph))
             iter_log[graph] = np.loadtxt("{}/{}_iterations_time_log".format(test_folder_path, graph))
+            avg_iter_log[graph] = [tuple(s.split(",")) for s in
+                                   np.loadtxt("{}/{}_avg_iterations_time_log".format(test_folder_path, graph), str)]
 
         except OSError:
             warnings.warn('Graph "{}" not found in folder {}'.format(graph, test_folder_path))
@@ -162,13 +176,42 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
             plt.show()
         plt.close()
 
+    if "avg-iter_time" in plots:
+        plt.title("Global avg iterations over cluster clock")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Iteration")
+        for graph in graphs:
+            lx = [float(p[0]) for p in avg_iter_log[graph]]
+            ly = [float(p[1]) for p in avg_iter_log[graph]]
+            n_iter = len(mse_log[graph])
+            if scatter:
+                plt.scatter(
+                    lx,
+                    ly,
+                    label=graph,
+                    s=points_size,
+                    color=colors[graph]
+                )
+            else:
+                plt.plot(
+                    lx,
+                    ly,
+                    label=graph,
+                    color=colors[graph]
+                )
+        plt.legend()
+        if save_to_test_folder:
+            plt.savefig(os.path.join(plot_folder_path, "1_avg-iter_time.png"))
+        if instant_plot:
+            plt.show()
+        plt.close()
+
     if "iter-lb_time" in plots:
-        plt.title("Global iterations over cluster clock")
+        plt.title("Global iterations over cluster clock with LB")
         plt.xlabel("Time (s)")
         plt.ylabel("Iteration")
         for graph in graphs:
             n_iter = len(mse_log[graph])
-            curves = None
             if scatter:
                 curves = plt.scatter(
                     iter_log[graph],
@@ -213,10 +256,181 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "1_iter_time.png"))
+            plt.savefig(os.path.join(plot_folder_path, "2_iter-lb_time.png"))
         if instant_plot:
             plt.show()
         plt.close()
+
+    if "avg-iter-lb_time" in plots:
+        plt.title("Global avg iterations over cluster clock with LB")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Iteration")
+        for graph in graphs:
+            lx = [float(p[0]) for p in avg_iter_log[graph]]
+            ly = [float(p[1]) for p in avg_iter_log[graph]]
+
+            curves = None
+            if scatter:
+                curves = plt.scatter(
+                    lx,
+                    ly,
+                    label=graph,
+                    s=points_size,
+                    color=colors[graph]
+                )
+            else:
+                curves = plt.plot(
+                    lx,
+                    ly,
+                    label=graph,
+                    color=colors[graph]
+                )
+
+            try:
+                p_x = list(range(0, int(iter_log[graph][-1])))
+                p_y = []
+                lb_slope = statistics.single_iteration_velocity_residual_lifetime_lower_bound(
+                    degrees[graph],
+                    setup['time_distr_class'],
+                    setup['time_distr_param']
+                )
+                for x in range(len(p_x)):
+                    p_y.append(x * lb_slope)
+
+                plt.plot(
+                    p_x,
+                    p_y,
+                    # label="{} LB".format(graph),
+                    color=curves[-1].get_color(),
+                    linestyle=':'
+                )
+            except KeyError:
+                plt.plot(
+                    list(range(0, int(iter_log[graph][-1]))),
+                    iteration_speed_lower_bound(1, degrees[graph], list(range(0, int(iter_log[graph][-1])))),
+                    # label="{} LB".format(graph),
+                    color=curves[-1].get_color(),
+                    linestyle=':'
+                )
+        plt.legend()
+        if save_to_test_folder:
+            plt.savefig(os.path.join(plot_folder_path, "2_avg-iter-lb_time.png"))
+        if instant_plot:
+            plt.show()
+        plt.close()
+
+    """if "iter-ub_time" in plots:
+        plt.title("Global iterations over cluster clock with UB")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Iteration")
+        for graph in graphs:
+            n_iter = len(mse_log[graph])
+            if scatter:
+                curves = plt.scatter(
+                    iter_log[graph],
+                    list(range(0, n_iter)),
+                    label=graph,
+                    s=points_size,
+                    color=colors[graph]
+                )
+            else:
+                curves = plt.plot(
+                    iter_log[graph],
+                    list(range(0, n_iter)),
+                    label=graph,
+                    color=colors[graph]
+                )
+
+            try:
+                p_x = list(range(0, int(iter_log[graph][-1])))
+                p_y = []
+                lb_slope = statistics.single_iteration_velocity_residual_lifetime_lower_bound(
+                    degrees[graph],
+                    setup['time_distr_class'],
+                    setup['time_distr_param']
+                )
+                for x in range(len(p_x)):
+                    p_y.append(x * lb_slope)
+
+                plt.plot(
+                    p_x,
+                    p_y,
+                    # label="{} LB".format(graph),
+                    color=curves[-1].get_color(),
+                    linestyle=':'
+                )
+            except KeyError:
+                plt.plot(
+                    list(range(0, int(iter_log[graph][-1]))),
+                    iteration_speed_lower_bound(1, degrees[graph], list(range(0, int(iter_log[graph][-1])))),
+                    # label="{} LB".format(graph),
+                    color=curves[-1].get_color(),
+                    linestyle=':'
+                )
+        plt.legend()
+        if save_to_test_folder:
+            plt.savefig(os.path.join(plot_folder_path, "2_iter-lb_time.png"))
+        if instant_plot:
+            plt.show()
+        plt.close()"""
+
+    if "avg-iter-ub_time" in plots:
+        plt.title("Global avg iterations over cluster clock with UB")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Iteration")
+        for graph in graphs:
+            lx = [float(p[0]) for p in avg_iter_log[graph]]
+            ly = [float(p[1]) for p in avg_iter_log[graph]]
+
+            if scatter:
+                curves = plt.scatter(
+                    lx,
+                    ly,
+                    label=graph,
+                    s=points_size,
+                    color=colors[graph]
+                )
+            else:
+                curves = plt.plot(
+                    lx,
+                    ly,
+                    label=graph,
+                    color=colors[graph]
+                )
+
+            try:
+                p_x = list(range(0, int(iter_log[graph][-1])))
+                p_y = []
+                lb_slope = statistics.single_iteration_velocity_upper_bound(
+                    degrees[graph],
+                    setup['time_distr_class'],
+                    setup['time_distr_param']
+                )
+                for x in range(len(p_x)):
+                    p_y.append(x * lb_slope)
+
+                plt.plot(
+                    p_x,
+                    p_y,
+                    # label="{} LB".format(graph),
+                    color=curves[-1].get_color(),
+                    linestyle=(0, (3, 5, 1, 5, 1, 5))
+                )
+            except KeyError:
+                plt.plot(
+                    list(range(0, int(iter_log[graph][-1]))),
+                    iteration_speed_lower_bound(1, degrees[graph], list(range(0, int(iter_log[graph][-1])))),
+                    # label="{} LB".format(graph),
+                    color=curves[-1].get_color(),
+                    linestyle=':'
+                )
+        plt.legend()
+        if save_to_test_folder:
+            plt.savefig(os.path.join(plot_folder_path, "2_avg-iter-ub_time.png"))
+        if instant_plot:
+            plt.show()
+        plt.close()
+
 
     if "mse_iter" in plots:
         plt.title("MSE over global iterations")
@@ -243,7 +457,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "2_mse_iter.png"))
+            plt.savefig(os.path.join(plot_folder_path, "3_mse_iter.png"))
         if instant_plot:
             plt.show()
         plt.close()
@@ -273,7 +487,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "2_real-mse_iter.png"))
+            plt.savefig(os.path.join(plot_folder_path, "3_real-mse_iter.png"))
         if instant_plot:
             plt.show()
         plt.close()
@@ -303,7 +517,7 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "3_mse_time.png"))
+            plt.savefig(os.path.join(plot_folder_path, "4_mse_time.png"))
         if instant_plot:
             plt.show()
         plt.close()
@@ -333,7 +547,105 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
                 )
         plt.legend()
         if save_to_test_folder:
-            plt.savefig(os.path.join(plot_folder_path, "3_real-mse_time.png"))
+            plt.savefig(os.path.join(plot_folder_path, "4_real-mse_time.png"))
+        if instant_plot:
+            plt.show()
+        plt.close()
+
+    if "iter-vel-err_degree"in plots:
+        plt.title("Velocity error over topology's degree")
+        plt.xlabel("Degree k")
+        plt.ylabel("Error (Velocity LB for k / Real Velocity for k)")
+
+        p_x = []
+        p_y = []
+        for graph in graphs:
+            lx = [float(p[0]) for p in avg_iter_log[graph]]
+            ly = [float(p[1]) for p in avg_iter_log[graph]]
+            v_lb = statistics.single_iteration_velocity_residual_lifetime_lower_bound(
+                degrees[graph],
+                setup['time_distr_class'],
+                setup['time_distr_param']
+            )
+            v_real = ly[-1] / lx[-1]
+
+            p_x.append(degrees[graph])
+            p_y.append(v_lb / v_real)
+
+        plt.plot(
+            p_x,
+            p_y,
+            markersize=5,
+            marker='o'
+        )
+
+        if save_to_test_folder:
+            plt.savefig(os.path.join(plot_folder_path, "5_iter-vel-err_degree.png"))
+        if instant_plot:
+            plt.show()
+        plt.close()
+
+    if "iter-vel_degree" in plots:
+        plt.title("Real VS LB Velocity over topology's degree")
+        plt.xlabel("Degree k")
+        plt.ylabel("Velocity for k (#iter / time)")
+
+        v_real_y = []
+        v_lb_y = []
+        x = []
+        for graph in graphs:
+            lx = [float(p[0]) for p in avg_iter_log[graph]]
+            ly = [float(p[1]) for p in avg_iter_log[graph]]
+            v_lb = statistics.single_iteration_velocity_residual_lifetime_lower_bound(
+                degrees[graph],
+                setup['time_distr_class'],
+                setup['time_distr_param']
+            )
+            v_real = ly[-1] / lx[-1]
+
+            x.append(degrees[graph])
+            v_real_y.append(v_real)
+            v_lb_y.append(v_lb)
+
+
+        if scatter:
+            plt.scatter(
+                x,
+                v_real_y,
+                label="Real velocity (from tests)",
+                color='g',
+                s=4,
+                marker='_'
+            )
+            plt.scatter(
+                x,
+                v_lb_y,
+                label="Velocity LB",
+                color='b',
+                s=4,
+                marker='_'
+            )
+        else:
+            plt.plot(
+                x,
+                v_real_y,
+                markersize=3,
+                marker='o',
+                label="Real velocity (from tests)",
+                color='g'
+            )
+            plt.plot(
+                x,
+                v_lb_y,
+                markersize=3,
+                marker='o',
+                label="Velocity LB",
+                color='b'
+            )
+
+        plt.legend()
+        if save_to_test_folder:
+            plt.savefig(os.path.join(plot_folder_path, "5_iter-vel_degree.png"))
         if instant_plot:
             plt.show()
         plt.close()

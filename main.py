@@ -98,8 +98,8 @@ Summary:
     setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_class'] = statistics.UniformDistribution
-    setup['time_distr_param'] = [0,2]  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
+    setup['time_distr_class'] = statistics.ExponentialDistribution
+    setup['time_distr_param'] = [1]  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
@@ -108,12 +108,12 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_005_uniform0-2_1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
+    test_subfolder = "test_005_exp1lambda_1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
     plot_from_file = True  # run plotter.py upon finishing
-    instant_plot = True  # instantly plot single simulations results
+    instant_plot = False  # instantly plot single simulations results
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
     ### END SETUP ###
@@ -288,6 +288,11 @@ time_distr_param = {time_distr_param}
         np.savetxt(
             os.path.join(test_path, "{}_iterations_time_log".format(graph)),
             cluster.iterations_time_log,
+            delimiter=','
+        )
+        np.savetxt(
+            os.path.join(test_path, "{}_avg_iterations_time_log".format(graph)),
+            cluster.avg_iterations_time_log,
             delimiter=','
         )
 

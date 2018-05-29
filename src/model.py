@@ -31,6 +31,7 @@ class Cluster:
         self.activation_func = None
         self.dynamic_log = []  # log containing for each iteration i a pair (t0_i, tf_i)
         self.W_log = []  # log 'iteration i-th' => value of weight vector at iteration i-th
+        self.avg_iterations_time_log = [(0.0, 0.0)]
         self.iterations_time_log = [0.0]  # 'iteration i-th' => clock value at which i-th iteration has been completed
         self.global_mean_absolute_error_log = []  # 'iteration' => global MAE
         self.global_mean_squared_error_log = []  # 'iteration' => global MSE
@@ -417,6 +418,13 @@ class Cluster:
                         self.iteration += 1
                         self.iterations_time_log.append(-1)
                         self.iterations_time_log[self.iteration] = node.local_clock
+
+                        avg_iter = 0
+                        for __node in self.nodes:
+                            avg_iter += __node.get_iteration_at_local_clock(self.clock)
+                        avg_iter /= len(self.nodes)
+                        self.avg_iterations_time_log.append((self.clock, avg_iter))
+
                         self._compute_metrics()
 
                         """max_error = -math.inf
@@ -624,6 +632,9 @@ class Node:
         if len(self.log) > iteration:
             return self.log[iteration]
         return math.inf
+
+    def get_iteration_at_local_clock(self, local_clock):
+        return np.searchsorted(self.log, local_clock)-1
 
     def enqueue_weight(self, dependency_node_id, weight):
         """

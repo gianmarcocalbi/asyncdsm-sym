@@ -2,6 +2,7 @@ import math, sys, random, abc, decimal
 from scipy import integrate
 from scipy.special import binom
 import numpy as np
+import sympy as sp
 
 
 def single_iteration_velocity_residual_lifetime_lower_bound(degree, distr_class, distr_param):
@@ -12,16 +13,20 @@ def single_iteration_velocity_residual_lifetime_lower_bound(degree, distr_class,
     return 1 / (E_X + E_Z)
 
 
-def single_iteration_velocity_memoryless_lower_bound(degree, distr_class, *distr_param):
-    try:
-        E_X = distr_class.mean(distr_param)
-        new_distr_param = distr_param
-    except TypeError:
-        E_X = distr_class.mean(distr_param[0])
-        new_distr_param = distr_param[0]
-
-    E_Z = eval("MaxOf" + distr_class.__name__).mean(new_distr_param, k=degree)
+def single_iteration_velocity_memoryless_lower_bound(degree, distr_class, distr_param):
+    if not type(distr_param) in (list, tuple,):
+        distr_param = (distr_param,)
+    E_X = distr_class.mean(*distr_param)
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_param, k=degree)
     return 1 / (E_X + E_Z)
+
+
+def single_iteration_velocity_upper_bound(degree, distr_class, distr_param):
+    if not type(distr_param) in (list, tuple,):
+        distr_param = (distr_param,)
+    E_X = distr_class.mean(*distr_param)
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_param, k=degree)
+    return 2 / (E_X + E_Z)
 
 
 class DistributionAbstract:
@@ -105,21 +110,25 @@ class Type2ParetoDistribution(DistributionAbstract):
 class MaxOfExponentialDistribution(DistributionAbstract):
     @staticmethod
     def sample(lambd, k=1):
-        raise NotImplementedError("sample method is not defined for this distribution")
+        raise NotImplementedError("sample method is not defined for MaxOfExponentialDistribution distribution")
 
     @staticmethod
     def mean(lambd, k=1):
         return 1 / lambd * (sum((1 / i) for i in range(1, k + 1)))
 
     @staticmethod
+    def residual_time_mean(lambd, k=1):
+        return MaxOfExponentialDistribution.mean(lambd, k)
+
+    @staticmethod
     def variance(lambd, k=1):
-        raise NotImplementedError("variance method is not defined for this distribution")
+        raise NotImplementedError("variance method is not defined for MaxOfExponentialDistribution distribution")
 
 
 class MaxOfUniformDistribution(DistributionAbstract):
     @staticmethod
     def sample(a=0, b=1, k=1):
-        raise NotImplementedError("sample method is not defined for this distribution")
+        raise NotImplementedError("sample method is not defined for MaxOfUniformDistribution distribution")
 
     @staticmethod
     def mean(a=0, b=1, k=1):
@@ -135,17 +144,17 @@ class MaxOfUniformDistribution(DistributionAbstract):
 
     @staticmethod
     def variance(a=0, b=1, k=1):
-        raise NotImplementedError("variance method is not defined for this distribution")
+        raise NotImplementedError("variance method is not defined for MaxOfUniformDistribution distribution")
 
 
 class MaxOfType2ParetoDistribution(DistributionAbstract):
     @staticmethod
     def sample(alpha, sigma=2, k=1):
-        raise NotImplementedError("variance method is not defined for this distribution")
+        raise NotImplementedError("sample method is not defined for MaxOfType2ParetoDistribution distribution")
 
     @staticmethod
     def mean(alpha, sigma=2, k=1):
-        raise NotImplementedError("variance method is not defined for this distribution")
+        raise NotImplementedError("mean method is not defined for MaxOfType2ParetoDistribution distribution")
 
     @staticmethod
     def residual_time_mean(alpha, sigma=2, k=1):
@@ -159,6 +168,7 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
         _sum1 = 0.0
         _sum2 = 0.0
         _sum3 = 0.0
+        _symsum = 0.0
         for i in range(1, k + 1):
             """
             if not True:
@@ -174,19 +184,19 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
             p3 = s / ((a - 1) * i - 1)
             _sum1 += p1 * p2 * p3
 
+            _sum2 += (((-1) ** (i + 1)) * binom(k, i)) * (s / ((a - 1) * i - 1.0))
+            _sum3 += (((-1) ** (i + 1)) * binom(k, i)) * s / ((a - 1) * i - 1.0)
+
             intgr = (D(s) / ((D(a) - D(1.0)) * D(i) - D(1.0)))
             d1 = D(binom(k, i))
             d2 = D(-1.0) ** (D(i) + D(1.0))
             d3 = D(intgr)
             _sumD += d1 * d2 * d3
 
-            _sum2 += (((-1) ** (i + 1)) * binom(k, i)) * (s / ((a-1) * i - 1.0))
-            _sum3 += (((-1) ** (i + 1)) * binom(k, i)) * s / ((a-1) * i - 1.0)
-
         decimal.getcontext().prec = prev_prec
-        #return _sum1, _sum2, _sum3, _sumD
+        # return _sum1, _sum2, _sum3, _sumD
         return float(_sumD)
 
     @staticmethod
     def variance(alpha, sigma=2, k=1):
-        raise NotImplementedError("variance method is not defined for this distribution")
+        raise NotImplementedError("variance method is not defined for MaxOfType2ParetoDistribution distribution")
