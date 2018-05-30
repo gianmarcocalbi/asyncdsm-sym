@@ -1,6 +1,5 @@
 import math, sys, random, abc, decimal
 from scipy import integrate
-from scipy.special import binom
 import numpy as np
 import sympy as sp
 
@@ -160,15 +159,11 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
     def residual_time_mean(alpha, sigma=2, k=1):
         prev_prec = decimal.getcontext().prec
         D = decimal.Decimal
-        decimal.getcontext().prec = 64
+        decimal.getcontext().prec = 128
 
         a = float(alpha)
         s = float(sigma)
-        _sumD = D(0.0)
-        _sum1 = 0.0
-        _sum2 = 0.0
-        _sum3 = 0.0
-        _symsum = 0.0
+        summation = D(0.0)
         for i in range(1, k + 1):
             """
             if not True:
@@ -179,24 +174,28 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
             else:
             """
 
-            p1 = float(binom(k, i))
-            p2 = float((-1) ** (i + 1))
-            p3 = s / ((a - 1) * i - 1)
-            _sum1 += p1 * p2 * p3
-
-            _sum2 += (((-1) ** (i + 1)) * binom(k, i)) * (s / ((a - 1) * i - 1.0))
-            _sum3 += (((-1) ** (i + 1)) * binom(k, i)) * s / ((a - 1) * i - 1.0)
-
-            intgr = (D(s) / ((D(a) - D(1.0)) * D(i) - D(1.0)))
-            d1 = D(binom(k, i))
+            d1 = D(binomial(k, i))
             d2 = D(-1.0) ** (D(i) + D(1.0))
-            d3 = D(intgr)
-            _sumD += d1 * d2 * d3
+            d3 = (D(s) / ((D(a) - D(1.0)) * D(i) - D(1.0)))
+            summation += d1 * d2 * d3
 
         decimal.getcontext().prec = prev_prec
-        # return _sum1, _sum2, _sum3, _sumD
-        return float(_sumD)
+
+        return float(summation)
 
     @staticmethod
     def variance(alpha, sigma=2, k=1):
         raise NotImplementedError("variance method is not defined for MaxOfType2ParetoDistribution distribution")
+
+def binomial(n,k):
+    if n == k:
+        return 1
+    elif k == 1:
+        return n
+    elif k > n:
+        return 0
+    else:
+        a = math.factorial(n)
+        b = math.factorial(k)
+        c = math.factorial(n-k)
+        return a // (b * c)
