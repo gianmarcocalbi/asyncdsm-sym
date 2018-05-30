@@ -4,29 +4,38 @@ import numpy as np
 import sympy as sp
 
 
-def single_iteration_velocity_residual_lifetime_lower_bound(degree, distr_class, distr_param):
-    if not type(distr_param) in (list, tuple,):
-        distr_param = (distr_param,)
-    E_X = distr_class.mean(*distr_param)
-    E_Z = eval("MaxOf" + distr_class.__name__).residual_time_mean(*distr_param, k=degree)
+def single_iteration_velocity_residual_lifetime_lower_bound(degree, distr_class, distr_params):
+    if not type(distr_params) in (list, tuple,):
+        distr_params = (distr_params,)
+    E_X = distr_class.mean(*distr_params)
+    E_Z = eval("MaxOf" + distr_class.__name__).residual_time_mean(*distr_params, k=degree)
     return 1 / (E_X + E_Z)
 
 
-def single_iteration_velocity_memoryless_lower_bound(degree, distr_class, distr_param):
-    if not type(distr_param) in (list, tuple,):
-        distr_param = (distr_param,)
-    E_X = distr_class.mean(*distr_param)
-    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_param, k=degree)
+def single_iteration_velocity_memoryless_lower_bound(degree, distr_class, distr_params):
+    if not type(distr_params) in (list, tuple,):
+        distr_params = (distr_params,)
+    E_X = distr_class.mean(*distr_params)
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=degree)
     return 1 / (E_X + E_Z)
 
 
-def single_iteration_velocity_upper_bound(degree, distr_class, distr_param):
-    if not type(distr_param) in (list, tuple,):
-        distr_param = (distr_param,)
-    E_X = distr_class.mean(*distr_param)
-    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_param, k=degree)
+def single_iteration_velocity_upper_bound(degree, distr_class, distr_params):
+    if not type(distr_params) in (list, tuple,):
+        distr_params = (distr_params,)
+    E_X = distr_class.mean(*distr_params)
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=degree)
     return 2 / (E_X + E_Z)
 
+def single_iteration_velocity_don_bound(degree, distr_class, distr_params):
+    if not distr_class is MaxOfExponentialDistribution:
+        raise Exception("This bound is not defined for MaxOf{} class".format(distr_class.__name__))
+
+    if not type(distr_params) in (list, tuple,):
+        distr_params = (distr_params,)
+    E_X = distr_class.mean(*distr_params)
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=degree)
+    return 2 / (E_X + E_Z)
 
 class DistributionAbstract:
     __metaclass__ = abc.ABCMeta
@@ -153,7 +162,22 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
 
     @staticmethod
     def mean(alpha, sigma=2, k=1):
-        raise NotImplementedError("mean method is not defined for MaxOfType2ParetoDistribution distribution")
+        prev_prec = decimal.getcontext().prec
+        D = decimal.Decimal
+        decimal.getcontext().prec = 128
+
+        a = D(alpha)
+        s = D(sigma)
+        summation = D(0.0)
+        for i in range(1, k + 1):
+            d1 = D(binomial(k, i))
+            d2 = D(-1.0) ** (D(i) + D(1.0))
+            d3 = D(s) / (D(a) * D(i) - D(1.0))
+            summation += d1 * d2 * d3
+
+        decimal.getcontext().prec = prev_prec
+
+        return float(summation)
 
     @staticmethod
     def residual_time_mean(alpha, sigma=2, k=1):
@@ -161,8 +185,8 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
         D = decimal.Decimal
         decimal.getcontext().prec = 128
 
-        a = float(alpha)
-        s = float(sigma)
+        a = D(alpha)
+        s = D(sigma)
         summation = D(0.0)
         for i in range(1, k + 1):
             """
@@ -176,7 +200,7 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
 
             d1 = D(binomial(k, i))
             d2 = D(-1.0) ** (D(i) + D(1.0))
-            d3 = (D(s) / ((D(a) - D(1.0)) * D(i) - D(1.0)))
+            d3 = D(s) / ((D(a) - D(1.0)) * D(i) - D(1.0))
             summation += d1 * d2 * d3
 
         decimal.getcontext().prec = prev_prec
@@ -187,7 +211,8 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
     def variance(alpha, sigma=2, k=1):
         raise NotImplementedError("variance method is not defined for MaxOfType2ParetoDistribution distribution")
 
-def binomial(n,k):
+
+def binomial(n, k):
     if n == k:
         return 1
     elif k == 1:
@@ -197,5 +222,5 @@ def binomial(n,k):
     else:
         a = math.factorial(n)
         b = math.factorial(k)
-        c = math.factorial(n-k)
+        c = math.factorial(n - k)
         return a // (b * c)

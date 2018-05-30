@@ -37,23 +37,23 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
     ]
 
     plots = (
-        "iter_time",
-        "avg-iter_time",
+        #"iter_time",
+        #"avg-iter_time",
 
-        "iter-lb_time",
-        "avg-iter-lb_time",
+        #"iter-lb_time",
+        #"avg-iter-lb_time",
 
-        #"iter-ub_time",
-        #"avg-iter-ub_time",
+        # "iter-ub_time",  # not implemented yet
+        "avg-iter-ub_time",
 
-        "mse_iter",
-        "real-mse_iter",
+        #"mse_iter",
+        #"real-mse_iter",
 
-        "mse_time",
-        "real-mse_time",
+        #"mse_time",
+        #"real-mse_time",
 
-        "iter-vel_degree",
-        "iter-vel-err_degree",
+        #"iter-vel_degree",
+        #"iter-vel-err_degree",
     )
 
     n = 100
