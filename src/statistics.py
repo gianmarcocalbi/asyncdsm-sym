@@ -24,7 +24,7 @@ def single_iteration_velocity_upper_bound(degree, distr_class, distr_params):
     if not type(distr_params) in (list, tuple,):
         distr_params = (distr_params,)
     E_X = distr_class.mean(*distr_params)
-    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=degree)
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=(degree+1))
     return 2 / (E_X + E_Z)
 
 def single_iteration_velocity_don_bound(degree, distr_class, distr_params):
@@ -57,6 +57,8 @@ class DistributionAbstract:
 
 
 class ExponentialDistribution(DistributionAbstract):
+    name = "Exponential"
+
     @staticmethod
     def sample(lambd):
         return np.random.exponential(1 / lambd)
@@ -71,6 +73,8 @@ class ExponentialDistribution(DistributionAbstract):
 
 
 class UniformDistribution(DistributionAbstract):
+    name = "Uniform"
+
     @staticmethod
     def F_X(x, a=0, b=1):
         if x <= a:
@@ -98,6 +102,7 @@ class UniformDistribution(DistributionAbstract):
 
 
 class Type2ParetoDistribution(DistributionAbstract):
+    name = "Type II Pareto"
     @staticmethod
     def sample(alpha, sigma=1):
         return np.random.pareto(alpha) * sigma

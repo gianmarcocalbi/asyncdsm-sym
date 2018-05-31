@@ -1,19 +1,16 @@
-from src import statistics
+from plotter_new import Plotter
 
-for k in range(100):
-    exp = statistics.single_iteration_velocity_upper_bound(
-        k,
-        statistics.ExponentialDistribution,
-        [1]
-    )
-    uni = statistics.single_iteration_velocity_upper_bound(
-        k,
-        statistics.UniformDistribution,
-        [0,2]
-    )
-    par = statistics.single_iteration_velocity_upper_bound(
-        k,
-        statistics.Type2ParetoDistribution,
-        [3,2]
-    )
-    print("k={} -> exp : {} - uni : {} - par : {}".format(k, exp, uni, par))
+p = Plotter(test_folder_name='test_005_exp1lambda_1ktime1e-4alphaXin0-2_classic')
+p.plot_avg_iter_over_time_with_upper_bound()
+p.plot_iter_over_time()
+p.plot_avg_iter_over_time()
+p.plot_iter_over_time_memoryless_lower_bound_only()
+p.plot_iter_over_time_residual_lifetime_lower_bound_only()
+p.plot_iter_over_time_upper_bound_only()
+p.plot_avg_iter_over_time_with_memoryless_lower_bound()
+p.plot_avg_iter_over_time_with_residual_lifetime_lower_bound()
+p.plot_avg_iter_over_time_with_upper_bound()
+p.plot_mse_over_iter()
+p.plot_real_mse_over_iter()
+p.plot_mse_over_time()
+p.plot_real_mse_over_time()

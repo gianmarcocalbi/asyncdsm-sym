@@ -1,4 +1,5 @@
 import math, sys, random
+import numpy as np
 
 def iteration_speed_lower_bound_new(distr_name, param):
     pass
@@ -26,6 +27,14 @@ def iteration_speed_lower_bound(l, k, time_arr):
     for t in time_arr:
         lb.append(t * l / (1 + sum(1 / i for i in range(1, k + 1))))
     return lb
+
+def compute_graph_degree_from_adjacency_matrix(adj_mat):
+    degree = 0
+
+    for i in range(len(adj_mat)):
+        degree = max(degree, np.sum(adj_mat[i])-1)
+
+    return int(degree)
 
 
 def progress(current_progress, total_progress, bar_length=50, text_before='', text_after=''):

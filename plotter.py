@@ -150,6 +150,8 @@ def plot_from_files(test_folder_path=None, save_to_test_folder=False, instant_pl
 
     if "iter_time" in plots:
         plt.title("Global iterations over cluster clock")
+        #plt.title('Left Title', loc='left')
+        #plt.title('Right Title', loc='right')
         plt.xlabel("Time (s)")
         plt.ylabel("Iteration")
         for graph in graphs:
