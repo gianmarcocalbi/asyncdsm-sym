@@ -15,6 +15,7 @@ class Plotter:
     def __init__(self,
                  test_folder_root="./test_log/",
                  test_folder_name=None,
+                 test_folder_path=None,
                  save_plots_to_test_folder=False,
                  instant_plot=True,
                  plots=(),
@@ -39,16 +40,18 @@ class Plotter:
         self.available_plots = (
             "iter_time",
             "avg-iter_time",
-            "iter-lb_time",
-            "avg-iter-lb_time",
-            "iter-ub_time",  # not implemented yet
-            "avg-iter-ub_time",
+            "avg-iter_time-memoryless-lb",
+            "avg-iter_time-residual-lifetime-lb",
+            "avg-iter_time-ub",
             "mse_iter",
             "real-mse_iter",
             "mse_time",
             "real-mse_time",
             "iter-vel_degree",
             "iter-vel-err_degree",
+            "memoryless-lb-error_degree",
+            "residual-lifetime-lb-error_degree",
+            "ub-error_degree"
         )
 
         if self.test_folder_name is None:
@@ -62,12 +65,15 @@ class Plotter:
                 )
             )
         else:
-            self.test_folder_path = os.path.normpath(
-                os.path.join(
-                    self.test_folder_root,
-                    self.test_folder_name
+            if test_folder_path is None:
+                self.test_folder_path = os.path.normpath(
+                    os.path.join(
+                        self.test_folder_root,
+                        self.test_folder_name
+                    )
                 )
-            )
+            else:
+                self.test_folder_path = os.path.normpath(test_folder_path)
 
         if not os.path.exists(self.test_folder_path):
             raise Exception("Folder {} doesn't exist".format(self.test_folder_path))
@@ -160,6 +166,40 @@ class Plotter:
 
                 self.mse_log[graph] = avg_mse_log[graph]
                 self.real_mse_log[graph] = avg_real_mse_log[graph]
+
+    def plot(self):
+        if "iter_time" in self.plots:
+            self.plot_iter_over_time()
+
+        if "avg-iter_time" in self.plots:
+            self.plot_avg_iter_over_time()
+
+        if "avg-iter_time-memoryless-lb" in self.plots:
+            self.plot_avg_iter_over_time_with_memoryless_lower_bound()
+
+        if "avg-iter_time-residual-lifetime-lb" in self.plots:
+            self.plot_avg_iter_over_time_with_residual_lifetime_lower_bound()
+
+        if "avg-iter_time-ub" in self.plots:
+            self.plot_avg_iter_over_time_with_upper_bound()
+
+        if "mse_iter" in self.plots:
+            self.plot_mse_over_iter()
+
+        if "real-mse_iter" in self.plots:
+            self.plot_real_mse_over_iter()
+
+        if "mse_time" in self.plots:
+            self.plot_mse_over_time()
+
+        if "real-mse_time" in self.plots:
+            self.plot_real_mse_over_time()
+
+        if "iter-vel_degree" in self.plots:
+            pass
+
+        if "iter-vel-err_degree" in self.plots:
+            pass
 
     def _plot_init(self,
                    plot_filename,
@@ -297,6 +337,59 @@ class Plotter:
 
     # ERROR over ITERATIONS END
 
+    # BOUND ERROR over DEGREE BEGIN
+
+    def _plot_bound_error_over_degree_lines_subroutine(self, bound_func, **kwargs):
+        p_x = []
+        p_y = []
+        for graph in self.graphs:
+            lx = [float(p[0]) for p in self.avg_iter_log[graph]]
+            ly = [float(p[1]) for p in self.avg_iter_log[graph]]
+            v_lb = bound_func(
+                self.degrees[graph],
+                self.setup['time_distr_class'],
+                self.setup['time_distr_param']
+            )
+            v_real = ly[-1] / lx[-1]
+
+            p_x.append(self.degrees[graph])
+            p_y.append(v_lb / v_real)
+
+        self._plot_subroutine(
+            p_x,
+            p_y,
+            markersize=5,
+            marker='o',
+            **kwargs)
+
+    def _plot_memoryless_lower_bound_error_over_degree_lines(self, **kwargs):
+        self._plot_bound_error_over_degree_lines_subroutine(
+            statistics.single_iteration_velocity_memoryless_lower_bound,
+            **kwargs
+        )
+
+    def _plot_residual_lifetime_lower_bound_error_over_degree_lines(self, **kwargs):
+        self._plot_bound_error_over_degree_lines_subroutine(
+            statistics.single_iteration_velocity_residual_lifetime_lower_bound,
+            **kwargs
+        )
+
+    def _plot_upper_bound_error_over_degree_lines(self, **kwargs):
+        self._plot_bound_error_over_degree_lines_subroutine(
+            statistics.single_iteration_velocity_upper_bound,
+            **kwargs
+        )
+
+    def _plot_don_bound_error_over_degree_lines(self, **kwargs):
+        self._plot_bound_error_over_degree_lines_subroutine(
+            statistics.single_iteration_velocity_don_bound,
+            **kwargs
+        )
+
+    # BOUND ERROR over DEGREE END
+
+    #
+
     def plot_iter_over_time(self):
         filename = "1_iter_time"
         self._plot_init(filename,
@@ -355,7 +448,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_avg_iter_over_time_with_memoryless_lower_bound(self):
-        filename = "1_iter_time-memoryless-lb"
+        filename = "1_avg-iter_time-memoryless-lb"
         self._plot_init(filename,
                         title_center="",
                         title_left="Average iteration at time with memoryless lower bound",
@@ -363,13 +456,13 @@ class Plotter:
                         xlabel="Time (s)",
                         ylabel="Iteration")
         self._plot_iter_over_time_memoryless_lower_bound_lines(
-            linestyle=(0, (1,8))
+            linestyle=(0, (1, 8))
         )
         self._plot_avg_iter_over_time_lines()
         self._plot_close(filename)
 
     def plot_avg_iter_over_time_with_residual_lifetime_lower_bound(self):
-        filename = "1_iter_time-residual-lifetime-lb"
+        filename = "1_avg-iter_time-residual-lifetime-lb"
         self._plot_init(filename,
                         title_center="",
                         title_left="Average iteration at time with residual lifetime lower bound",
@@ -377,13 +470,13 @@ class Plotter:
                         xlabel="Time (s)",
                         ylabel="Iteration")
         self._plot_iter_over_time_residual_lifetime_lower_bound_lines(
-            linestyle=(0, (1,4))
+            linestyle=(0, (1, 4))
         )
         self._plot_avg_iter_over_time_lines()
         self._plot_close(filename)
 
     def plot_avg_iter_over_time_with_upper_bound(self):
-        filename = "1_iter_time-ub"
+        filename = "1_avg-iter_time-ub"
         self._plot_init(filename,
                         title_center="",
                         title_left="Average iteration at time with upper bound",
@@ -441,3 +534,87 @@ class Plotter:
                         ylabel="RMSE")
         self._plot_real_mse_over_time_lines()
         self._plot_close(filename)
+
+    def plot_memoryless_lower_bound_error_over_degree(self):
+        filename = "4_memoryless-lb-error_degree"
+        self._plot_init(filename,
+                        title_center="",
+                        title_left="Memoryless lower bound error over degree",
+                        title_right=self.time_distr_name,
+                        xlabel="Time (s)",
+                        ylabel="LB Error (Velocity LB for k / Real Velocity for k)")
+        self._plot_memoryless_lower_bound_error_over_degree_lines()
+        self._plot_close(filename)
+
+    def plot_residual_lifetime_lower_bound_error_over_degree(self):
+        filename = "4_residual-lifetime-lb-error_degree"
+        self._plot_init(filename,
+                        title_center="",
+                        title_left="Residual lifetime lower bound error over degree",
+                        title_right=self.time_distr_name,
+                        xlabel="Time (s)",
+                        ylabel="LB Error (Velocity LB for k / Real Velocity for k)")
+        self._plot_residual_lifetime_lower_bound_error_over_degree_lines()
+        self._plot_close(filename)
+
+    def plot_upper_bound_error_over_degree(self):
+        filename = "4_ub-error_degree"
+        self._plot_init(filename,
+                        title_center="",
+                        title_left="Upper bound error over degree",
+                        title_right=self.time_distr_name,
+                        xlabel="Time (s)",
+                        ylabel="LB Error (Velocity UB for k / Real Velocity for k)")
+        self._plot_upper_bound_error_over_degree_lines()
+        self._plot_close(filename)
+
+
+if __name__ == "__main__":
+    # argparse setup
+    parser = argparse.ArgumentParser(
+        description='Plotter'
+    )
+
+    parser.add_argument(
+        '-t', '--test_path',
+        action='store',
+        default=None,
+        required=False,
+        help='Test from which load logs to',
+        dest='test_path'
+    )
+
+    parser.add_argument(
+        '-s', '--save',
+        action='store_true',
+        default=False,
+        required=False,
+        help='Specify whether save to file or not',
+        dest='s_flag'
+    )
+
+    args = parser.parse_args()
+
+    Plotter(
+        test_folder_path=args.test_path,
+        save_plots_to_test_folder=args.s_flag,
+        instant_plot=not args.s_flag,
+        plots=(
+            "iter_time",
+            "avg-iter_time",
+            "avg-iter_time-memoryless-lb",
+            "avg-iter_time-residual-lifetime-lb",
+            "avg-iter_time-ub",
+            "mse_iter",
+            "real-mse_iter",
+            "mse_time",
+            "real-mse_time",
+            "iter-vel_degree",
+            "iter-vel-err_degree",
+        ),
+        moving_average_window=0,
+        ymax=None,
+        yscale='log',  # linear or log
+        scatter=False,
+        points_size=0.5
+    )
