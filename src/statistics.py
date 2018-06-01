@@ -24,18 +24,37 @@ def single_iteration_velocity_upper_bound(degree, distr_class, distr_params):
     if not type(distr_params) in (list, tuple,):
         distr_params = (distr_params,)
     E_X = distr_class.mean(*distr_params)
-    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=(degree+1))
+    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=(degree + 1))
     return 2 / (E_X + E_Z)
 
+
 def single_iteration_velocity_don_bound(degree, distr_class, distr_params):
-    if not distr_class is MaxOfExponentialDistribution:
+    if not distr_class is ExponentialDistribution:
         raise Exception("This bound is not defined for MaxOf{} class".format(distr_class.__name__))
 
     if not type(distr_params) in (list, tuple,):
         distr_params = (distr_params,)
-    E_X = distr_class.mean(*distr_params)
+    """E_X = distr_class.mean(*distr_params)
     E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=degree)
-    return 2 / (E_X + E_Z)
+    return 2 / (E_X + E_Z)"""
+
+    prev_prec = decimal.getcontext().prec
+    D = decimal.Decimal
+    decimal.getcontext().prec = 256
+    k = D(degree)
+    l = D(distr_params[0])
+    s = D(0.0)
+    for i in range(1,int(k)+1):
+        b = D(binomial(k,i))
+        _s = D(0.0)
+        for j in range(1,i+1):
+            _s += D(1/j)
+        s += b * D(1/D(2 ** k)) * _s
+
+    decimal.getcontext().prec = prev_prec
+
+    return float(1/((1/l)*(s+D(1))))
+
 
 class DistributionAbstract:
     __metaclass__ = abc.ABCMeta
@@ -103,6 +122,7 @@ class UniformDistribution(DistributionAbstract):
 
 class Type2ParetoDistribution(DistributionAbstract):
     name = "Type II Pareto"
+
     @staticmethod
     def sample(alpha, sigma=1):
         return np.random.pareto(alpha) * sigma

@@ -108,13 +108,13 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_005_exp1lambda_1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
+    test_subfolder = "test_006_exp1lambda_1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
-    plot_from_file = True  # run plotter.py upon finishing
+    plot_from_file = False  # run plotter.py upon finishing
     instant_plot = False  # instantly plot single simulations results
-    save_plot_to_file = True
+    save_plot_to_file = False
     save_descriptor = True  # create _descriptor.txt file
     ### END SETUP ###
 
@@ -293,6 +293,11 @@ time_distr_param = {time_distr_param}
         np.savetxt(
             os.path.join(test_path, "{}_avg_iterations_time_log".format(graph)),
             cluster.avg_iterations_time_log,
+            delimiter=','
+        )
+        np.savetxt(
+            os.path.join(test_path, "{}_max_iterations_time_log".format(graph)),
+            cluster.max_iterations_time_log,
             delimiter=','
         )
 

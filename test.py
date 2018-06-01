@@ -1,16 +1,6 @@
 from plotter_new import Plotter
+from src import statistics
 
-p = Plotter(test_folder_name='test_005_exp1lambda_1ktime1e-4alphaXin0-2_classic')
-p.plot_avg_iter_over_time_with_upper_bound()
-p.plot_iter_over_time()
-p.plot_avg_iter_over_time()
-p.plot_iter_over_time_memoryless_lower_bound_only()
-p.plot_iter_over_time_residual_lifetime_lower_bound_only()
-p.plot_iter_over_time_upper_bound_only()
-p.plot_avg_iter_over_time_with_memoryless_lower_bound()
-p.plot_avg_iter_over_time_with_residual_lifetime_lower_bound()
-p.plot_avg_iter_over_time_with_upper_bound()
-p.plot_mse_over_iter()
-p.plot_real_mse_over_iter()
-p.plot_mse_over_time()
-p.plot_real_mse_over_time()
+p = Plotter(test_folder_name='test_006_exp1lambda_1ktime1e-4alphaXin0-2_classic.conflict.1')
+p.plot_avg_iter_over_time_with_don_bound()
+p.plot_don_bound_error_over_degree()

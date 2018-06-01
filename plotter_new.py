@@ -43,6 +43,7 @@ class Plotter:
             "avg-iter_time-memoryless-lb",
             "avg-iter_time-residual-lifetime-lb",
             "avg-iter_time-ub",
+            "avg-iter_time-don-bound",
             "mse_iter",
             "real-mse_iter",
             "mse_time",
@@ -121,6 +122,7 @@ class Plotter:
         self.real_mse_log = {}
         self.iter_log = {}
         self.avg_iter_log = {}
+        self.max_iter_log = {}
 
         for graph in self.graphs[:]:
             try:
@@ -136,6 +138,10 @@ class Plotter:
                 self.avg_iter_log[graph] = [
                     tuple(s.split(",")) for s in
                     np.loadtxt("{}/{}_avg_iterations_time_log".format(self.test_folder_path, graph), str)
+                ]
+                self.max_iter_log[graph] = [
+                    tuple(s.split(",")) for s in
+                    np.loadtxt("{}/{}_max_iterations_time_log".format(self.test_folder_path, graph), str)
                 ]
 
             except OSError:
@@ -249,6 +255,18 @@ class Plotter:
         for graph in self.graphs:
             lx = [float(p[0]) for p in self.avg_iter_log[graph]]
             ly = [float(p[1]) for p in self.avg_iter_log[graph]]
+
+            self._plot_subroutine(
+                lx,
+                ly,
+                label=graph,
+                color=self.colors[graph],
+                **kwargs)
+
+    def _plot_max_iter_over_time_lines(self, **kwargs):
+        for graph in self.graphs:
+            lx = [float(p[0]) for p in self.max_iter_log[graph]]
+            ly = [float(p[1]) for p in self.max_iter_log[graph]]
 
             self._plot_subroutine(
                 lx,
@@ -489,6 +507,20 @@ class Plotter:
         self._plot_avg_iter_over_time_lines()
         self._plot_close(filename)
 
+    def plot_avg_iter_over_time_with_don_bound(self):
+        filename = "1_avg-iter_time-don-bound"
+        self._plot_init(filename,
+                        title_center="",
+                        title_left="Average iteration at time with \"Don\" bound for the fastest node",
+                        title_right=self.time_distr_name,
+                        xlabel="Time (s)",
+                        ylabel="Iteration")
+        self._plot_iter_over_time_don_bound_lines(
+            linestyle=(0, (1, 4))
+        )
+        self._plot_max_iter_over_time_lines()
+        self._plot_close(filename)
+
     # PLOTS WITH BOUNDS BEGIN
 
     def plot_mse_over_iter(self):
@@ -566,6 +598,17 @@ class Plotter:
                         xlabel="Time (s)",
                         ylabel="LB Error (Velocity UB for k / Real Velocity for k)")
         self._plot_upper_bound_error_over_degree_lines()
+        self._plot_close(filename)
+
+    def plot_don_bound_error_over_degree(self):
+        filename = "4_don-b-error_degree"
+        self._plot_init(filename,
+                        title_center="",
+                        title_left="\"Don\" bound error over degree",
+                        title_right=self.time_distr_name,
+                        xlabel="Time (s)",
+                        ylabel="Bound Error (Velocity Bound for k / Real Velocity for k)")
+        self._plot_don_bound_error_over_degree_lines()
         self._plot_close(filename)
 
 
