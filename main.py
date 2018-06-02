@@ -85,7 +85,7 @@ Summary:
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 1000  # seconds
+    setup['max_time'] = 10000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -99,7 +99,7 @@ Summary:
     setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_class'] = statistics.ExponentialDistribution
+    setup['time_distr_class'] = statistics.UniformDistribution
     setup['time_distr_param'] = [1]  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
 
     if setup_from_file:
@@ -107,15 +107,14 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_006_exp1lambda_1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
+    test_subfolder = "test_006_uniform0-2_10ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
-    plot_from_file = False  # run plotter.py upon finishing
     instant_plot = False  # instantly plot single simulations results
-    save_plot_to_file = False
+    save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
     ### END SETUP ###
 
@@ -308,7 +307,7 @@ time_distr_param = {time_distr_param}
         with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
-    if plot_from_file:
+    if save_plot_to_file or instant_plot:
         plot_from_files(test_path, save_plot_to_file, instant_plot)
 
         # console.stdout.close()
