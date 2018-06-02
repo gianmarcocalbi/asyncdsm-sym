@@ -1,10 +1,11 @@
-import random, math, time, os, plotter, pickle, shutil, datetime, pprint
+import random, math, time, os, pickle, shutil, datetime, pprint
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
 from sklearn import linear_model
 from src.model import Cluster
 from src import mltoolbox, graph_generator, statistics
+from src.plotter import Plotter, plot_from_files
 import matplotlib.pyplot as plt
 
 # degree = 0
@@ -51,7 +52,7 @@ Summary:
 """.format(str(datetime.datetime.now()))
 
     setup_from_file = False
-    setup_folder_path = plotter.get_last_temp_test_path()
+    setup_folder_path = Plotter.get_last_temp_test_folder_path()
     setup_file_path = os.path.join(setup_folder_path, ".setup.pkl")
 
     setup = dict()
@@ -106,7 +107,7 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
     test_subfolder = "test_006_exp1lambda_1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
@@ -308,7 +309,7 @@ time_distr_param = {time_distr_param}
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
     if plot_from_file:
-        plotter.plot_from_files(test_path, save_plot_to_file, instant_plot)
+        plot_from_files(test_path, save_plot_to_file, instant_plot)
 
         # console.stdout.close()
 

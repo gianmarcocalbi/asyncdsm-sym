@@ -412,17 +412,15 @@ class Cluster:
                     # iteration i-th has been completed and the completion time for such
                     # iteration is the actual local_clock of this node
                     min_iter = math.inf
-                    avg_iter = 0
                     max_iter = -1
                     for _node in self.nodes:
                         if _node.iteration < min_iter:
                             min_iter = _node.iteration
                         if _node.iteration > max_iter:
                             max_iter = _node.iteration
-                        avg_iter += _node.get_iteration_at_local_clock(self.clock)
-                    avg_iter /= len(self.nodes)
 
                     if max_iter > self.max_iterations_time_log[-1][1]:
+                        pass
                         self.max_iterations_time_log.append((self.clock, max_iter))
 
 
@@ -430,6 +428,11 @@ class Cluster:
                         self.iteration += 1
                         self.iterations_time_log.append(-1)
                         self.iterations_time_log[self.iteration] = node.local_clock
+
+                        avg_iter = 0
+                        for __node in self.nodes:
+                            avg_iter += __node.get_iteration_at_local_clock(self.clock)
+                        avg_iter /= len(self.nodes)
 
                         self.avg_iterations_time_log.append((self.clock, avg_iter))
 
