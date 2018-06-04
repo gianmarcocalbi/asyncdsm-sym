@@ -99,8 +99,8 @@ Summary:
     setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_class'] = statistics.UniformDistribution
-    setup['time_distr_param'] = [1]  # rate for exponential, shape for pareto, b of [a=0,b] for the uniform
+    setup['time_distr_class'] = statistics.ExponentialDistribution
+    setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
@@ -109,8 +109,9 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_006_uniform0-2_10ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
+    test_subfolder = "test_006_exp1lambda_10ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
+    compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
     instant_plot = False  # instantly plot single simulations results
@@ -274,29 +275,33 @@ time_distr_param = {time_distr_param}
             delete_test_dir()
             raise
 
+        extension = ''
+        if compress:
+            extension = '.gz'
+
         # create output log files
         np.savetxt(
-            os.path.join(test_path, "{}_global_real_mean_squared_error_log".format(graph)),
+            os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
             cluster.global_real_mean_squared_error_log,
             delimiter=','
         )
         np.savetxt(
-            os.path.join(test_path, "{}_global_mean_squared_error_log".format(graph)),
+            os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
             cluster.global_mean_squared_error_log,
             delimiter=','
         )
         np.savetxt(
-            os.path.join(test_path, "{}_iterations_time_log".format(graph)),
+            os.path.join(test_path, "{}_iterations_time_log{}".format(graph, extension)),
             cluster.iterations_time_log,
             delimiter=','
         )
         np.savetxt(
-            os.path.join(test_path, "{}_avg_iterations_time_log".format(graph)),
+            os.path.join(test_path, "{}_avg_iterations_time_log{}".format(graph, extension)),
             cluster.avg_iterations_time_log,
             delimiter=','
         )
         np.savetxt(
-            os.path.join(test_path, "{}_max_iterations_time_log".format(graph)),
+            os.path.join(test_path, "{}_max_iterations_time_log{}".format(graph, extension)),
             cluster.max_iterations_time_log,
             delimiter=','
         )

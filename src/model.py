@@ -38,7 +38,7 @@ class Cluster:
         self.global_mean_squared_error_log = []  # 'iteration' => global MSE
         self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
         self.epsilon = 0.0  # acceptance threshold
-        self.metrics_type = 0  # use alternative metrics (almost obsolete)
+        self.metrics_type = 0  # use alternative metrics
 
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
@@ -420,7 +420,6 @@ class Cluster:
                             max_iter = _node.iteration
 
                     if max_iter > self.max_iterations_time_log[-1][1]:
-                        pass
                         self.max_iterations_time_log.append((self.clock, max_iter))
 
 

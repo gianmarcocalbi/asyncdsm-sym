@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, argparse, warnings, glob, pickle
+import os, warnings, glob, pickle
 from src.functions import *
 from src import statistics
 
@@ -16,19 +16,21 @@ def plot_from_files(test_path, save_plot_to_file, instant_plot):
             "avg-iter_time-memoryless-lb",
             "avg-iter_time-residual-lifetime-lb",
             "avg-iter_time-ub",
-            "avg-iter_time-don-bound",
+            #"avg-iter_time-don-bound",
             "mse_iter",
             "real-mse_iter",
             "mse_time",
             "real-mse_time",
+
             "iter-memoryless-lb-error_degree",
             "iter-residual-lifetime-lb-error_degree",
             "iter-ub-error_degree",
             "iter-all-bounds-error_degree",
+
             "iter-memoryless-lb-velocity_degree",
             "iter-residual-lifetime-lb-velocity_degree",
             "iter-ub-velocity_degree",
-            "iter-all-bound-velocity_degree",
+            "iter-all-bounds-velocity_degree",
         ),
         moving_average_window=0,
         ymax=None,
@@ -81,12 +83,12 @@ class Plotter:
             "iter-memoryless-lb-error_degree",
             "iter-residual-lifetime-lb-error_degree",
             "iter-ub-error_degree",
-            "iter-all-bound-error_degree",
+            "iter-all-bounds-error_degree",
 
             "iter-memoryless-lb-velocity_degree",
             "iter-residual-lifetime-lb-velocity_degree",
             "iter-ub-velocity_degree",
-            "iter-all-bound-velocity_degree",
+            "iter-all-bounds-velocity_degree",
         )
 
         if self.test_folder_name is None and test_folder_path is None:
@@ -165,24 +167,29 @@ class Plotter:
         # it's important to loop on a copy of self.graphs and not on the original one
         # since the original in modified inside the loop
         for graph in self.graphs[:]:
+            mse_log_path = "{}/{}_global_mean_squared_error_log".format(self.test_folder_path, graph)
+            real_mse_log_path = "{}/{}_global_real_mean_squared_error_log".format(self.test_folder_path, graph)
+            iter_log_path = "{}/{}_iterations_time_log".format(self.test_folder_path, graph)
+            avg_iter_log_path = "{}/{}_avg_iterations_time_log".format(self.test_folder_path, graph)
+            max_iter_log_path = "{}/{}_max_iterations_time_log".format(self.test_folder_path, graph)
+
+            if os.path.isfile(mse_log_path + ".gz"):
+                mse_log_path += '.gz'
+            if os.path.isfile(real_mse_log_path + ".gz"):
+                real_mse_log_path += '.gz'
+            if os.path.isfile(iter_log_path + ".gz"):
+                iter_log_path += '.gz'
+            if os.path.isfile(avg_iter_log_path + ".gz"):
+                avg_iter_log_path += '.gz'
+            if os.path.isfile(max_iter_log_path + ".gz"):
+                max_iter_log_path += '.gz'
+
             try:
-                self.mse_log[graph] = np.loadtxt(
-                    "{}/{}_global_mean_squared_error_log".format(self.test_folder_path, graph)
-                )
-                self.real_mse_log[graph] = np.loadtxt(
-                    "{}/{}_global_real_mean_squared_error_log".format(self.test_folder_path, graph)
-                )
-                self.iter_log[graph] = np.loadtxt(
-                    "{}/{}_iterations_time_log".format(self.test_folder_path, graph)
-                )
-                self.avg_iter_log[graph] = [
-                    tuple(s.split(",")) for s in
-                    np.loadtxt("{}/{}_avg_iterations_time_log".format(self.test_folder_path, graph), str)
-                ]
-                self.max_iter_log[graph] = [
-                    tuple(s.split(",")) for s in
-                    np.loadtxt("{}/{}_max_iterations_time_log".format(self.test_folder_path, graph), str)
-                ]
+                self.mse_log[graph] = np.loadtxt(mse_log_path)
+                self.real_mse_log[graph] = np.loadtxt(real_mse_log_path)
+                self.iter_log[graph] = np.loadtxt(iter_log_path)
+                self.avg_iter_log[graph] = [tuple(s.split(",")) for s in np.loadtxt(avg_iter_log_path, str)]
+                self.max_iter_log[graph] = [tuple(s.split(",")) for s in np.loadtxt(max_iter_log_path, str)]
 
             except OSError:
                 warnings.warn('Graph "{}" not found in folder {}'.format(graph, self.test_folder_path))
@@ -280,7 +287,6 @@ class Plotter:
 
         if "iter-all-bounds-velocity_degree" in self.plots:
             self.plot_iter_all_bounds_velocity_over_degrees_with_real_velocity()
-
 
     def _plot_init(self,
                    title_center="",
@@ -407,8 +413,8 @@ class Plotter:
     def _plot_mse_over_iter_lines(self, **kwargs):
         for graph in self.graphs:
             self._plot_subroutine(
-                self.mse_log[graph],
                 list(range(len(self.mse_log[graph]))),
+                self.mse_log[graph],
                 label=graph,
                 color=self.colors[graph],
                 **kwargs)
@@ -416,8 +422,8 @@ class Plotter:
     def _plot_real_mse_over_iter_lines(self, **kwargs):
         for graph in self.graphs:
             self._plot_subroutine(
-                self.real_mse_log[graph],
                 list(range(len(self.real_mse_log[graph]))),
+                self.real_mse_log[graph],
                 label=graph,
                 color=self.colors[graph],
                 **kwargs)
@@ -468,8 +474,8 @@ class Plotter:
             **kwargs)
 
     def _plot_iter_real_velocity_error_over_degree_lines(self, **kwargs):
-        p_x=list(self.degrees.values())
-        p_y=[1 for _ in p_x]
+        p_x = list(self.degrees.values())
+        p_y = [1 for _ in p_x]
 
         self._plot_subroutine(
             p_x,
@@ -810,7 +816,8 @@ class Plotter:
         self._plot_iter_memoryless_lower_bound_error_over_degree_lines()
         self._plot_iter_residual_lifetime_lower_bound_error_over_degree_lines()
         self._plot_iter_upper_bound_error_over_degree_lines()
-        self._plot_iter_don_bound_error_over_degree_lines()
+        if self.setup['time_distr_class'] == statistics.ExponentialDistribution:
+            self._plot_iter_don_bound_error_over_degree_lines()
         self._plot_close(filename)
 
     def plot_iter_all_bounds_error_over_degree_with_real_velocity(self):
@@ -824,10 +831,10 @@ class Plotter:
         self._plot_iter_memoryless_lower_bound_error_over_degree_lines()
         self._plot_iter_residual_lifetime_lower_bound_error_over_degree_lines()
         self._plot_iter_upper_bound_error_over_degree_lines()
-        self._plot_iter_don_bound_error_over_degree_lines()
+        if self.setup['time_distr_class'] == statistics.ExponentialDistribution:
+            self._plot_iter_don_bound_error_over_degree_lines()
         self._plot_iter_real_velocity_error_over_degree_lines()
         self._plot_close(filename)
-
 
     def plot_iter_memoryless_lower_bound_velocity_over_degree(self):
         filename = "5_iter-memoryless-lb-velocity_degree"
@@ -884,42 +891,9 @@ class Plotter:
         self._plot_iter_memoryless_lower_bound_velocity_over_degree_lines()
         self._plot_iter_residual_lifetime_lower_bound_velocity_over_degree_lines()
         self._plot_iter_upper_bound_velocity_over_degree_lines()
-        self._plot_iter_don_bound_velocity_over_degree_lines()
+        if self.setup['time_distr_class'] == statistics.ExponentialDistribution:
+            self._plot_iter_don_bound_velocity_over_degree_lines()
         self._plot_iter_real_velocity_over_degree_lines()
         self._plot_close(filename)
 
-
     # PUBLIC INTERFACE - END
-
-
-if __name__ == "__main__":
-    # argparse setup
-    parser = argparse.ArgumentParser(
-        description='Plotter'
-    )
-
-    parser.add_argument(
-        '-t', '--test_path',
-        action='store',
-        default=None,
-        required=False,
-        help='Test from which load logs to',
-        dest='test_path'
-    )
-
-    parser.add_argument(
-        '-s', '--save',
-        action='store_true',
-        default=False,
-        required=False,
-        help='Specify whether save to file or not',
-        dest='s_flag'
-    )
-
-    args = parser.parse_args()
-
-    plot_from_files(
-        args.test_path,
-        args.s_flag,
-        not args.s_flag
-    )

@@ -15,11 +15,10 @@
 - [x] Getting started with Jupiter Notebook.
 - [x] Add parse flags to plotter in order to have a fast plotting method.
 - [x] Plotter auto-detects which graphs to plot basing on the logs prefixes in test log folder.
-- [ ] Same name and color on graphs.
-
-- [ ] Fix trailing segment after plotting averaged metrics obtained from a simulation which ended due to `max_time` (the problem occurs only when averaging).  
+- [x] Same name and color on graphs.
+- [x] Fix trailing segment after plotting averaged metrics obtained from a simulation which ended due to `max_time` (the problem occurs only when averaging).  
 - [ ] Test SGD correctness with Leon Bottou suggestions.
-- [ ] Add new cluster parameter to set lambda ratio and distribution of the time taken by each node to perform its task. 
+- [x] Add new cluster parameter to set lambda ratio and distribution of the time taken by each node to perform its task. 
 
 ## High priority
 - [x] Change dict setup to function parameters to avoid too much memory consumption.

@@ -1,12 +1,12 @@
 >>> Test Descriptor File
 Title: test
-Date: 2018-06-02 14:31:01.305692
+Date: 2018-06-04 12:13:16.636349
 Summary: 
 
 
 ### BEGIN SETUP ###
 n = 100
-seed = 1527942661
+seed = 1528107196
 graphs = {   '0_diagonal': np.array([[1., 0., 0., ..., 0., 0., 0.],
        [0., 1., 0., ..., 0., 0., 0.],
        [0., 0., 1., ..., 0., 0., 0.],
@@ -67,7 +67,7 @@ graphs = {   '0_diagonal': np.array([[1., 0., 0., ..., 0., 0., 0.],
 # TRAINING SET SETUP
 n_samples = 10000
 n_features = 100
-sample_function = <function LinearYHatFunction.f at 0x7f5a6c7b4ea0>
+sample_function = <function LinearYHatFunction.f at 0x7f2d287ef730>
 domain_radius = 5
 domain_center = 0
 error_mean = 0
@@ -93,4 +93,4 @@ time_distr_class = <class 'src.statistics.ExponentialDistribution'>
 time_distr_param = [1]
 
 
-# duration (hh:mm:ss): 00:45:27
+# duration (hh:mm:ss): 00:47:26
