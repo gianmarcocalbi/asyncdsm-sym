@@ -38,16 +38,6 @@ class Cluster:
         self.global_mean_squared_error_log = []  # 'iteration' => global MSE
         self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
 
-        self.avg_iter_to_time = []  # avg iter -> self.clock
-        self.min_iter_to_time = []  # min iter -> self.clock
-        self.max_iter_to_time = []  # max iter -> self.clock
-        self.avg_iter_to_mse = []  # avg iter -> MSE
-        self.min_iter_to_mse = []  # min iter -> MSE
-        self.max_iter_to_mse = []  # max iter -> MSE
-        self.avg_iter_to_rmse = []  # avg iter -> RMSE
-        self.min_iter_to_rmse = []  # min iter -> RMSE
-        self.max_iter_to_rmse = []  # max iter -> RMSE
-
         self.epsilon = 0.0  # acceptance threshold
         self.metrics_type = 0  # use alternative metrics
 
@@ -489,9 +479,9 @@ class Cluster:
                     mse = str(self.get_global_mean_squared_error())
 
                 try:
-                    rmse = str(int(self.get_global_mean_squared_error() * 100) / 100)
+                    rmse = str(int(self.get_global_real_mean_squared_error() * 100) / 100)
                 except OverflowError:
-                    rmse = str(self.get_global_mean_squared_error())
+                    rmse = str(self.get_global_real_mean_squared_error())
 
                 output += "MSE={} RMSE={}".format(mse, rmse)
 

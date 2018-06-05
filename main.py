@@ -65,11 +65,11 @@ Summary:
         "1_cycle": CYCLE(setup['n']),  # degree = 1
         "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         #"2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        #"3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        #"4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        #"8_regular": REGULAR(setup['n'], 8),  # degree = 8
         "20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        #"50_regular": REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
@@ -80,7 +80,7 @@ Summary:
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1
+    setup['error_std_dev'] = 4
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     setup['node_error_mean'] = 0
