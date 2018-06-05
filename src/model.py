@@ -37,6 +37,17 @@ class Cluster:
         self.global_mean_absolute_error_log = []  # 'iteration' => global MAE
         self.global_mean_squared_error_log = []  # 'iteration' => global MSE
         self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
+
+        self.avg_iter_to_time = []  # avg iter -> self.clock
+        self.min_iter_to_time = []  # min iter -> self.clock
+        self.max_iter_to_time = []  # max iter -> self.clock
+        self.avg_iter_to_mse = []  # avg iter -> MSE
+        self.min_iter_to_mse = []  # min iter -> MSE
+        self.max_iter_to_mse = []  # max iter -> MSE
+        self.avg_iter_to_rmse = []  # avg iter -> RMSE
+        self.min_iter_to_rmse = []  # min iter -> RMSE
+        self.max_iter_to_rmse = []  # max iter -> RMSE
+
         self.epsilon = 0.0  # acceptance threshold
         self.metrics_type = 0  # use alternative metrics
 
@@ -427,7 +438,6 @@ class Cluster:
                     if max_iter > self.max_iterations_time_log[-1][1]:
                         self.max_iterations_time_log.append((self.clock, max_iter))
 
-
                     if min_iter == self.iteration + 1:
                         self.iteration += 1
                         self.iterations_time_log.append(-1)
@@ -649,7 +659,7 @@ class Node:
         return math.inf
 
     def get_iteration_at_local_clock(self, local_clock):
-        return np.searchsorted(self.log, local_clock)-1
+        return np.searchsorted(self.log, local_clock) - 1
 
     def enqueue_weight(self, dependency_node_id, weight):
         """
@@ -679,7 +689,7 @@ class Node:
         # get the counter after the computation has ended
         # cf = time.perf_counter()
         dt = self.time_distr_class.sample(*self.time_distr_param)  # todo: temp
-        #dt = random.uniform(0,2)
+        # dt = random.uniform(0,2)
 
         # computes the clock when the computation has finished
         # tf = t0 + cf - c0
