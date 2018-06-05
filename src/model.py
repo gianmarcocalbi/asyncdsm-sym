@@ -43,7 +43,8 @@ class Cluster:
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
               metrics="all", metrics_type=0, shuffle=True, verbose=False,
-              time_distr_class=statistics.ExponentialDistribution, time_distr_param=()):
+              time_distr_class=statistics.ExponentialDistribution, time_distr_param=(),
+              node_error_mean=0, node_error_std_dev=1):
         """Cluster setup.
 
         Parameters
@@ -164,10 +165,14 @@ class Cluster:
             del Xy
 
         N = self.adjacency_matrix.shape[0]
+        nodes_errors = np.random.normal(node_error_mean, node_error_std_dev, N)
         for i in range(N):
             # size of the subsample of the training set that will be assigned to
             # this node
-            node_X_size = math.floor(X.shape[0] / (N - i))
+            node_X_size = int(math.floor(X.shape[0] / (N - i)))
+
+            for j in range(node_X_size):
+                y[j] += nodes_errors[i]
 
             # assign the correct subsample to this node
             node_X = copy.deepcopy(X[0:node_X_size])  # instances

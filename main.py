@@ -64,8 +64,8 @@ Summary:
         "0_diagonal": DIAGONAL(setup['n']),
         "1_cycle": CYCLE(setup['n']),  # degree = 1
         "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        #"2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
+        "3_regular": REGULAR(setup['n'], 3),  # degree = 3
         "4_regular": REGULAR(setup['n'], 4),  # degree = 4
         "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         "20_regular": REGULAR(setup['n'], 20),  # degree = 20
@@ -83,9 +83,12 @@ Summary:
     setup['error_std_dev'] = 1
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
+    setup['node_error_mean'] = 0
+    setup['node_error_std_dev'] = 5
+
     # CLUSTER SETUP
-    setup['max_iter'] = None
-    setup['max_time'] = 10000  # seconds
+    setup['max_iter'] = 100
+    setup['max_time'] = None  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -107,9 +110,9 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_006_exp1lambda_10ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
+    test_subfolder = "test_006_nodeErr_exp1lambda_1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
@@ -213,6 +216,8 @@ domain_radius = {domain_radius}
 domain_center = {domain_center}
 error_mean = {error_mean}
 error_std_dev = {error_std_dev}
+node_error_mean = {node_error_mean}
+node_error_std_dev = {node_error_std_dev}
 
 # CLUSTER SETUP
 max_iter = {max_iter}
@@ -264,7 +269,9 @@ time_distr_param = {time_distr_param}
             shuffle=setup['shuffle'],
             verbose=setup['verbose'],
             time_distr_class=setup['time_distr_class'],
-            time_distr_param=setup['time_distr_param']
+            time_distr_param=setup['time_distr_param'],
+            node_error_mean=setup['node_error_mean'],
+            node_error_std_dev=setup['node_error_std_dev']
         )
 
         try:

@@ -16,17 +16,15 @@ def plot_from_files(test_path, save_plot_to_file, instant_plot):
             "avg-iter_time-memoryless-lb",
             "avg-iter_time-residual-lifetime-lb",
             "avg-iter_time-ub",
-            #"avg-iter_time-don-bound",
+            "avg-iter_time-don-bound",
             "mse_iter",
             "real-mse_iter",
             "mse_time",
             "real-mse_time",
-
             "iter-memoryless-lb-error_degree",
             "iter-residual-lifetime-lb-error_degree",
             "iter-ub-error_degree",
             "iter-all-bounds-error_degree",
-
             "iter-memoryless-lb-velocity_degree",
             "iter-residual-lifetime-lb-velocity_degree",
             "iter-ub-velocity_degree",
@@ -816,8 +814,7 @@ class Plotter:
         self._plot_iter_memoryless_lower_bound_error_over_degree_lines()
         self._plot_iter_residual_lifetime_lower_bound_error_over_degree_lines()
         self._plot_iter_upper_bound_error_over_degree_lines()
-        if self.setup['time_distr_class'] == statistics.ExponentialDistribution:
-            self._plot_iter_don_bound_error_over_degree_lines()
+        self._plot_iter_don_bound_error_over_degree_lines()
         self._plot_close(filename)
 
     def plot_iter_all_bounds_error_over_degree_with_real_velocity(self):
@@ -831,8 +828,7 @@ class Plotter:
         self._plot_iter_memoryless_lower_bound_error_over_degree_lines()
         self._plot_iter_residual_lifetime_lower_bound_error_over_degree_lines()
         self._plot_iter_upper_bound_error_over_degree_lines()
-        if self.setup['time_distr_class'] == statistics.ExponentialDistribution:
-            self._plot_iter_don_bound_error_over_degree_lines()
+        self._plot_iter_don_bound_error_over_degree_lines()
         self._plot_iter_real_velocity_error_over_degree_lines()
         self._plot_close(filename)
 
@@ -891,8 +887,7 @@ class Plotter:
         self._plot_iter_memoryless_lower_bound_velocity_over_degree_lines()
         self._plot_iter_residual_lifetime_lower_bound_velocity_over_degree_lines()
         self._plot_iter_upper_bound_velocity_over_degree_lines()
-        if self.setup['time_distr_class'] == statistics.ExponentialDistribution:
-            self._plot_iter_don_bound_velocity_over_degree_lines()
+        self._plot_iter_don_bound_velocity_over_degree_lines()
         self._plot_iter_real_velocity_over_degree_lines()
         self._plot_close(filename)
 

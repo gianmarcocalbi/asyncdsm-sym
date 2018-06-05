@@ -3,6 +3,9 @@ from scipy import integrate
 import numpy as np
 import sympy as sp
 
+D = decimal.Decimal
+decimal.getcontext().prec = 256
+
 
 def single_iteration_velocity_residual_lifetime_lower_bound(degree, distr_class, distr_params):
     if not type(distr_params) in (list, tuple,):
@@ -28,32 +31,21 @@ def single_iteration_velocity_upper_bound(degree, distr_class, distr_params):
     return 2 / (E_X + E_Z)
 
 
-def single_iteration_velocity_don_bound(degree, distr_class, distr_params):
-    if not distr_class is ExponentialDistribution:
-        raise Exception("This bound is not defined for MaxOf{} class".format(distr_class.__name__))
-
+def single_iteration_velocity_don_bound(degree, distr_class, distr_params, out_decimal=False):
     if not type(distr_params) in (list, tuple,):
         distr_params = (distr_params,)
-    """E_X = distr_class.mean(*distr_params)
-    E_Z = eval("MaxOf" + distr_class.__name__).mean(*distr_params, k=degree)
-    return 2 / (E_X + E_Z)"""
-
-    prev_prec = decimal.getcontext().prec
-    D = decimal.Decimal
-    decimal.getcontext().prec = 256
     k = D(degree)
-    l = D(distr_params[0])
     s = D(0.0)
-    for i in range(1,int(k)+1):
-        b = D(binomial(k,i))
-        _s = D(0.0)
-        for j in range(1,i+1):
-            _s += D(1/j)
-        s += b * D(1/D(2 ** k)) * _s
+    for h in range(1, degree + 1):
+        E_max_Xk = eval("MaxOf" + distr_class.__name__).residual_time_mean(*distr_params, k=h, out_decimal=True)
+        s += D(binomial(k, h)) * D(1 / 2 ** k) * D(E_max_Xk)
 
-    decimal.getcontext().prec = prev_prec
+    E_X = distr_class.mean(*distr_params, out_decimal=True)
+    velocity = D(1 / (s + E_X))
 
-    return float(1/((1/l)*(s+D(1))))
+    if out_decimal:
+        return velocity
+    return float(velocity)
 
 
 class DistributionAbstract:
@@ -79,16 +71,22 @@ class ExponentialDistribution(DistributionAbstract):
     name = "Exponential"
 
     @staticmethod
-    def sample(lambd):
+    def sample(lambd, out_decimal=False):
+        if out_decimal:
+            return D(np.random.exponential(1 / lambd))
         return np.random.exponential(1 / lambd)
 
     @staticmethod
-    def mean(lambd):
+    def mean(lambd, out_decimal=False):
+        if out_decimal:
+            return D(1 / lambd)
         return 1 / lambd
 
     @staticmethod
-    def variance(lambd):
-        return 1 / (lambd ** 2)
+    def variance(lambd, out_decimal=False):
+        if out_decimal:
+            return D(1 / lambd ** 2)
+        return 1 / lambd ** 2
 
 
 class UniformDistribution(DistributionAbstract):
@@ -104,7 +102,9 @@ class UniformDistribution(DistributionAbstract):
             return 1
 
     @staticmethod
-    def F_res_X(x, a=0, b=1):
+    def F_res_X(x, a=0, b=1, out_decimal=False):
+        if out_decimal:
+            return D((a ** 2 - 2 * b * x + x ** 2) / (a ** 2 - b ** 2))
         return (a ** 2 - 2 * b * x + x ** 2) / (a ** 2 - b ** 2)
 
     @staticmethod
@@ -112,7 +112,9 @@ class UniformDistribution(DistributionAbstract):
         return np.random.uniform(a, b)
 
     @staticmethod
-    def mean(a=0, b=1):
+    def mean(a=0, b=1, out_decimal=False):
+        if out_decimal:
+            return D((a + b) / 2)
         return (a + b) / 2
 
     @staticmethod
@@ -128,9 +130,12 @@ class Type2ParetoDistribution(DistributionAbstract):
         return np.random.pareto(alpha) * sigma
 
     @staticmethod
-    def mean(alpha, sigma=1):
+    def mean(alpha, sigma=1, out_decimal=False):
         if alpha <= 1:
             return math.inf
+        if out_decimal:
+            return D(sigma / (alpha - 1))
+
         return sigma / (alpha - 1)
 
     @staticmethod
@@ -142,16 +147,19 @@ class Type2ParetoDistribution(DistributionAbstract):
 
 class MaxOfExponentialDistribution(DistributionAbstract):
     @staticmethod
-    def sample(lambd, k=1):
+    def sample(lambd, k=1, out_decimal=False):
         raise NotImplementedError("sample method is not defined for MaxOfExponentialDistribution distribution")
 
     @staticmethod
-    def mean(lambd, k=1):
+    def mean(lambd, k=1, out_decimal=False):
+        if out_decimal:
+            return D(1 / D(lambd) * (sum(D(1 / i) for i in range(1, k + 1))))
+
         return 1 / lambd * (sum((1 / i) for i in range(1, k + 1)))
 
     @staticmethod
-    def residual_time_mean(lambd, k=1):
-        return MaxOfExponentialDistribution.mean(lambd, k)
+    def residual_time_mean(lambd, k=1, out_decimal=False):
+        return MaxOfExponentialDistribution.mean(lambd, k, out_decimal)
 
     @staticmethod
     def variance(lambd, k=1):
@@ -164,16 +172,24 @@ class MaxOfUniformDistribution(DistributionAbstract):
         raise NotImplementedError("sample method is not defined for MaxOfUniformDistribution distribution")
 
     @staticmethod
-    def mean(a=0, b=1, k=1):
+    def mean(a=0, b=1, k=1, out_decimal=False):
+        if out_decimal:
+            return D((a + b * k) / (k + 1))
         return (a + b * k) / (k + 1)
 
     @staticmethod
-    def residual_time_mean(a=0, b=1, k=1):
+    def residual_time_mean(a=0, b=1, k=1, out_decimal=False):
         integrand = lambda y: (y ** 2 - 2 * b * y + a ** 2) ** k
         integral = integrate.quad(integrand, a, b)
         # integrand = lambda x: 1 - UniformDistribution.F_res_X(x, *args) ** k
         # print(integral[1])
-        return b - (2 ** k * a ** (k + 1)) / ((a + b) ** k * (k + 1)) - (1 / (a ** 2 - b ** 2) ** k) * integral[0]
+        res_time_mean = b - D((2 ** k * a ** (k + 1)) / ((a + b) ** k * (k + 1))) - D(1 / (a ** 2 - b ** 2) ** k) * \
+                        D(integral[0])
+
+        if out_decimal:
+            return res_time_mean
+
+        return float(res_time_mean)
 
     @staticmethod
     def variance(a=0, b=1, k=1):
@@ -186,11 +202,7 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
         raise NotImplementedError("sample method is not defined for MaxOfType2ParetoDistribution distribution")
 
     @staticmethod
-    def mean(alpha, sigma=2, k=1):
-        prev_prec = decimal.getcontext().prec
-        D = decimal.Decimal
-        decimal.getcontext().prec = 128
-
+    def mean(alpha, sigma=2, k=1, out_decimal=False):
         a = D(alpha)
         s = D(sigma)
         summation = D(0.0)
@@ -200,16 +212,13 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
             d3 = D(s) / (D(a) * D(i) - D(1.0))
             summation += d1 * d2 * d3
 
-        decimal.getcontext().prec = prev_prec
+        if out_decimal:
+            return summation
 
         return float(summation)
 
     @staticmethod
-    def residual_time_mean(alpha, sigma=2, k=1):
-        prev_prec = decimal.getcontext().prec
-        D = decimal.Decimal
-        decimal.getcontext().prec = 128
-
+    def residual_time_mean(alpha, sigma=2, k=1, out_decimal=False):
         a = D(alpha)
         s = D(sigma)
         summation = D(0.0)
@@ -228,7 +237,8 @@ class MaxOfType2ParetoDistribution(DistributionAbstract):
             d3 = D(s) / ((D(a) - D(1.0)) * D(i) - D(1.0))
             summation += d1 * d2 * d3
 
-        decimal.getcontext().prec = prev_prec
+        if out_decimal:
+            return summation
 
         return float(summation)
 
