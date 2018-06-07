@@ -34,6 +34,7 @@ class Cluster:
         self.max_iterations_time_log = [(0.0, 0.0)]
         self.avg_iterations_time_log = [(0.0, 0.0)]
         self.iterations_time_log = [0.0]  # 'iteration i-th' => clock value at which i-th iteration has been completed
+
         self.global_mean_absolute_error_log = []  # 'iteration' => global MAE
         self.global_mean_squared_error_log = []  # 'iteration' => global MSE
         self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
@@ -137,7 +138,6 @@ class Cluster:
         self.max_time = max_time
         self.epsilon = epsilon
         self.metrics_type = metrics_type
-        self.X = X
         self.X = np.c_[np.ones((X.shape[0])), X]
         self.y = y
         self.y_hat = y_hat
@@ -167,6 +167,33 @@ class Cluster:
 
         N = self.adjacency_matrix.shape[0]
         nodes_errors = np.random.normal(node_error_mean, node_error_std_dev, N)
+        const_nodes_errors = [-83.28411333, 71.58962632, -60.25259273, -99.46557484,
+                              -97.92844031, -63.94734889, -82.94997962, 2.78223026,
+                              -62.01663969, -83.75822132, -64.40231483, -85.91570811,
+                              -76.43437877, -10.35232129, 77.46356589, -13.70264743,
+                              80.51630245, 36.08280799, -68.97733934, 5.92671984,
+                              92.29648459, 77.96059191, -71.5299331, -51.23508174,
+                              93.64944443, 90.49572626, -13.29000754, 78.71273312,
+                              -67.4670157, -18.82521754, -30.33089577, 90.04622367,
+                              75.73007174, 93.81144581, 90.85680519, -75.61784667,
+                              -21.30962062, 16.87845713, 36.72845058, 38.10191277,
+                              -68.79589475, 85.24656259, -10.17673826, -76.31756125,
+                              -44.7084939, -20.92133108, -96.08353345, -2.55210673,
+                              76.90313813, 72.15279857, -73.71236721, -94.03522294,
+                              -58.69553256, -92.63928345, -50.9823587, -65.98068949,
+                              59.01994502, 23.47870319, 11.8807276, 48.96198088,
+                              28.18562996, 10.35162796, 49.08698713, -93.88004653,
+                              -76.43240355, 45.36726624, 34.39763733, -19.89711403,
+                              -19.86247725, 50.36132876, -65.82818107, 89.98149178,
+                              39.57614796, -0.94467392, 84.52338396, 75.80487766,
+                              -94.09734395, -34.26364099, -92.54946344, -3.37618719,
+                              0.40423372, 57.05457758, 45.11945628, 18.56985231,
+                              17.89504908, 82.03306727, -57.26776625, 8.90081326,
+                              80.39062445, -76.13615793, -31.19230233, 20.54954623,
+                              -1.44267891, -90.67494623, -13.26868545, -0.79750683,
+                              -27.82431676, -53.48157654, 15.58884395, 36.62168811]
+        if N > len(const_nodes_errors):
+            const_nodes_errors = nodes_errors
         for i in range(N):
             # size of the subsample of the training set that will be assigned to
             # this node
@@ -316,10 +343,13 @@ class Cluster:
 
         elif self.metrics_type == 2:
             for node in self.nodes:
+                W = node.training_task.W_log[self.iteration]
+                real_W = np.ones(len(W))
+                real_values = self.activation_func(self.y_hat.f(self.X, real_W))
                 grmse += mltoolbox.compute_mse(
-                    node.training_task.W_log[self.iteration],
+                    W,
                     self.X,
-                    self.y,
+                    real_values,
                     self.activation_func,
                     self.y_hat.f
                 )
@@ -407,9 +437,10 @@ class Cluster:
             prev_clock = self.clock
             self.clock = event["time"]
 
-            if event["type"] == "node_step":
+            if event["type"] in ("node_step", "node_endstep"):
                 node = event["node"]
 
+                # todo: add node_endstep
                 if node.can_run():
                     self.dynamic_log[node.get_id()].append(node.step())
 
@@ -523,12 +554,20 @@ class Cluster:
 
                 # enqueue the next event for current node
                 if not stop_condition:
-                    new_event = {
-                        'time': node.local_clock,
-                        'type': 'node_step',
-                        'node': node
-                    }
-                    self.enqueue_event(new_event)
+                    if node.iteration < self.max_iter and node.local_clock < self.max_time:
+                        new_event = {
+                            'time': node.local_clock,
+                            'type': 'node_step',
+                            'node': node
+                        }
+                        self.enqueue_event(new_event)
+                    else:
+                        new_event = {
+                            'time': node.local_clock,
+                            'type': 'node_endstep',
+                            'node': node
+                        }
+                        self.enqueue_event(new_event)
 
             elif event["type"] == "":
                 pass

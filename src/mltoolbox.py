@@ -15,17 +15,16 @@ class Trainer(Task):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, X, y, y_hat, activation_func):
-        self.X = X
+
+        # bias inserted as w0 = (1,...,1)
+        self.X = np.c_[np.ones((X.shape[0])), X]
         self.y = y
         self.y_hat = y_hat
         self.N = self.X.shape[0]
         self.iteration = 0
 
-        # bias inserted as w0 = (1,...,1)
-        self.X = np.c_[np.ones((X.shape[0])), X]
-
         #self.W = np.zeros(X.shape[1] + 1)
-        self.W = np.random.uniform(0, 2, size=(X.shape[1] + 1,))  # todo: remove "+ 1"?
+        self.W = np.random.uniform(-2, 8, size=(X.shape[1] + 1,))  # todo: remove "+ 1"?
         self.W_log = [np.copy(self.W)]
 
         if not activation_func is types.FunctionType:

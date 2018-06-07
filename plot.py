@@ -9,6 +9,17 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '-p',
+        '--plots',
+        nargs='+',
+        help='List of plots to create',
+        required=False,
+        action='store',
+        dest='plots',
+        default=()
+    )
+
+    parser.add_argument(
         '-t', '--test_path',
         action='store',
         default=None,
@@ -29,7 +40,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     plotter.plot_from_files(
-        args.test_path,
-        args.s_flag,
-        not args.s_flag
+        test_folder_path=args.test_path,
+        save_plots_to_test_folder=args.s_flag,
+        instant_plot=not args.s_flag,
+        plots=tuple(args.plots)
     )

@@ -1,4 +1,4 @@
-import random, math, time, os, pickle, shutil, datetime, pprint
+import random, math, time, os, pickle, shutil, datetime, pprint, warnings
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
@@ -65,11 +65,11 @@ Summary:
         "1_cycle": CYCLE(setup['n']),  # degree = 1
         "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         #"2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        #"3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        #"4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        #"8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        "3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         "20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        #"50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
@@ -80,15 +80,15 @@ Summary:
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 4
+    setup['error_std_dev'] = 1
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
     setup['node_error_mean'] = 0
-    setup['node_error_std_dev'] = 5
+    setup['node_error_std_dev'] = 0
 
     # CLUSTER SETUP
-    setup['max_iter'] = 100
-    setup['max_time'] = None  # seconds
+    setup['max_iter'] = None
+    setup['max_time'] = 10000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -102,24 +102,29 @@ Summary:
     setup['metrics_type'] = 0
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_class'] = statistics.ExponentialDistribution
-    setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
+    setup['time_distr_class'] = statistics.Type2ParetoDistribution
+    setup['time_distr_param'] = [3,2]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_006_nodeErr_exp1lambda_1ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
+    test_subfolder = "test_006_pareto3-2_10ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
     instant_plot = False  # instantly plot single simulations results
+    plots = (
+        "mse_iter",
+        "real-mse_iter"
+    )
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
+    single_node_inspection = False
     ### END SETUP ###
 
     np.random.seed(setup['seed'])
@@ -286,17 +291,34 @@ time_distr_param = {time_distr_param}
         if compress:
             extension = '.gz'
 
+
         # create output log files
-        np.savetxt(
-            os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
-            cluster.global_real_mean_squared_error_log,
-            delimiter=','
-        )
-        np.savetxt(
-            os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
-            cluster.global_mean_squared_error_log,
-            delimiter=','
-        )
+
+        if type(single_node_inspection) is int:
+            np.savetxt(
+                os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
+                cluster.nodes[single_node_inspection].training_task.mean_squared_error_log,
+                delimiter=','
+            )
+            np.savetxt(
+                os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
+                cluster.nodes[single_node_inspection].training_task.real_mean_squared_error_log,
+                delimiter=','
+            )
+        else:
+            if not single_node_inspection is False:
+                warnings.warn("Single node inspection failed, switching to classical cluster inspection")
+            np.savetxt(
+                os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
+                cluster.global_real_mean_squared_error_log,
+                delimiter=','
+            )
+            np.savetxt(
+                os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
+                cluster.global_mean_squared_error_log,
+                delimiter=','
+            )
+
         np.savetxt(
             os.path.join(test_path, "{}_iterations_time_log{}".format(graph, extension)),
             cluster.iterations_time_log,
@@ -320,7 +342,12 @@ time_distr_param = {time_distr_param}
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
     if save_plot_to_file or instant_plot:
-        plot_from_files(test_path, save_plot_to_file, instant_plot)
+        plot_from_files(
+            test_folder_path=test_path,
+            save_plots_to_test_folder=save_plot_to_file,
+            instant_plot=instant_plot,
+            plots=plots
+        )
 
         # console.stdout.close()
 
