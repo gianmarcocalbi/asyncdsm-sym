@@ -52,7 +52,7 @@ Summary:
 """.format(str(datetime.datetime.now()))
 
     setup_from_file = False
-    setup_folder_path = Plotter.get_last_temp_test_folder_path()
+    setup_folder_path = Plotter.get_temp_test_folder_path_by_index()
     setup_file_path = os.path.join(setup_folder_path, ".setup.pkl")
 
     setup = dict()
@@ -75,7 +75,7 @@ Summary:
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 10000
+    setup['n_samples'] = 1000
     setup['n_features'] = 100
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
@@ -83,12 +83,14 @@ Summary:
     setup['error_std_dev'] = 1
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
+    setup['starting_weights_domain'] = [2,8]
+
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 0
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 10000  # seconds
+    setup['max_time'] = 1000  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
     setup['batch_size'] = 20
@@ -99,28 +101,30 @@ Summary:
     setup['alpha'] = 1e-04
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
-    setup['metrics_type'] = 0
+    setup['metrics_type'] = 2
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_class'] = statistics.Type2ParetoDistribution
-    setup['time_distr_param'] = [3,2]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
+    setup['time_distr_class'] = statistics.ExponentialDistribution
+    setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
     test_subfolder = "test_006_pareto3-2_10ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
-    instant_plot = False  # instantly plot single simulations results
+    instant_plot = True  # instantly plot single simulations results
     plots = (
         "mse_iter",
-        "real-mse_iter"
+        "real-mse_iter",
+        "mse_time",
+        "real-mse_time",
     )
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
@@ -221,6 +225,7 @@ domain_radius = {domain_radius}
 domain_center = {domain_center}
 error_mean = {error_mean}
 error_std_dev = {error_std_dev}
+starting_weights_domain = {starting_weights_domain}
 node_error_mean = {node_error_mean}
 node_error_std_dev = {node_error_std_dev}
 
@@ -276,7 +281,8 @@ time_distr_param = {time_distr_param}
             time_distr_class=setup['time_distr_class'],
             time_distr_param=setup['time_distr_param'],
             node_error_mean=setup['node_error_mean'],
-            node_error_std_dev=setup['node_error_std_dev']
+            node_error_std_dev=setup['node_error_std_dev'],
+            starting_weights_domain=setup['starting_weights_domain'],
         )
 
         try:

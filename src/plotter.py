@@ -6,7 +6,7 @@ from src import statistics
 
 
 def plot_from_files(**kwargs):
-    Plotter(**kwargs ).plot()
+    Plotter(**kwargs).plot()
 
 
 class Plotter:
@@ -15,6 +15,7 @@ class Plotter:
             test_folder_root="./test_log/",
             test_folder_name=None,
             test_folder_path=None,
+            temp_index=0,
             save_plots_to_test_folder=False,
             instant_plot=True,
             plots=(),
@@ -30,7 +31,7 @@ class Plotter:
         self.test_folder_path = test_folder_path
         self.save_plots_to_test_folder = save_plots_to_test_folder
         self.instant_plot = instant_plot
-        self.last_temp_test_folder_name = Plotter.get_last_temp_test_folder_name()
+        self.temp_test_folder_name = Plotter.get_temp_test_folder_name_by_index(temp_index)
         self.moving_average_window = moving_average_window
         self.ymax = ymax
         self.yscale = yscale
@@ -61,9 +62,9 @@ class Plotter:
         )
 
         if self.test_folder_name is None and test_folder_path is None:
-            if self.last_temp_test_folder_name == "":
+            if self.temp_test_folder_name == "":
                 raise Exception("No temp test to plot")
-            self.test_folder_name = Plotter.get_last_temp_test_folder_name()
+            self.test_folder_name = Plotter.get_temp_test_folder_name_by_index(temp_index)
             self.test_folder_path = os.path.normpath(
                 os.path.join(
                     self.test_folder_root,
@@ -190,18 +191,18 @@ class Plotter:
                 self.real_mse_log[graph] = avg_real_mse_log[graph]
 
     @staticmethod
-    def get_last_temp_test_folder_name():
+    def get_temp_test_folder_name_by_index(index=0):
         subdirs_list = os.listdir("./test_log/temp/")
         if len(subdirs_list) == 0:
             return ""
-        return str(max(subdirs_list))
+        subdirs_list.sort(reverse=True)
+        if abs(index) > len(subdirs_list) - 1:
+            index = 0
+        return str(subdirs_list[index])
 
     @staticmethod
-    def get_last_temp_test_folder_path():
-        subdirs_list = os.listdir("./test_log/temp/")
-        if len(subdirs_list) == 0:
-            return ""
-        return os.path.normpath(os.path.join("./test_log/temp/", str(max(subdirs_list))))
+    def get_temp_test_folder_path_by_index(index=0):
+        return os.path.normpath(os.path.join("./test_log/temp/", Plotter.get_temp_test_folder_name_by_index(index)))
 
     # PLOT MAIN UTILS METHODS - BEGIN
 
@@ -588,7 +589,9 @@ class Plotter:
             title_left="Smallest iteration over time",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Iteration")
+            ylabel="Iteration",
+            yscale='linear'
+        )
         self._plot_iter_over_time_lines()
         self._plot_close(filename)
 
@@ -599,7 +602,8 @@ class Plotter:
             title_left="Average iteration at time",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Average iteration")
+            ylabel="Average iteration",
+            yscale='linear')
         self._plot_avg_iter_over_time_lines()
         self._plot_close(filename)
 
@@ -612,7 +616,8 @@ class Plotter:
             title_left="Iterations over time memoryless lower bound",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Iteration")
+            ylabel="Iteration",
+            yscale='linear')
         self._plot_iter_over_time_memoryless_lower_bound_lines()
         self._plot_close(filename)
 
@@ -623,7 +628,8 @@ class Plotter:
             title_left="Iterations over time residual time lower bound",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Iteration")
+            ylabel="Iteration",
+            yscale='linear')
         self._plot_iter_over_time_residual_lifetime_lower_bound_lines()
         self._plot_close(filename)
 
@@ -634,7 +640,8 @@ class Plotter:
             title_left="Iterations over time upper bound",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Iteration")
+            ylabel="Iteration",
+            yscale='linear')
         self._plot_iter_over_time_upper_bound_lines()
         self._plot_close(filename)
 
@@ -645,7 +652,8 @@ class Plotter:
             title_left="Average iteration at time with memoryless lower bound",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Iteration"
+            ylabel="Iteration",
+            yscale='linear'
         )
         self._plot_iter_over_time_memoryless_lower_bound_lines(
             linestyle=(0, (1, 8))
@@ -660,7 +668,8 @@ class Plotter:
             title_left="Average iteration at time with residual lifetime lower bound",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Iteration")
+            ylabel="Iteration",
+            yscale='linear')
         self._plot_iter_over_time_residual_lifetime_lower_bound_lines(
             linestyle=(0, (1, 4))
         )
@@ -674,7 +683,8 @@ class Plotter:
             title_left="Average iteration at time with upper bound",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Iteration")
+            ylabel="Iteration",
+            yscale='linear')
         self._plot_iter_over_time_upper_bound_lines(
             linestyle=(0, (3, 5, 1, 5))
         )
@@ -688,7 +698,8 @@ class Plotter:
             title_left="Average iteration at time with \"Don\" bound for the fastest node",
             title_right=self.time_distr_name,
             xlabel="Time (s)",
-            ylabel="Iteration")
+            ylabel="Iteration",
+            yscale='linear')
         self._plot_iter_over_time_don_bound_lines(
             linestyle=(0, (1, 4))
         )

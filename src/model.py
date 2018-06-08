@@ -30,7 +30,7 @@ class Cluster:
         self.loss = None
         self.activation_func = None
         self.dynamic_log = []  # log containing for each iteration i a pair (t0_i, tf_i)
-        self.W_log = []  # log 'iteration i-th' => value of weight vector at iteration i-th
+        self.w = []  # log 'iteration i-th' => value of weight vector at iteration i-th
         self.max_iterations_time_log = [(0.0, 0.0)]
         self.avg_iterations_time_log = [(0.0, 0.0)]
         self.iterations_time_log = [0.0]  # 'iteration i-th' => clock value at which i-th iteration has been completed
@@ -46,7 +46,7 @@ class Cluster:
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
               metrics="all", metrics_type=0, shuffle=True, verbose=False,
               time_distr_class=statistics.ExponentialDistribution, time_distr_param=(),
-              node_error_mean=0, node_error_std_dev=1):
+              node_error_mean=0, node_error_std_dev=1, starting_weights_domain=(0, 5)):
         """Cluster setup.
 
         Parameters
@@ -207,8 +207,9 @@ class Cluster:
             node_y = copy.deepcopy(y[0:node_X_size])  # oracle outputs
 
             # instantiate new node for the just-selected subsample
-            self.nodes.append(Node(i, node_X, node_y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                                   learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param))
+            self.nodes.append(
+                Node(i, node_X, node_y, y_hat, method, batch_size, activation_func, loss, penalty, alpha, learning_rate,
+                     metrics, shuffle, verbose, time_distr_class, time_distr_param, starting_weights_domain, ))
             self.dynamic_log.append([])
 
             # evict the just-already-assigned samples of the training-set
@@ -224,11 +225,12 @@ class Cluster:
 
         self._compute_metrics()
 
-    def get_avg_W(self, index=-1):
-        if index < len(self.W_log) > 0:
-            return self.W_log[index]
-        else:
-            raise Exception("No weight vector defined")
+
+    def get_w_at_iteration(self, iteration):
+        return np.copy(self.w[iteration])
+
+    def get_w(self):
+        return np.copy(self.w[-1])
 
     def get_global_mean_absolute_error(self, index=-1):
         if index < len(self.global_mean_absolute_error_log) > 0:
@@ -252,18 +254,18 @@ class Cluster:
         # todo
         pass
 
-    def compute_avg_W(self):
-        W = np.zeros(len(self.nodes[0].training_task.W))
+    def compute_avg_w(self):
+        w = np.zeros(len(self.nodes[0].training_task.get_w()))
         for node in self.nodes:
-            W += node.training_task.W_log[self.iteration]
-        W /= len(self.nodes)
+            w += node.training_task.get_w_at_iteration(self.iteration)
+        w /= len(self.nodes)
 
-        if len(self.W_log) == self.iteration:
-            self.W_log.append(W)
-        elif len(self.W_log) == self.iteration + 1:
-            self.W_log[self.iteration] = W
+        if len(self.w) == self.iteration:
+            self.w.append(w)
+        elif len(self.w) == self.iteration + 1:
+            self.w[self.iteration] = w
         else:
-            raise Exception('Unexpected W_log size')
+            raise Exception('Unexpected w(t) size')
 
     def compute_global_mean_absolute_error(self):
         gmae = 0
@@ -274,7 +276,7 @@ class Cluster:
         elif self.metrics_type == 2:
             for node in self.nodes:
                 gmae += mltoolbox.compute_mae(
-                    node.training_task.W_log[self.iteration],
+                    node.training_task.get_w_at_iteration(self.iteration),
                     self.X,
                     self.y,
                     self.activation_func,
@@ -282,9 +284,9 @@ class Cluster:
                 )
             gmae /= len(self.nodes)
         else:
-            W = self.W_log[self.iteration]
+            w = self.get_w_at_iteration(self.iteration)
             N = self.X.shape[0]
-            predictions = self.activation_func(self.y_hat.f(self.X, W))
+            predictions = self.activation_func(self.y_hat.f(self.X, w))
             linear_error = np.absolute(self.y - predictions)
             gmae = np.sum(linear_error) / N
 
@@ -307,7 +309,7 @@ class Cluster:
         elif self.metrics_type == 2:
             for node in self.nodes:
                 gmse += mltoolbox.compute_mse(
-                    node.training_task.W_log[self.iteration],
+                    node.training_task.get_w_at_iteration(self.iteration),
                     self.X,
                     self.y,
                     self.activation_func,
@@ -316,7 +318,7 @@ class Cluster:
             gmse /= len(self.nodes)
         else:
             gmse = mltoolbox.compute_mse(
-                self.W_log[self.iteration],
+                self.get_w_at_iteration(self.iteration),
                 self.X,
                 self.y,
                 self.activation_func,
@@ -343,11 +345,11 @@ class Cluster:
 
         elif self.metrics_type == 2:
             for node in self.nodes:
-                W = node.training_task.W_log[self.iteration]
-                real_W = np.ones(len(W))
-                real_values = self.activation_func(self.y_hat.f(self.X, real_W))
+                w = node.training_task.get_w_at_iteration(self.iteration)
+                real_w = np.ones(len(w))
+                real_values = self.activation_func(self.y_hat.f(self.X, real_w))
                 grmse += mltoolbox.compute_mse(
-                    W,
+                    w,
                     self.X,
                     real_values,
                     self.activation_func,
@@ -356,12 +358,12 @@ class Cluster:
             grmse /= len(self.nodes)
 
         else:
-            W = self.W_log[self.iteration]
-            real_W = np.ones(len(W))
-            real_values = self.activation_func(self.y_hat.f(self.X, real_W))
+            w = self.get_w_at_iteration(self.iteration)
+            real_w = np.ones(len(w))
+            real_values = self.activation_func(self.y_hat.f(self.X, real_w))
 
             grmse = mltoolbox.compute_mse(
-                W,
+                w,
                 self.X,
                 real_values,
                 self.activation_func,
@@ -379,7 +381,7 @@ class Cluster:
             raise Exception("Computation has diverged to infinite")
 
     def _compute_metrics(self):
-        self.compute_avg_W()
+        self.compute_avg_w()
         for metric in self.nodes[0].training_task.metrics:
             # todo: remove eval!!!
             eval("self.compute_global_" + metric + "()")
@@ -461,8 +463,14 @@ class Cluster:
 
                     if min_iter == self.iteration + 1:
                         self.iteration += 1
-                        self.iterations_time_log.append(-1)
-                        self.iterations_time_log[self.iteration] = node.local_clock
+
+                        last_to_complete_iteration_clock = -1
+                        for __node in self.nodes:
+                            node_clock_at_iter = __node.get_local_clock_by_iteration(self.iteration)
+                            if node_clock_at_iter > last_to_complete_iteration_clock:
+                                last_to_complete_iteration_clock = node_clock_at_iter
+
+                        self.iterations_time_log.append(last_to_complete_iteration_clock)
 
                         avg_iter = 0
                         for __node in self.nodes:
@@ -554,23 +562,17 @@ class Cluster:
                     ))
 
                 # enqueue the next event for current node
-                if not stop_condition:
+                if not stop_condition and event['type'] != 'node_endstep':
+                    new_event_type = 'node_endstep'
                     if node.iteration < self.max_iter and node.local_clock < self.max_time:
-                        new_event = {
-                            'time': node.local_clock,
-                            'type': 'node_step',
-                            'node': node
-                        }
-                        self.enqueue_event(new_event)
-                    else:
-                        if event["type"] == 'node_endstep':
-                            warnings.warn("Node in endstep event fell in endstep event again")
-                        new_event = {
-                            'time': node.local_clock,
-                            'type': 'node_endstep',
-                            'node': node
-                        }
-                        self.enqueue_event(new_event)
+                        new_event_type = 'node_step'
+
+                    new_event = {
+                        'time': node.local_clock,
+                        'type': new_event_type,
+                        'node': node
+                    }
+                    self.enqueue_event(new_event)
 
             elif event["type"] == "":
                 pass
@@ -586,7 +588,7 @@ class Node:
     """
 
     def __init__(self, _id, X, y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                 learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param):
+                 learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param, starting_weights_domain):
         self._id = _id  # id number of the node
         self.dependencies = []  # list of node dependencies
         self.recipients = []
@@ -607,6 +609,7 @@ class Node:
         if method == "stochastic":
             self.training_task = mltoolbox.StochasticGradientDescentTrainer(
                 X, y, y_hat,
+                starting_weights_domain,
                 activation_func,
                 loss,
                 penalty,
@@ -619,6 +622,7 @@ class Node:
         elif method == "batch":
             self.training_task = mltoolbox.BatchGradientDescentTrainer(
                 batch_size,
+                starting_weights_domain,
                 X, y, y_hat,
                 activation_func,
                 loss,
@@ -635,6 +639,7 @@ class Node:
 
             self.training_task = mltoolbox.GradientDescentTrainer(
                 X, y, y_hat,
+                starting_weights_domain,
                 activation_func,
                 loss,
                 penalty,
@@ -691,7 +696,10 @@ class Node:
         return math.inf
 
     def get_iteration_at_local_clock(self, local_clock):
-        return np.searchsorted(self.log, local_clock) - 1
+        i = np.searchsorted(self.log, local_clock) - 1
+        if i < 0:
+            return 0
+        return i
 
     def enqueue_weight(self, dependency_node_id, weight):
         """
@@ -737,7 +745,7 @@ class Node:
         Perform a single step of the gradient descent method.
         :return: a list containing [clock_before, clock_after] w.r.t. the computation
         """
-        # avg internal self.W vector with W incoming from dependencies
+        # avg internal self.w vector with w incoming from dependencies
         if self.iteration > 0:
             self.avg_weight_with_dependencies()
 
@@ -749,23 +757,24 @@ class Node:
 
     def avg_weight_with_dependencies(self):
         """
-        Average self.W vector with weights W from dependencies.
+        Average self.w vector with weights w from dependencies.
         :return: None
         """
         if len(self.dependencies) > 0:
-            W = np.copy(self.training_task.W)
+            # todo self.training_task.get_current_w()
+            w = self.training_task.get_w()
             for dep in self.dependencies:
-                W += self.dequeue_weight(dep.get_id())
-            self.training_task.W = W / (len(self.dependencies) + 1)
+                w += self.dequeue_weight(dep.get_id())
+            self.training_task.set_w(w / (len(self.dependencies) + 1))
 
     def broadcast_weight_to_recipients(self):
         """
-        Broadcast the just computed self.W vector to recipients by enqueuing
+        Broadcast the just computed self.w vector to recipients by enqueuing
         it on their buffers.
         :return: None
         """
         for recipient in self.recipients:
-            recipient.enqueue_weight(self.get_id(), np.copy(self.training_task.W))
+            recipient.enqueue_weight(self.get_id(), self.training_task.get_w())
 
     def can_run(self):
         """

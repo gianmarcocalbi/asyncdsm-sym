@@ -20,12 +20,21 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '-t', '--test_path',
+        '-f', '--folder-path',
         action='store',
         default=None,
         required=False,
-        help='Test from which load logs to',
-        dest='test_path'
+        help='Test folder from which load logs to',
+        dest='folder_path'
+    )
+
+    parser.add_argument(
+        '-t', '--temp-index',
+        action='store',
+        default=0,
+        required=False,
+        help='Test folder from which load logs to',
+        dest='temp_index'
     )
 
     parser.add_argument(
@@ -40,8 +49,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     plotter.plot_from_files(
-        test_folder_path=args.test_path,
+        test_folder_path=args.folder_path,
         save_plots_to_test_folder=args.s_flag,
         instant_plot=not args.s_flag,
-        plots=tuple(args.plots)
+        plots=tuple(args.plots),
+        temp_index=int(args.temp_index)
     )

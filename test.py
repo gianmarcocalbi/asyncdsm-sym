@@ -16,7 +16,7 @@ graphs = (
 
 for graph, degree in graphs:
     try:
-        print("{} speed = {}".format(graph, statistics.single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter2(
+        print("{} speed = {}".format(graph, statistics.single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(
             "./test_log/test_006_pareto3-2_10ktime1e-4alphaXin0-2_classic.conflict.1", graph, 99, 10000)))
     except IOError:
         pass

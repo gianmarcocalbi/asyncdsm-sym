@@ -5,7 +5,7 @@ import numpy as np
 D = decimal.Decimal
 decimal.getcontext().prec = 256
 
-def single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter2(test_folder_path, graph, nodes_amount, max_time):
+def single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(test_folder_path, graph, nodes_amount, max_time):
     graph_avg_iter_log_path = "{}/{}_avg_iterations_time_log".format(test_folder_path, graph)
     diag_avg_iter_log_path = "{}/0_diagonal_avg_iterations_time_log".format(test_folder_path)
 
@@ -28,30 +28,6 @@ def single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter2(test_folder_p
                         "doesn't allow to compute values for this function")
 
     return graph_avg_iter_iter / max_time
-
-def single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(test_folder_path, graph, nodes_amount):
-    graph_avg_iter_log_path = "{}/{}_avg_iterations_time_log".format(test_folder_path, graph)
-    diag_avg_iter_log_path = "{}/0_diagonal_avg_iterations_time_log".format(test_folder_path)
-
-    if os.path.isfile(graph_avg_iter_log_path + ".gz"):
-        graph_avg_iter_log_path += '.gz'
-
-    if os.path.isfile(diag_avg_iter_log_path + ".gz"):
-        diag_avg_iter_log_path += '.gz'
-
-    graph_avg_iter_log = [tuple(s.split(",")) for s in np.loadtxt(graph_avg_iter_log_path, str)]
-    diag_avg_iter_log = [tuple(s.split(",")) for s in np.loadtxt(diag_avg_iter_log_path, str)]
-
-    diag_avg_iter_time = float(diag_avg_iter_log[-1][0])
-    diag_avg_iter_iter = float(diag_avg_iter_log[-1][1])
-    graph_avg_iter_time = float(graph_avg_iter_log[-1][0])
-    graph_avg_iter_iter = float(graph_avg_iter_log[-1][1])
-
-    if 0 != abs(diag_avg_iter_iter - graph_avg_iter_iter) <= nodes_amount:
-        raise Exception("You're using logs generated from a simulation using max_iter limit, this kind of simulation "
-                        "doesn't allow to compute values for this function")
-
-    return graph_avg_iter_iter * nodes_amount / diag_avg_iter_iter
 
 
 def single_iteration_velocity_residual_lifetime_lower_bound(degree, distr_class, distr_params):
