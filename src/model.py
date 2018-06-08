@@ -441,7 +441,7 @@ class Cluster:
                 node = event["node"]
 
                 # todo: add node_endstep
-                if node.can_run():
+                if node.can_run() and event["type"] == "node_step":
                     self.dynamic_log[node.get_id()].append(node.step())
 
                     # when this node finishes iteration "i", it checks if all the others
@@ -484,7 +484,8 @@ class Cluster:
                         raise Exception("Unexpected behaviour of cluster distributed dynamics")
                 else:
                     # node cannot run computation because it lacks some
-                    # dependencies' informations
+                    # dependencies' informations or it is in the endstep event
+                    # so it is not supposed to do anything else
                     max_local_clock = node.local_clock
                     for dep in node.dependencies:
                         if dep.get_local_clock_by_iteration(node.iteration) > max_local_clock:
@@ -562,6 +563,8 @@ class Cluster:
                         }
                         self.enqueue_event(new_event)
                     else:
+                        if event["type"] == 'node_endstep':
+                            warnings.warn("Node in endstep event fell in endstep event again")
                         new_event = {
                             'time': node.local_clock,
                             'type': 'node_endstep',
