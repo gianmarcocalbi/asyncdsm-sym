@@ -14,18 +14,22 @@ class Task:
 class Trainer(Task):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, X, y, y_hat, starting_weights_domain, activation_func):
+    def __init__(self, X, y, y_hat, starting_weights_domain, activation_func=None):
 
-        # bias inserted as w0 = (1,...,1)
-        self.X = np.c_[np.ones((X.shape[0])), X]
+        self.X = X
         self.y = y
         self.y_hat = y_hat
         self.N = self.X.shape[0]
         self.iteration = 0
 
-        # self.W = np.zeros(X.shape[1] + 1)
-        self.w = [np.random.uniform(starting_weights_domain[0], starting_weights_domain[1],
-                                      size=(X.shape[1] + 1,))]  # todo: remove "+ 1"?
+        # self.W = np.zeros(X.shape[1])
+        self.w = [
+            np.random.uniform(
+                starting_weights_domain[0],
+                starting_weights_domain[1],
+                size=(self.X.shape[1],)
+            )
+        ]
 
         if not activation_func is types.FunctionType:
             if activation_func == "sigmoid":
@@ -115,52 +119,67 @@ class GradientDescentTrainerAbstract(Trainer):
         return 0
 
     def compute_mean_absolute_error(self):
-        predictions = self.activation_func(self.y_hat.f(self.X, self.get_w()))
-        linear_error = np.absolute(self.y - predictions)
-        mean_absolute_error = np.sum(linear_error) / self.N
+        mae = compute_mae(self.get_w(), self.X, self.y, self.activation_func, self.y_hat.f)
         if len(self.mean_absolute_error_log) == self.iteration:
-            self.mean_absolute_error_log.append(mean_absolute_error)
+            self.mean_absolute_error_log.append(mae)
         elif len(self.mean_absolute_error_log) == self.iteration + 1:
-            self.mean_absolute_error_log[self.iteration] = mean_absolute_error
+            self.mean_absolute_error_log[self.iteration] = mae
         else:
             raise Exception('Unexpected mean_absolute_error_log size')
 
-        return mean_absolute_error
+        return mae
 
     def compute_mean_squared_error(self):
-        predictions = self.activation_func(self.y_hat.f(self.X, self.get_w()))
-        linear_error = np.absolute(self.y - predictions)
-        mean_squared_error = np.sum(np.power(linear_error, 2)) / self.N
+        mse = compute_mse(self.get_w(), self.X, self.y, self.activation_func, self.y_hat.f)
         if len(self.mean_squared_error_log) == self.iteration:
-            self.mean_squared_error_log.append(mean_squared_error)
+            self.mean_squared_error_log.append(mse)
         elif len(self.mean_squared_error_log) == self.iteration + 1:
-            self.mean_squared_error_log[self.iteration] = mean_squared_error
+            self.mean_squared_error_log[self.iteration] = mse
         else:
             raise Exception('Unexpected mean_squared_error_log size')
 
-        return mean_squared_error
+        return mse
 
     def compute_real_mean_squared_error(self):
-        w = np.ones(len(self.get_w()))
-        real_values = self.activation_func(self.y_hat.f(self.X, w))
-        predictions = self.activation_func(self.y_hat.f(self.X, self.get_w()))
-        linear_error = np.absolute(real_values - predictions)
-        real_mean_squared_error = np.sum(np.power(linear_error, 2)) / self.N
-
+        real_w = np.ones(len(self.get_w()))
+        real_values = self.activation_func(self.y_hat.f(self.X, real_w))
+        rmse = compute_mse(
+            self.get_w(),
+            self.X,
+            real_values,
+            self.activation_func,
+            self.y_hat.f
+        )
         # real_mean_squared_error -= variance
 
         if len(self.real_mean_squared_error_log) == self.iteration:
-            self.real_mean_squared_error_log.append(real_mean_squared_error)
+            self.real_mean_squared_error_log.append(rmse)
         elif len(self.real_mean_squared_error_log) == self.iteration + 1:
-            self.real_mean_squared_error_log[self.iteration] = real_mean_squared_error
+            self.real_mean_squared_error_log[self.iteration] = rmse
         else:
             raise Exception('Unexpected real_mean_squared_error_log size')
 
-        return real_mean_squared_error
+        return rmse
 
     @abc.abstractmethod
     def step(self):
         raise NotImplementedError('step method not implemented in GradientDescentTrainerAbstract child class')
+
+
+class LinearRegressionGradientDescentTrainer(GradientDescentTrainerAbstract):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.beta = None
+
+    def step(self):
+        if self.beta is None:
+            self.beta = estimate_unbiased_beta(self.X, self.y)
+            #self.beta = np.linalg.lstsq(self.X, self.y)
+
+        self.w.append(self.beta)
+
+        self.iteration += 1
+        self._compute_metrics()
 
 
 class GradientDescentTrainer(GradientDescentTrainerAbstract):
@@ -241,8 +260,8 @@ class DualAveragingGradientDescentTrainer(GradientDescentTrainerAbstract):
         loss_f_gradient = self.loss.f_gradient(y_pick, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient
 
-        #self.z
-        #self.w -= self.alpha * gradient
+        # self.z
+        # self.w -= self.alpha * gradient
 
         self.iteration += 1
         self._compute_metrics()
@@ -439,10 +458,15 @@ def rosenbrock_function(_X, _w):
     return v
 
 
-def estimate_beta(_X, _y):
-    # _X = np.delete(_X, 1, axis=1)
-    # return np.concatenate(([1], np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)))
-    return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)
+def estimate_unbiased_beta(_X, _y):
+    _X = np.delete(_X, 0, axis=1)
+    _y = _y - 1
+    return np.concatenate(([1], estimate_biased_beta(_X, _y)))
+
+
+def estimate_biased_beta(_X, _y):
+    #return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)
+    return np.linalg.lstsq(_X, _y, rcond=None)[0]
 
 
 def compute_mse(w, X, y, activation_func, y_hat_func):

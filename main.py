@@ -75,24 +75,24 @@ Summary:
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 1000
+    setup['n_samples'] = 10000
     setup['n_features'] = 100
     setup['domain_radius'] = 5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1
+    setup['error_std_dev'] = 0
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
-    setup['starting_weights_domain'] = [2,8]
+    setup['starting_weights_domain'] = [1,4]
 
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 0
 
     # CLUSTER SETUP
     setup['max_iter'] = None
-    setup['max_time'] = 1000  # seconds
+    setup['max_time'] = 100  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
-    setup['method'] = "classic"
+    setup['method'] = "linear_regression"
     setup['batch_size'] = 20
     setup['activation_func'] = None
     setup['loss'] = mltoolbox.SquaredLossFunction
@@ -101,7 +101,7 @@ Summary:
     setup['alpha'] = 1e-04
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
-    setup['metrics_type'] = 2
+    setup['metrics_type'] = 1  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['shuffle'] = True
     setup['verbose'] = False
     setup['time_distr_class'] = statistics.ExponentialDistribution

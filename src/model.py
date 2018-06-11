@@ -42,6 +42,8 @@ class Cluster:
         self.epsilon = 0.0  # acceptance threshold
         self.metrics_type = 0  # use alternative metrics
 
+        self.linear_regression_beta = None
+
     def setup(self, X, y, y_hat, method="stochastic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
               metrics="all", metrics_type=0, shuffle=True, verbose=False,
@@ -60,7 +62,7 @@ class Cluster:
         y_hat : class inheriting from YHatFunctionAbstract
             Class inherited from YHatFunctionAbstract.
 
-        method : 'classic', 'stochastic' or 'batch', optional
+        method : 'classic', 'stochastic', 'batch' or 'linear_regression', optional
             Method used to minimize error function.
 
         max_iter : int, None or math.inf, optional
@@ -139,9 +141,11 @@ class Cluster:
         self.epsilon = epsilon
         self.metrics_type = metrics_type
         self.X = np.c_[np.ones((X.shape[0])), X]
-        self.y = y
+        self.y = y + 1
         self.y_hat = y_hat
         self.loss = loss
+
+        del y, X
 
         if activation_func is None:
             activation_func = "identity"
@@ -159,10 +163,10 @@ class Cluster:
         self.activation_func = activation_func
 
         if shuffle:
-            Xy = np.c_[X, y]
+            Xy = np.c_[self.X, self.y]
             np.random.shuffle(Xy)
-            X = np.delete(Xy, -1, 1)
-            y = np.take(Xy, -1, 1)
+            self.X = np.delete(Xy, -1, 1)
+            self.y = np.take(Xy, -1, 1)
             del Xy
 
         N = self.adjacency_matrix.shape[0]
@@ -194,17 +198,26 @@ class Cluster:
                               -27.82431676, -53.48157654, 15.58884395, 36.62168811]
         if N > len(const_nodes_errors):
             const_nodes_errors = nodes_errors
+
+        subX_size = int(math.floor(self.X.shape[0] / N))
+        subX_size_res = self.X.shape[0] % N
+        prev_end = 0
         for i in range(N):
             # size of the subsample of the training set that will be assigned to
             # this node
-            node_X_size = int(math.floor(X.shape[0] / (N - i)))
+            node_X_size = subX_size
+            if subX_size_res > 0:
+                node_X_size += 1
+                subX_size_res -= 1
+            beg = prev_end
+            end = beg + node_X_size
 
-            for j in range(node_X_size):
-                y[j] += nodes_errors[i]
+            for j in range(beg, end):
+                self.y[j] += nodes_errors[i]
 
             # assign the correct subsample to this node
-            node_X = copy.deepcopy(X[0:node_X_size])  # instances
-            node_y = copy.deepcopy(y[0:node_X_size])  # oracle outputs
+            node_X = copy.deepcopy(self.X[beg:end])  # instances
+            node_y = copy.deepcopy(self.y[beg:end])  # oracle outputs
 
             # instantiate new node for the just-selected subsample
             self.nodes.append(
@@ -212,9 +225,20 @@ class Cluster:
                      metrics, shuffle, verbose, time_distr_class, time_distr_param, starting_weights_domain, ))
             self.dynamic_log.append([])
 
-            # evict the just-already-assigned samples of the training-set
-            X = X[node_X_size:]
-            y = y[node_X_size:]
+            prev_end = end
+
+        prev_size = self.nodes[0].training_task.X.shape[0]
+        for u in range(1, len(self.nodes)):
+            size = self.nodes[u].training_task.X.shape[0]
+            if not (size == prev_size or size == prev_size - 1):
+                raise Exception(
+                    "Wrong dataset allocation among nodes: at least one node has a training subset "
+                    "too big or too small wrt the others")
+
+        if prev_end != self.X.shape[0]:
+            raise Exception(
+                "Wrong dataset allocation among nodes: the total amount of samples in nodes "
+                "is different from the total size of the training set")
 
         # set up all nodes' dependencies following the adjacency_matrix
         for i in range(N):
@@ -223,8 +247,9 @@ class Cluster:
                     self.nodes[j].add_dependency(self.nodes[i])
                     self.nodes[i].add_recipient(self.nodes[j])
 
+        self.linear_regression_beta = mltoolbox.estimate_unbiased_beta(self.X, self.y)
+        # self.linear_regression_beta = np.concatenate(([1], mltoolbox.estimate_beta(np.delete(self.X, 0, axis=1), self.y)))
         self._compute_metrics()
-
 
     def get_w_at_iteration(self, iteration):
         return np.copy(self.w[iteration])
@@ -580,6 +605,7 @@ class Cluster:
                 pass
 
             event = self.dequeue_event()
+        pass
 
 
 class Node:
@@ -604,6 +630,7 @@ class Node:
         # it store a queue for each dependency. Such queue can be accessed by
         # addressing the id of the node: "dependency_id" -> dep_queue.
         self.buffer = {}
+        self.method = method
 
         # instantiate training model for the node
         if method == "stochastic":
@@ -624,6 +651,19 @@ class Node:
                 batch_size,
                 starting_weights_domain,
                 X, y, y_hat,
+                activation_func,
+                loss,
+                penalty,
+                alpha,
+                learning_rate,
+                metrics,
+                shuffle,
+                verbose
+            )
+        elif method == "linear_regression":
+            self.training_task = mltoolbox.LinearRegressionGradientDescentTrainer(
+                X, y, y_hat,
+                starting_weights_domain,
                 activation_func,
                 loss,
                 penalty,
@@ -724,6 +764,9 @@ class Node:
         # get the counter before the computation starts
         # c0 = time.perf_counter()
 
+        """if self.method == "linear_regression":
+            self.linear_regression_step()
+        else:"""
         self.gradient_step()
 
         # get the counter after the computation has ended
@@ -739,6 +782,9 @@ class Node:
 
         self.iteration += 1
         self.log.append(self.local_clock)
+
+    def linear_regression_step(self):
+        self.training_task.step()
 
     def gradient_step(self):
         """
