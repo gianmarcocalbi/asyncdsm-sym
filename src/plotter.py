@@ -758,6 +758,7 @@ class Plotter:
             title_center="",
             title_left="Memoryless lower bound error over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="LB Error (Velocity LB for k / Real Velocity for k)")
         self._plot_iter_memoryless_lower_bound_error_over_degree_lines()
@@ -769,6 +770,7 @@ class Plotter:
             title_center="",
             title_left="Residual lifetime lower bound error over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="LB Error (Velocity LB for k / Real Velocity for k)")
         self._plot_iter_residual_lifetime_lower_bound_error_over_degree_lines()
@@ -780,6 +782,7 @@ class Plotter:
             title_center="",
             title_left="Upper bound error over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="LB Error (Velocity UB for k / Real Velocity for k)")
         self._plot_iter_upper_bound_error_over_degree_lines()
@@ -791,6 +794,7 @@ class Plotter:
             title_center="",
             title_left="\"Don\" bound error over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="Bound Error (Velocity Bound for k / Real Velocity for k)")
         self._plot_iter_don_bound_error_over_degree_lines()
@@ -802,6 +806,7 @@ class Plotter:
             title_center="",
             title_left="All bounds' errors over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="Bound Error (Velocity Bound for k / Real Velocity for k)")
         self._plot_iter_memoryless_lower_bound_error_over_degree_lines()
@@ -816,6 +821,7 @@ class Plotter:
             title_center="",
             title_left="All bounds' errors over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="Bound Error (Velocity Bound for k / Real Velocity for k)")
         self._plot_iter_memoryless_lower_bound_error_over_degree_lines()
@@ -831,6 +837,7 @@ class Plotter:
             title_center="",
             title_left="Memoryless lower bound velocity over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="Bound Velocity")
         self._plot_iter_memoryless_lower_bound_velocity_over_degree_lines()
@@ -842,6 +849,7 @@ class Plotter:
             title_center="",
             title_left="Residual Lifetime lower bound velocity over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="Bound Velocity")
         self._plot_iter_residual_lifetime_lower_bound_velocity_over_degree_lines()
@@ -853,6 +861,7 @@ class Plotter:
             title_center="",
             title_left="Upper bound velocity over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="Bound Velocity")
         self._plot_iter_upper_bound_velocity_over_degree_lines()
@@ -864,6 +873,7 @@ class Plotter:
             title_center="",
             title_left="Don bound velocity over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="Bound Velocity")
         self._plot_iter_don_bound_velocity_over_degree_lines()
@@ -875,6 +885,7 @@ class Plotter:
             title_center="",
             title_left="All bounds' velocities over degree",
             title_right=self.time_distr_name,
+            yscale='linear',
             xlabel="Degree",
             ylabel="Velocity")
         self._plot_iter_memoryless_lower_bound_velocity_over_degree_lines()

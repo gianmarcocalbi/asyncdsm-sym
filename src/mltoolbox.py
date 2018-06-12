@@ -7,7 +7,7 @@ class Task:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def step(self):
+    def step(self, *args):
         raise NotImplementedError('step method not implemented in Task child class')
 
 
@@ -44,7 +44,7 @@ class Trainer(Task):
         self.activation_func = activation_func
 
     @abc.abstractmethod
-    def step(self):
+    def step(self, *args):
         raise NotImplementedError('step method not implemented in Trainer child class')
 
     def get_w(self):
@@ -162,7 +162,7 @@ class GradientDescentTrainerAbstract(Trainer):
         return rmse
 
     @abc.abstractmethod
-    def step(self):
+    def step(self, *args):
         raise NotImplementedError('step method not implemented in GradientDescentTrainerAbstract child class')
 
 
@@ -174,7 +174,7 @@ class LinearRegressionGradientDescentTrainer(GradientDescentTrainerAbstract):
     def step(self):
         if self.beta is None:
             self.beta = estimate_unbiased_beta(self.X, self.y)
-            #self.beta = np.linalg.lstsq(self.X, self.y)
+            # self.beta = np.linalg.lstsq(self.X, self.y)
 
         self.w.append(self.beta)
 
@@ -248,24 +248,29 @@ class DualAveragingGradientDescentTrainer(GradientDescentTrainerAbstract):
         super().__init__(*args)
         self.z = [np.zeros(len(self.get_w()))]
 
-    def step(self, avg_z=np.inf):
-        if avg_z == np.inf:
-            avg_z = self.z
-
-        pick = np.random.randint(0, self.X.shape[0])
-        X_pick = self.X[pick]
-        y_pick = self.y[pick]
-        y_hat_f = self.y_hat.f(X_pick, self.get_w())
-        y_hat_f_gradient = self.y_hat.f_gradient(X_pick, y_pick)
-        loss_f_gradient = self.loss.f_gradient(y_pick, y_hat_f, y_hat_f_gradient)
-        gradient = loss_f_gradient
-
-        # self.z
-        # self.w -= self.alpha * gradient
+    def step(self, avg_z):
+        y_hat_f = self.y_hat.f(self.X, self.get_w())
+        y_hat_f_gradient = self.y_hat.f_gradient(self.X, self.y)
+        loss_f_gradient = self.loss.f_gradient(self.y, y_hat_f, y_hat_f_gradient)
+        gradient = loss_f_gradient / self.N
+        z = avg_z + gradient
+        self.z.append(z)
+        self.w.append(-self.alpha * z)
 
         self.iteration += 1
         self._compute_metrics()
 
+    def get_z(self):
+        return np.copy(self.z[-1])
+
+    def get_z_at_iteration(self, iteration):
+        return np.copy(self.z[iteration])
+
+    def set_z(self, new_z):
+        self.z[-1] = new_z
+
+    def set_z_at_iteration(self, new_z, iteration):
+        self.z[iteration] = new_z
 
 class LossFunctionAbstract:
     __metaclass__ = abc.ABCMeta
@@ -465,7 +470,7 @@ def estimate_unbiased_beta(_X, _y):
 
 
 def estimate_biased_beta(_X, _y):
-    #return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)
+    # return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)
     return np.linalg.lstsq(_X, _y, rcond=None)[0]
 
 

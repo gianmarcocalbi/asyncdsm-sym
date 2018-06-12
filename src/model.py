@@ -44,7 +44,7 @@ class Cluster:
 
         self.linear_regression_beta = None
 
-    def setup(self, X, y, y_hat, method="stochastic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
+    def setup(self, X, y, y_hat, method="classic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
               loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
               metrics="all", metrics_type=0, shuffle=True, verbose=False,
               time_distr_class=statistics.ExponentialDistribution, time_distr_param=(),
@@ -219,6 +219,9 @@ class Cluster:
             node_X = copy.deepcopy(self.X[beg:end])  # instances
             node_y = copy.deepcopy(self.y[beg:end])  # oracle outputs
 
+            """if np.sum(self.adjacency_matrix[0]) == 1:
+                method = "linear_regression"
+            """
             # instantiate new node for the just-selected subsample
             self.nodes.append(
                 Node(i, node_X, node_y, y_hat, method, batch_size, activation_func, loss, penalty, alpha, learning_rate,
@@ -248,7 +251,6 @@ class Cluster:
                     self.nodes[i].add_recipient(self.nodes[j])
 
         self.linear_regression_beta = mltoolbox.estimate_unbiased_beta(self.X, self.y)
-        # self.linear_regression_beta = np.concatenate(([1], mltoolbox.estimate_beta(np.delete(self.X, 0, axis=1), self.y)))
         self._compute_metrics()
 
     def get_w_at_iteration(self, iteration):
@@ -673,6 +675,19 @@ class Node:
                 shuffle,
                 verbose
             )
+        elif method == "dual_averaging":
+            self.training_task = mltoolbox.DualAveragingGradientDescentTrainer(
+                X, y, y_hat,
+                starting_weights_domain,
+                activation_func,
+                loss,
+                penalty,
+                alpha,
+                learning_rate,
+                metrics,
+                shuffle,
+                verbose
+            )
         else:
             if method != "classic":
                 warnings.warn('Method "{}" does not exist, using classic gradient descent instead'.format(method))
@@ -741,21 +756,10 @@ class Node:
             return 0
         return i
 
-    def enqueue_weight(self, dependency_node_id, weight):
-        """
-        Enqueue a weight in the buffer.
-        :param dependency_node_id: node that perform the enqueue operation
-        :param weight: weight vector to enqueue
-        :return: None
-        """
-        self.buffer[dependency_node_id].append(weight)
+    def enqueue_outgoing_data(self, dependency_node_id, data):
+        self.buffer[dependency_node_id].append(data)
 
-    def dequeue_weight(self, dependency_node_id):
-        """
-        Remove and return the head of the buffer for a certain dependency.
-        :param dependency_node_id: id of the dependency
-        :return: weight vector from such dependency (for the current iteration)
-        """
+    def dequeue_incoming_data(self, dependency_node_id):
         return self.buffer[dependency_node_id].pop(0)
 
     def step(self):
@@ -764,10 +768,10 @@ class Node:
         # get the counter before the computation starts
         # c0 = time.perf_counter()
 
-        """if self.method == "linear_regression":
-            self.linear_regression_step()
-        else:"""
-        self.gradient_step()
+        if self.method == "dual_averaging":
+            self.dual_averaging_step()
+        else:
+            self.gradient_step()
 
         # get the counter after the computation has ended
         # cf = time.perf_counter()
@@ -785,6 +789,16 @@ class Node:
 
     def linear_regression_step(self):
         self.training_task.step()
+
+    def dual_averaging_step(self):
+        avg_z = np.zeros(len(self.training_task.get_w()))
+        if self.iteration > 0:
+            avg_z = self.avg_z_with_dependencies()
+
+        self.training_task.step(avg_z)
+
+        # broadcast the obtained value to all node's recipients
+        self.broadcast_z_to_recipients()
 
     def gradient_step(self):
         """
@@ -810,17 +824,24 @@ class Node:
             # todo self.training_task.get_current_w()
             w = self.training_task.get_w()
             for dep in self.dependencies:
-                w += self.dequeue_weight(dep.get_id())
+                w += self.dequeue_incoming_data(dep.get_id())
             self.training_task.set_w(w / (len(self.dependencies) + 1))
 
     def broadcast_weight_to_recipients(self):
-        """
-        Broadcast the just computed self.w vector to recipients by enqueuing
-        it on their buffers.
-        :return: None
-        """
         for recipient in self.recipients:
-            recipient.enqueue_weight(self.get_id(), self.training_task.get_w())
+            recipient.enqueue_outgoing_data(self.get_id(), self.training_task.get_w())
+
+    def avg_z_with_dependencies(self):
+        if len(self.dependencies) > 0:
+            z = np.zeros(len(self.training_task.get_z()))  # self.training_task.get_z()
+            for dep in self.dependencies:
+                z += self.dequeue_incoming_data(dep.get_id())
+            return z / len(self.dependencies)
+        return 0
+
+    def broadcast_z_to_recipients(self):
+        for recipient in self.recipients:
+            recipient.enqueue_outgoing_data(self.get_id(), self.training_task.get_z())
 
     def can_run(self):
         """

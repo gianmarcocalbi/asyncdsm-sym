@@ -57,51 +57,51 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = int(time.time())
+    setup['seed'] = 281994 #int(time.time())
     setup['n'] = 100
 
     setup['graphs'] = {
         "0_diagonal": DIAGONAL(setup['n']),
-        "1_cycle": CYCLE(setup['n']),  # degree = 1
-        "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        #"1_cycle": CYCLE(setup['n']),  # degree = 1
+        #"2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         #"2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
-        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
-        "n-1_clique": CLIQUE(setup['n']),  # degree = n
+        #"3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        #"4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        #"8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        #"20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        #"50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        #"n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
     # TRAINING SET SETUP
     setup['n_samples'] = 10000
     setup['n_features'] = 100
-    setup['domain_radius'] = 5
+    setup['domain_radius'] = 7.5
     setup['domain_center'] = 0
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 0
+    setup['error_std_dev'] = 1
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
-    setup['starting_weights_domain'] = [1,4]
+    setup['starting_weights_domain'] = [-1,7]
 
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 0
 
     # CLUSTER SETUP
-    setup['max_iter'] = None
-    setup['max_time'] = 100  # seconds
+    setup['max_iter'] = 1000000
+    setup['max_time'] = None  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
-    setup['method'] = "linear_regression"
+    setup['method'] = "classic"
     setup['batch_size'] = 20
     setup['activation_func'] = None
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
     setup['epsilon'] = None
-    setup['alpha'] = 1e-04
+    setup['alpha'] = 2*1e-04
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
-    setup['metrics_type'] = 1  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['shuffle'] = True
     setup['verbose'] = False
     setup['time_distr_class'] = statistics.ExponentialDistribution
