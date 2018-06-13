@@ -57,39 +57,44 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = 281994 #int(time.time())
+    setup['seed'] = int(time.time())
     setup['n'] = 100
 
     setup['graphs'] = {
         "0_diagonal": DIAGONAL(setup['n']),
-        #"1_cycle": CYCLE(setup['n']),  # degree = 1
-        #"2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        #"2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        #"3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        #"4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        #"8_regular": REGULAR(setup['n'], 8),  # degree = 8
-        #"20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        #"50_regular": REGULAR(setup['n'], 50),  # degree = 50
-        #"n-1_clique": CLIQUE(setup['n']),  # degree = n
+        "1_cycle": CYCLE(setup['n']),  # degree = 1
+        "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
+        # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 10000
+    setup['n_samples'] = 20000
     setup['n_features'] = 100
-    setup['domain_radius'] = 7.5
+    setup['domain_radius'] = 6
     setup['domain_center'] = 0
     setup['error_mean'] = 0
     setup['error_std_dev'] = 1
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
 
-    setup['starting_weights_domain'] = [-1,7]
+    r = np.random.uniform(4, 6)
+    c = np.random.uniform(1, 3.8)
+    if np.random.choice([True, False]):
+        c = -c
+
+    setup['starting_weights_domain'] = [-1,5] # [c-r,c+r]
 
     setup['node_error_mean'] = 0
-    setup['node_error_std_dev'] = 0
+    setup['node_error_std_dev'] = 50
 
     # CLUSTER SETUP
-    setup['max_iter'] = 1000000
+    setup['max_iter'] = 300
     setup['max_time'] = None  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
@@ -98,7 +103,7 @@ Summary:
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
     setup['epsilon'] = None
-    setup['alpha'] = 2*1e-04
+    setup['alpha'] = 1e-4
     setup['learning_rate'] = "constant"
     setup['metrics'] = "all"
     setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
@@ -114,7 +119,7 @@ Summary:
     # OUTPUT SETUP
     save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_006_pareto3-2_10ktime1e-4alphaXin0-2_classic"  # test folder inside test_log/
+    test_subfolder = "test_008_nodeErr0_metric0_exp1lambda_500time3e-4alphaXin-1-7_dual_averaging"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
@@ -297,17 +302,16 @@ time_distr_param = {time_distr_param}
         if compress:
             extension = '.gz'
 
-
         # create output log files
 
         if type(single_node_inspection) is int:
             np.savetxt(
-                os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
+                os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
                 cluster.nodes[single_node_inspection].training_task.mean_squared_error_log,
                 delimiter=','
             )
             np.savetxt(
-                os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
+                os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
                 cluster.nodes[single_node_inspection].training_task.real_mean_squared_error_log,
                 delimiter=','
             )
@@ -316,12 +320,12 @@ time_distr_param = {time_distr_param}
                 warnings.warn("Single node inspection failed, switching to classical cluster inspection")
             np.savetxt(
                 os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
-                cluster.global_real_mean_squared_error_log,
+                cluster.global_mean_squared_error_log,
                 delimiter=','
             )
             np.savetxt(
                 os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
-                cluster.global_mean_squared_error_log,
+                cluster.global_real_mean_squared_error_log,
                 delimiter=','
             )
 

@@ -1,0 +1,99 @@
+>>> Test Descriptor File
+Title: test
+Date: 2018-06-13 12:13:55.381186
+Summary: 
+
+
+### BEGIN SETUP ###
+n = 100
+seed = 1528884835
+graphs = {   '0_diagonal': np.array([[1., 0., 0., ..., 0., 0., 0.],
+       [0., 1., 0., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 0., 0.],
+       [0., 0., 0., ..., 0., 1., 0.],
+       [0., 0., 0., ..., 0., 0., 1.]]),
+    '1_cycle': np.array([[1., 1., 0., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 1., 0.],
+       [0., 0., 0., ..., 0., 1., 1.],
+       [1., 0., 0., ..., 0., 0., 1.]]),
+    '20_regular': np.array([[1., 1., 0., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 1., 0., 0.],
+       ...,
+       [0., 0., 1., ..., 1., 1., 0.],
+       [0., 0., 0., ..., 0., 1., 1.],
+       [1., 0., 0., ..., 0., 0., 1.]]),
+    '2_diam-expander': np.array([[1., 1., 0., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 1., 0.],
+       [0., 0., 0., ..., 0., 1., 1.],
+       [1., 0., 0., ..., 0., 0., 1.]]),
+    '4_regular': np.array([[1., 1., 0., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 1., 0.],
+       [0., 0., 0., ..., 0., 1., 1.],
+       [1., 0., 0., ..., 0., 0., 1.]]),
+    '50_regular': np.array([[1., 1., 1., ..., 0., 1., 0.],
+       [0., 1., 1., ..., 1., 0., 1.],
+       [1., 0., 1., ..., 0., 1., 0.],
+       ...,
+       [0., 1., 0., ..., 1., 1., 1.],
+       [1., 0., 1., ..., 0., 1., 1.],
+       [1., 1., 0., ..., 1., 0., 1.]]),
+    '8_regular': np.array([[1., 1., 0., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 1., 0.],
+       [0., 0., 0., ..., 0., 1., 1.],
+       [1., 0., 0., ..., 0., 0., 1.]]),
+    'n-1_clique': np.array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]])}
+
+# TRAINING SET SETUP
+n_samples = 10000
+n_features = 100
+sample_function = <function LinearYHatFunction.f at 0x7f05384a2e18>
+domain_radius = 6
+domain_center = 0
+error_mean = 0
+error_std_dev = 1
+starting_weights_domain = [-1, 5]
+node_error_mean = 0
+node_error_std_dev = 0
+
+# CLUSTER SETUP
+max_iter = 500
+max_time = None
+yhat = <class 'src.mltoolbox.LinearYHatFunction'>
+method = dual_averaging
+batch_size = 20
+activation_func = None
+loss = <class 'src.mltoolbox.SquaredLossFunction'>
+penalty = l2
+epsilon = None
+alpha = 1e-05
+learning_rate = constant
+metrics = all
+metrics_type = 0
+shuffle = True
+verbose = False
+time_distr_class = <class 'src.statistics.ExponentialDistribution'>
+time_distr_param = [1]
+
+
+# duration (hh:mm:ss): 00:03:04
