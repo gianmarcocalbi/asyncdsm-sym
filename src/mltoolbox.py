@@ -1,6 +1,6 @@
 # import the necessary packages
 import numpy as np
-import abc, types, warnings
+import abc, types, warnings, math
 
 
 class Task:
@@ -96,6 +96,12 @@ class GradientDescentTrainerAbstract(Trainer):
             # todo: remove eval!!!
             eval("self.compute_" + metric + "()")
 
+    def get_alpha(self):
+        alpha = self.alpha
+        if self.learning_rate == "root_decreasing" and self.iteration > 1:
+            alpha /= math.sqrt(self.iteration)
+        return alpha
+
     def get_score(self):
         return self.score_log[-1]
 
@@ -173,8 +179,7 @@ class LinearRegressionGradientDescentTrainer(GradientDescentTrainerAbstract):
 
     def step(self):
         if self.beta is None:
-            self.beta = estimate_unbiased_beta(self.X, self.y)
-            # self.beta = np.linalg.lstsq(self.X, self.y)
+            self.beta = estimate_linear_regression_beta(self.X, self.y)
 
         self.w.append(self.beta)
 
@@ -193,7 +198,7 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
         loss_f_gradient = self.loss.f_gradient(self.y, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient / self.N
 
-        self.w.append(self.get_w() - self.alpha * gradient)
+        self.w.append(self.get_w() - self.get_alpha() * gradient)
         # self.W = estimate_beta(self.X, self.y)
 
         self.iteration += 1
@@ -213,7 +218,7 @@ class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
         loss_f_gradient = self.loss.f_gradient(y_pick, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient
 
-        self.w.append(self.get_w() - self.alpha * gradient)
+        self.w.append(self.get_w() - self.get_alpha() * gradient)
         self.iteration += 1
         self._compute_metrics()
 
@@ -238,15 +243,20 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
         y_hat_f_gradient = self.y_hat.f_gradient(X_batch, y_batch)
         loss_f_gradient = self.loss.f_gradient(y_batch, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient / self.batch_size
-        self.w.append(self.get_w() - self.alpha * gradient)
+        self.w.append(self.get_w() - self.get_alpha() * gradient)
         self.iteration += 1
         self._compute_metrics()
 
 
 class DualAveragingGradientDescentTrainer(GradientDescentTrainerAbstract):
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, r, X, y, y_hat, starting_weights_domain, activation_func, loss, penalty,
+                 alpha, learning_rate, metrics, shuffle, verbose):
+        if learning_rate != "root_decreasing":
+            warnings.warn("Dual averaging method is running with wrong alpha (={}), it should bel root_decreasing".format(learning_rate))
+        super().__init__(X, y, y_hat, starting_weights_domain, activation_func, loss, penalty,
+                         alpha, learning_rate, metrics, shuffle, verbose)
         self.z = [np.zeros(len(self.get_w()))]
+        self.r = r
 
     def step(self, avg_z):
         y_hat_f = self.y_hat.f(self.X, self.get_w())
@@ -255,7 +265,13 @@ class DualAveragingGradientDescentTrainer(GradientDescentTrainerAbstract):
         gradient = loss_f_gradient / self.N
         z = avg_z + gradient
         self.z.append(z)
-        self.w.append(-self.alpha * z)
+        phi = -self.get_alpha() * z
+        phi_norm_2= math.sqrt(np.inner(phi, phi))
+        if phi_norm_2 > self.r:
+            input("X")
+            phi = (phi / phi_norm_2) * self.r
+
+        self.w.append(phi)
 
         self.iteration += 1
         self._compute_metrics()
@@ -462,6 +478,9 @@ def rosenbrock_function(_X, _w):
         v += 100 * (_X[i + 1] - _X[i] ** 2) + (1 - _X[i]) ** 2
     return v
 
+def estimate_linear_regression_beta(_X, _y):
+    # return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)
+    return np.linalg.lstsq(_X, _y, rcond=None)[0]
 
 def estimate_unbiased_beta(_X, _y):
     _X = np.delete(_X, 0, axis=1)

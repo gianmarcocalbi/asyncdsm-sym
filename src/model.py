@@ -1,4 +1,4 @@
-import copy, math, random, time, types, sys, warnings, tqdm
+import copy, math, random, time, types, sys, warnings, tqdm, collections
 import numpy as np
 from src import mltoolbox, statistics
 from src.functions import *
@@ -41,12 +41,15 @@ class Cluster:
 
         self.epsilon = 0.0  # acceptance threshold
         self.metrics_type = 0  # use alternative metrics
+        self.metrics_nodes_id = []
+        self.metrics_nodes = []
 
         self.linear_regression_beta = None
 
-    def setup(self, X, y, y_hat, method="classic", max_iter=None, max_time=None, batch_size=5, activation_func=None,
-              loss=mltoolbox.SquaredLossFunction, penalty='l2', epsilon=0.0, alpha=0.0001, learning_rate="constant",
-              metrics="all", metrics_type=0, shuffle=True, verbose=False,
+    def setup(self, X, y, y_hat, method="classic", max_iter=None, max_time=None, batch_size=5,
+              dual_averaging_radius=None, activation_func=None, loss=mltoolbox.SquaredLossFunction, penalty='l2',
+              epsilon=0.0, alpha=0.0001, learning_rate="constant",
+              metrics="all", metrics_type=0, metrics_nodes = 'all', shuffle=True, verbose=False,
               time_distr_class=statistics.ExponentialDistribution, time_distr_param=(),
               node_error_mean=0, node_error_std_dev=1, starting_weights_domain=(0, 5)):
         """Cluster setup.
@@ -119,6 +122,9 @@ class Cluster:
         None
 
         """
+
+        N = self.adjacency_matrix.shape[0]
+
         # if X and y have different sizes then the training set is bad formatted
         if len(y) != X.shape[0]:
             raise Exception("X has different amount of rows than y ({} != {})".format(X.shape[0], len(y)))
@@ -140,6 +146,15 @@ class Cluster:
         self.max_time = max_time
         self.epsilon = epsilon
         self.metrics_type = metrics_type
+
+        if not isinstance(metrics_nodes, collections.Iterable):
+            if isinstance(metrics_nodes, int):
+                metrics_nodes = [metrics_nodes]
+            else:
+                metrics_nodes = list(range(N))
+        self.metrics_nodes_id = metrics_nodes
+
+
         self.X = np.c_[np.ones((X.shape[0])), X]
         self.y = y + 1
         self.y_hat = y_hat
@@ -169,36 +184,7 @@ class Cluster:
             self.y = np.take(Xy, -1, 1)
             del Xy
 
-        N = self.adjacency_matrix.shape[0]
         nodes_errors = np.random.normal(node_error_mean, node_error_std_dev, N)
-        const_nodes_errors = [-83.28411333, 71.58962632, -60.25259273, -99.46557484,
-                              -97.92844031, -63.94734889, -82.94997962, 2.78223026,
-                              -62.01663969, -83.75822132, -64.40231483, -85.91570811,
-                              -76.43437877, -10.35232129, 77.46356589, -13.70264743,
-                              80.51630245, 36.08280799, -68.97733934, 5.92671984,
-                              92.29648459, 77.96059191, -71.5299331, -51.23508174,
-                              93.64944443, 90.49572626, -13.29000754, 78.71273312,
-                              -67.4670157, -18.82521754, -30.33089577, 90.04622367,
-                              75.73007174, 93.81144581, 90.85680519, -75.61784667,
-                              -21.30962062, 16.87845713, 36.72845058, 38.10191277,
-                              -68.79589475, 85.24656259, -10.17673826, -76.31756125,
-                              -44.7084939, -20.92133108, -96.08353345, -2.55210673,
-                              76.90313813, 72.15279857, -73.71236721, -94.03522294,
-                              -58.69553256, -92.63928345, -50.9823587, -65.98068949,
-                              59.01994502, 23.47870319, 11.8807276, 48.96198088,
-                              28.18562996, 10.35162796, 49.08698713, -93.88004653,
-                              -76.43240355, 45.36726624, 34.39763733, -19.89711403,
-                              -19.86247725, 50.36132876, -65.82818107, 89.98149178,
-                              39.57614796, -0.94467392, 84.52338396, 75.80487766,
-                              -94.09734395, -34.26364099, -92.54946344, -3.37618719,
-                              0.40423372, 57.05457758, 45.11945628, 18.56985231,
-                              17.89504908, 82.03306727, -57.26776625, 8.90081326,
-                              80.39062445, -76.13615793, -31.19230233, 20.54954623,
-                              -1.44267891, -90.67494623, -13.26868545, -0.79750683,
-                              -27.82431676, -53.48157654, 15.58884395, 36.62168811]
-        if N > len(const_nodes_errors):
-            const_nodes_errors = nodes_errors
-
         subX_size = int(math.floor(self.X.shape[0] / N))
         subX_size_res = self.X.shape[0] % N
         prev_end = 0
@@ -224,8 +210,9 @@ class Cluster:
             """
             # instantiate new node for the just-selected subsample
             self.nodes.append(
-                Node(i, node_X, node_y, y_hat, method, batch_size, activation_func, loss, penalty, alpha, learning_rate,
-                     metrics, shuffle, verbose, time_distr_class, time_distr_param, starting_weights_domain, ))
+                Node(i, node_X, node_y, y_hat, method, batch_size, dual_averaging_radius, activation_func, loss,
+                     penalty, alpha, learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param,
+                     starting_weights_domain, ))
             self.dynamic_log.append([])
 
             prev_end = end
@@ -250,7 +237,10 @@ class Cluster:
                     self.nodes[j].add_dependency(self.nodes[i])
                     self.nodes[i].add_recipient(self.nodes[j])
 
-        self.linear_regression_beta = mltoolbox.estimate_unbiased_beta(self.X, self.y)
+        for i in self.metrics_nodes_id:
+            self.metrics_nodes.append(self.nodes[i])
+
+        self.linear_regression_beta = mltoolbox.estimate_linear_regression_beta(self.X, self.y)
         self._compute_metrics()
 
     def get_w_at_iteration(self, iteration):
@@ -297,11 +287,11 @@ class Cluster:
     def compute_global_mean_absolute_error(self):
         gmae = 0
         if self.metrics_type == 1:
-            for node in self.nodes:
+            for node in self.metrics_nodes:
                 gmae += node.training_task.mean_absolute_error_log[self.iteration]
-            gmae /= len(self.nodes)
+            gmae /= len(self.metrics_nodes)
         elif self.metrics_type == 2:
-            for node in self.nodes:
+            for node in self.metrics_nodes:
                 gmae += mltoolbox.compute_mae(
                     node.training_task.get_w_at_iteration(self.iteration),
                     self.X,
@@ -309,7 +299,7 @@ class Cluster:
                     self.activation_func,
                     self.y_hat.f
                 )
-            gmae /= len(self.nodes)
+            gmae /= len(self.metrics_nodes)
         else:
             w = self.get_w_at_iteration(self.iteration)
             N = self.X.shape[0]
@@ -330,11 +320,11 @@ class Cluster:
     def compute_global_mean_squared_error(self):
         gmse = 0
         if self.metrics_type == 1:
-            for node in self.nodes:
+            for node in self.metrics_nodes:
                 gmse += node.training_task.mean_squared_error_log[self.iteration]
-            gmse /= len(self.nodes)
+            gmse /= len(self.metrics_nodes)
         elif self.metrics_type == 2:
-            for node in self.nodes:
+            for node in self.metrics_nodes:
                 gmse += mltoolbox.compute_mse(
                     node.training_task.get_w_at_iteration(self.iteration),
                     self.X,
@@ -342,7 +332,7 @@ class Cluster:
                     self.activation_func,
                     self.y_hat.f
                 )
-            gmse /= len(self.nodes)
+            gmse /= len(self.metrics_nodes)
         else:
             gmse = mltoolbox.compute_mse(
                 self.get_w_at_iteration(self.iteration),
@@ -366,12 +356,12 @@ class Cluster:
         grmse = 0
 
         if self.metrics_type == 1:
-            for node in self.nodes:
+            for node in self.metrics_nodes:
                 grmse += node.training_task.real_mean_squared_error_log[self.iteration]
-            grmse /= len(self.nodes)
+            grmse /= len(self.metrics_nodes)
 
         elif self.metrics_type == 2:
-            for node in self.nodes:
+            for node in self.metrics_nodes:
                 w = node.training_task.get_w_at_iteration(self.iteration)
                 real_w = np.ones(len(w))
                 real_values = self.activation_func(self.y_hat.f(self.X, real_w))
@@ -382,7 +372,7 @@ class Cluster:
                     self.activation_func,
                     self.y_hat.f
                 )
-            grmse /= len(self.nodes)
+            grmse /= len(self.metrics_nodes)
 
         else:
             w = self.get_w_at_iteration(self.iteration)
@@ -615,8 +605,9 @@ class Node:
     Represent a computational node.
     """
 
-    def __init__(self, _id, X, y, y_hat, method, batch_size, activation_func, loss, penalty, alpha,
-                 learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param, starting_weights_domain):
+    def __init__(self, _id, X, y, y_hat, method, batch_size, dual_averaging_radius, activation_func, loss, penalty,
+                 alpha, learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param,
+                 starting_weights_domain):
         self._id = _id  # id number of the node
         self.dependencies = []  # list of node dependencies
         self.recipients = []
@@ -677,6 +668,7 @@ class Node:
             )
         elif method == "dual_averaging":
             self.training_task = mltoolbox.DualAveragingGradientDescentTrainer(
+                dual_averaging_radius,
                 X, y, y_hat,
                 starting_weights_domain,
                 activation_func,
@@ -770,6 +762,8 @@ class Node:
 
         if self.method == "dual_averaging":
             self.dual_averaging_step()
+        elif self.method == "linear_regression":
+            self.linear_regression_step()
         else:
             self.gradient_step()
 
@@ -832,12 +826,12 @@ class Node:
             recipient.enqueue_outgoing_data(self.get_id(), self.training_task.get_w())
 
     def avg_z_with_dependencies(self):
+        z = self.training_task.get_z() # self.training_task.get_z()
         if len(self.dependencies) > 0:
-            z = np.zeros(len(self.training_task.get_z()))  # self.training_task.get_z()
             for dep in self.dependencies:
                 z += self.dequeue_incoming_data(dep.get_id())
-            return z / len(self.dependencies)
-        return 0
+
+        return z / (len(self.dependencies) + 1)
 
     def broadcast_z_to_recipients(self):
         for recipient in self.recipients:

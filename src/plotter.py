@@ -102,6 +102,7 @@ class Plotter:
         self.colors = {
             "0_diagonal": '#ba2eff',  # pink/purple
             "1_cycle": '#ffc300',  # orange
+            "2_cycle-bi": '#ffea01',
             "2_diam-expander": '#009713',  # green
             "2_root-expander": '#BB0016',  # red
             "3_regular": '#7ec2a0ff',

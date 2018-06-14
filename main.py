@@ -63,6 +63,7 @@ Summary:
     setup['graphs'] = {
         "0_diagonal": DIAGONAL(setup['n']),
         "1_cycle": CYCLE(setup['n']),  # degree = 1
+        # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
         "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
         # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
@@ -75,7 +76,7 @@ Summary:
     }
 
     # TRAINING SET SETUP
-    setup['n_samples'] = 20000
+    setup['n_samples'] = 100000
     setup['n_features'] = 100
     setup['domain_radius'] = 6
     setup['domain_center'] = 0
@@ -88,25 +89,27 @@ Summary:
     if np.random.choice([True, False]):
         c = -c
 
-    setup['starting_weights_domain'] = [-1,5] # [c-r,c+r]
+    setup['starting_weights_domain'] = [-1, 5]  # [c-r,c+r]
 
     setup['node_error_mean'] = 0
-    setup['node_error_std_dev'] = 50
+    setup['node_error_std_dev'] = 100
 
     # CLUSTER SETUP
-    setup['max_iter'] = 300
+    setup['max_iter'] = 10000
     setup['max_time'] = None  # seconds
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['method'] = "classic"
+    setup['dual_averaging_radius'] = 1000
     setup['batch_size'] = 20
     setup['activation_func'] = None
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
     setup['epsilon'] = None
-    setup['alpha'] = 1e-4
-    setup['learning_rate'] = "constant"
+    setup['alpha'] = 3e-4
+    setup['learning_rate'] = "constant"  # constant, root_decreasing
     setup['metrics'] = "all"
-    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = [0]  # single node ID, list of IDs, otherwise all will be take into account in metrics
     setup['shuffle'] = True
     setup['verbose'] = False
     setup['time_distr_class'] = statistics.ExponentialDistribution
@@ -117,9 +120,9 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_008_nodeErr0_metric0_exp1lambda_500time3e-4alphaXin-1-7_dual_averaging"  # test folder inside test_log/
+    test_subfolder = "test_008_nodeErr100_noise1_metric2node0_exp1lambda_10kiter3e-4alpha_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
@@ -133,7 +136,6 @@ Summary:
     )
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
-    single_node_inspection = False
     ### END SETUP ###
 
     np.random.seed(setup['seed'])
@@ -240,6 +242,7 @@ max_time = {max_time}
 yhat = {yhat}
 method = {method}
 batch_size = {batch_size}
+dual_averaging_radius={dual_averaging_radius}
 activation_func = {activation_func}
 loss = {loss}
 penalty = {penalty}
@@ -248,6 +251,7 @@ alpha = {alpha}
 learning_rate = {learning_rate}
 metrics = {metrics}
 metrics_type = {metrics_type}
+metrics_nodes = {metrics_nodes}
 shuffle = {shuffle}
 verbose = {verbose}
 time_distr_class = {time_distr_class}
@@ -273,6 +277,7 @@ time_distr_param = {time_distr_param}
             max_time=setup['max_time'],
             method=setup['method'],
             batch_size=setup['batch_size'],
+            dual_averaging_radius=setup['dual_averaging_radius'],
             activation_func=setup['activation_func'],
             loss=setup['loss'],
             penalty=setup['penalty'],
@@ -281,6 +286,7 @@ time_distr_param = {time_distr_param}
             learning_rate=setup['learning_rate'],
             metrics=setup['metrics'],
             metrics_type=setup['metrics_type'],
+            metrics_nodes=setup['metrics_nodes'],
             shuffle=setup['shuffle'],
             verbose=setup['verbose'],
             time_distr_class=setup['time_distr_class'],
@@ -303,31 +309,16 @@ time_distr_param = {time_distr_param}
             extension = '.gz'
 
         # create output log files
-
-        if type(single_node_inspection) is int:
-            np.savetxt(
-                os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
-                cluster.nodes[single_node_inspection].training_task.mean_squared_error_log,
-                delimiter=','
-            )
-            np.savetxt(
-                os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
-                cluster.nodes[single_node_inspection].training_task.real_mean_squared_error_log,
-                delimiter=','
-            )
-        else:
-            if not single_node_inspection is False:
-                warnings.warn("Single node inspection failed, switching to classical cluster inspection")
-            np.savetxt(
-                os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
-                cluster.global_mean_squared_error_log,
-                delimiter=','
-            )
-            np.savetxt(
-                os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
-                cluster.global_real_mean_squared_error_log,
-                delimiter=','
-            )
+        np.savetxt(
+            os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
+            cluster.global_mean_squared_error_log,
+            delimiter=','
+        )
+        np.savetxt(
+            os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
+            cluster.global_real_mean_squared_error_log,
+            delimiter=','
+        )
 
         np.savetxt(
             os.path.join(test_path, "{}_iterations_time_log{}".format(graph, extension)),
