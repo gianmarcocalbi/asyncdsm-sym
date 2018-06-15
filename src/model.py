@@ -49,8 +49,8 @@ class Cluster:
     def setup(self, X, y, y_hat, method="classic", max_iter=None, max_time=None, batch_size=5,
               dual_averaging_radius=None, activation_func=None, loss=mltoolbox.SquaredLossFunction, penalty='l2',
               epsilon=0.0, alpha=0.0001, learning_rate="constant",
-              metrics="all", metrics_type=0, metrics_nodes = 'all', shuffle=True, verbose=False,
-              time_distr_class=statistics.ExponentialDistribution, time_distr_param=(),
+              metrics="all", metrics_type=0, metrics_nodes='all', shuffle=True, verbose=False,
+              time_distr_class=statistics.ExponentialDistribution, time_distr_param=(), time_const_weight=0,
               node_error_mean=0, node_error_std_dev=1, starting_weights_domain=(0, 5)):
         """Cluster setup.
 
@@ -147,13 +147,12 @@ class Cluster:
         self.epsilon = epsilon
         self.metrics_type = metrics_type
 
-        if not isinstance(metrics_nodes, collections.Iterable):
+        if not (isinstance(metrics_nodes, list) or isinstance(metrics_nodes, tuple)):
             if isinstance(metrics_nodes, int):
                 metrics_nodes = [metrics_nodes]
             else:
                 metrics_nodes = list(range(N))
         self.metrics_nodes_id = metrics_nodes
-
 
         self.X = np.c_[np.ones((X.shape[0])), X]
         self.y = y + 1
@@ -212,7 +211,7 @@ class Cluster:
             self.nodes.append(
                 Node(i, node_X, node_y, y_hat, method, batch_size, dual_averaging_radius, activation_func, loss,
                      penalty, alpha, learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param,
-                     starting_weights_domain, ))
+                     time_const_weight, starting_weights_domain, ))
             self.dynamic_log.append([])
 
             prev_end = end
@@ -607,7 +606,7 @@ class Node:
 
     def __init__(self, _id, X, y, y_hat, method, batch_size, dual_averaging_radius, activation_func, loss, penalty,
                  alpha, learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param,
-                 starting_weights_domain):
+                 time_const_weight, starting_weights_domain):
         self._id = _id  # id number of the node
         self.dependencies = []  # list of node dependencies
         self.recipients = []
@@ -618,6 +617,7 @@ class Node:
         if not type(time_distr_param) in (list, tuple,):
             time_distr_param = [time_distr_param]
         self.time_distr_param = time_distr_param
+        self.time_const_weight = time_const_weight
 
         # buffer of incoming weights from dependencies
         # it store a queue for each dependency. Such queue can be accessed by
@@ -769,7 +769,10 @@ class Node:
 
         # get the counter after the computation has ended
         # cf = time.perf_counter()
-        dt = self.time_distr_class.sample(*self.time_distr_param)  # todo: temp
+        mean = self.time_distr_class.mean(*self.time_distr_param)
+        c = self.time_const_weight
+        x = self.time_distr_class.sample(*self.time_distr_param)
+        dt = c * mean + (1 - c) * x
         # dt = random.uniform(0,2)
 
         # computes the clock when the computation has finished
@@ -826,7 +829,7 @@ class Node:
             recipient.enqueue_outgoing_data(self.get_id(), self.training_task.get_w())
 
     def avg_z_with_dependencies(self):
-        z = self.training_task.get_z() # self.training_task.get_z()
+        z = self.training_task.get_z()  # self.training_task.get_z()
         if len(self.dependencies) > 0:
             for dep in self.dependencies:
                 z += self.dequeue_incoming_data(dep.get_id())

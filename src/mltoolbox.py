@@ -366,6 +366,7 @@ class SampleGenerator:
         pass
 
 
+
 def sample_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
                          error_mean=0, error_std_dev=1):
     """

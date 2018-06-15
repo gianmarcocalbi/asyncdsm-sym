@@ -205,6 +205,15 @@ class Plotter:
     def get_temp_test_folder_path_by_index(index=0):
         return os.path.normpath(os.path.join("./test_log/temp/", Plotter.get_temp_test_folder_name_by_index(index)))
 
+    def get_graph_color(self, graph):
+        if graph in self.colors:
+            return self.colors[graph]
+        else:
+            h = hex(int(np.random.uniform(0, 0xffffff)))[2:] + "000000"
+            h = "#" + h[0:6]
+            warnings.warn("Graph '{}' has no own color specified, used {} instead".format(graph, h))
+            return h
+
     # PLOT MAIN UTILS METHODS - BEGIN
 
     def plot(self):
@@ -274,9 +283,9 @@ class Plotter:
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         if ymax is None:
-            ymax=self.ymax
+            ymax = self.ymax
         if yscale is None:
-            yscale=self.yscale
+            yscale = self.yscale
 
         if not ymax is None:
             plt.ylim(ymax)
@@ -314,7 +323,7 @@ class Plotter:
                 self.iter_log[graph],
                 list(range(len(self.iter_log[graph]))),
                 label=graph,
-                color=self.colors[graph],
+                color=self.get_graph_color(graph),
                 **kwargs
             )
 
@@ -327,7 +336,7 @@ class Plotter:
                 lx,
                 ly,
                 label=graph,
-                color=self.colors[graph],
+                color=self.get_graph_color(graph),
                 **kwargs
             )
 
@@ -340,7 +349,7 @@ class Plotter:
                 lx,
                 ly,
                 label=graph,
-                color=self.colors[graph],
+                color=self.get_graph_color(graph),
                 **kwargs
             )
 
@@ -360,7 +369,7 @@ class Plotter:
             self._plot_subroutine(
                 lx,
                 ly,
-                color=self.colors[graph],
+                color=self.get_graph_color(graph),
                 **kwargs
             )
 
@@ -398,7 +407,7 @@ class Plotter:
                 list(range(len(self.mse_log[graph]))),
                 self.mse_log[graph],
                 label=graph,
-                color=self.colors[graph],
+                color=self.get_graph_color(graph),
                 **kwargs)
 
     def _plot_real_mse_over_iter_lines(self, **kwargs):
@@ -407,7 +416,7 @@ class Plotter:
                 list(range(len(self.real_mse_log[graph]))),
                 self.real_mse_log[graph],
                 label=graph,
-                color=self.colors[graph],
+                color=self.get_graph_color(graph),
                 **kwargs)
 
     def _plot_mse_over_time_lines(self, **kwargs):
@@ -416,7 +425,7 @@ class Plotter:
                 self.iter_log[graph],
                 self.mse_log[graph],
                 label=graph,
-                color=self.colors[graph],
+                color=self.get_graph_color(graph),
                 **kwargs)
 
     def _plot_real_mse_over_time_lines(self, **kwargs):
@@ -425,7 +434,7 @@ class Plotter:
                 self.iter_log[graph],
                 self.real_mse_log[graph],
                 label=graph,
-                color=self.colors[graph],
+                color=self.get_graph_color(graph),
                 **kwargs)
 
     # PLOT ERROR over ITER LINES - END

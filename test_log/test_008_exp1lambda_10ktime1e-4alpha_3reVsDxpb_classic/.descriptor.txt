@@ -1,0 +1,59 @@
+>>> Test Descriptor File
+Title: test
+Date: 2018-06-15 10:51:27.371700
+Summary: 
+
+
+### BEGIN SETUP ###
+n = 100
+seed = 1529052687
+graphs = {   '3_diam-expander-bi': np.array([[1., 1., 0., ..., 0., 0., 1.],
+       [1., 1., 1., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 1., 0.],
+       [0., 0., 0., ..., 1., 1., 1.],
+       [1., 0., 0., ..., 0., 1., 1.]]),
+    '3_regular': np.array([[1., 1., 0., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 0., 0., 0.],
+       [0., 0., 1., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 1., 1., 0.],
+       [0., 0., 0., ..., 0., 1., 1.],
+       [1., 0., 0., ..., 0., 0., 1.]])}
+
+# TRAINING SET SETUP
+n_samples = 100000
+n_features = 100
+sample_function = <function LinearYHatFunction.f at 0x7f2f0f188048>
+domain_radius = 6
+domain_center = 0
+error_mean = 0
+error_std_dev = 1
+starting_weights_domain = [-1.8857892071610323, 7.004745539046775]
+node_error_mean = 0
+node_error_std_dev = 0
+
+# CLUSTER SETUP
+max_iter = None
+max_time = 10000
+yhat = <class 'src.mltoolbox.LinearYHatFunction'>
+method = classic
+batch_size = 20
+dual_averaging_radius=1000
+activation_func = None
+loss = <class 'src.mltoolbox.SquaredLossFunction'>
+penalty = l2
+epsilon = None
+alpha = 0.0001
+learning_rate = constant
+metrics = all
+metrics_type = 0
+metrics_nodes = all
+shuffle = True
+verbose = False
+time_distr_class = <class 'src.statistics.ExponentialDistribution'>
+time_distr_param = [1]
+
+
+# duration (hh:mm:ss): 00:09:05

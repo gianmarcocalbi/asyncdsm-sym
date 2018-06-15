@@ -57,63 +57,76 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = int(time.time())
+    setup['seed'] = 1529054767  # int(time.time())
     setup['n'] = 100
 
     setup['graphs'] = {
-        "0_diagonal": DIAGONAL(setup['n']),
-        "1_cycle": CYCLE(setup['n']),  # degree = 1
+        # "0_diagonal": DIAGONAL(setup['n']),
+        # "1_cycle": CYCLE(setup['n']),  # degree = 1
         # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
-        "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        # "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
-        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
-        "n-1_clique": CLIQUE(setup['n']),  # degree = n
+        "3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+
+        "3_regular-bi": graph_generator.generate_graph_by_edges(100, ["i->i+1", "i->i-1", "i->i+50"]),
+        "3_5-regular-100n": graph_generator.generate_graph_by_edges(
+            100, ["i->i+1", "i->i-1", "i->i+34", "i+66->i"]),
+        "6_regular": REGULAR(setup['n'], 5),
+        "6_regular-bi-100n": graph_generator.generate_graph_by_edges(
+            100, ["i->i+1", "i->i-1", "i->i+33", "i+33->i", "i+66->i", "i->i+66"]),
+        "12_regular": REGULAR(setup['n'], 12),
+
+        # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        # "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
     # TRAINING SET SETUP
     setup['n_samples'] = 100000
     setup['n_features'] = 100
+
+    setup['error_mean'] = 0
+    setup['error_std_dev'] = 1  # <--
+
+    setup['node_error_mean'] = 0
+    setup['node_error_std_dev'] = 0  # <--
+
+    # TRAINING SET ALMOST FIXED STUP
+    setup['sample_function'] = mltoolbox.LinearYHatFunction.f
     setup['domain_radius'] = 6
     setup['domain_center'] = 0
-    setup['error_mean'] = 0
-    setup['error_std_dev'] = 1
-    setup['sample_function'] = mltoolbox.LinearYHatFunction.f
-
     r = np.random.uniform(4, 6)
     c = np.random.uniform(1, 3.8)
     if np.random.choice([True, False]):
         c = -c
+    setup['starting_weights_domain'] = [c - r, c + r]
 
-    setup['starting_weights_domain'] = [-1, 5]  # [c-r,c+r]
-
-    setup['node_error_mean'] = 0
-    setup['node_error_std_dev'] = 100
-
-    # CLUSTER SETUP
-    setup['max_iter'] = 10000
-    setup['max_time'] = None  # seconds
-    setup['yhat'] = mltoolbox.LinearYHatFunction
+    # CLUSTER SETUP 1
+    setup['max_iter'] = None
+    setup['max_time'] = 10000  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 1000
+    setup['alpha'] = 1e-4
+    setup['learning_rate'] = "constant"  # constant, root_decreasing
+    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
+    setup['time_distr_class'] = statistics.ExponentialDistribution
+    setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
+    setup['time_const_weight'] = 0
+
+    # CLUSTER ALMOST FIXED SETUP
+    setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['batch_size'] = 20
     setup['activation_func'] = None
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
     setup['epsilon'] = None
-    setup['alpha'] = 3e-4
-    setup['learning_rate'] = "constant"  # constant, root_decreasing
     setup['metrics'] = "all"
-    setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = [0]  # single node ID, list of IDs, otherwise all will be take into account in metrics
     setup['shuffle'] = True
     setup['verbose'] = False
-    setup['time_distr_class'] = statistics.ExponentialDistribution
-    setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
@@ -121,18 +134,20 @@ Summary:
 
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    test_subfolder = "test_009_exp1lambda_10ktime1e-4alpha_6degreeComparison_classic"  # test folder inside test_log/
+
+    # OUTPUT ALMOST FIXED SETUP
     test_root = "test_log"  # don't touch this
-    test_subfolder = "test_008_nodeErr100_noise1_metric2node0_exp1lambda_10kiter3e-4alpha_classic"  # test folder inside test_log/
     temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
     instant_plot = True  # instantly plot single simulations results
     plots = (
-        "mse_iter",
-        "real-mse_iter",
-        "mse_time",
-        "real-mse_time",
+        # "mse_iter",
+        # "real-mse_iter",
+        # "mse_time",
+        # "real-mse_time",
     )
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
@@ -140,6 +155,11 @@ Summary:
 
     np.random.seed(setup['seed'])
     random.seed(setup['seed'])
+
+    if setup['n'] % 2 != 0:
+        warnings.warn("Amount of nodes is odd (N={}), keep in mind graph generator "
+                      "can misbehave in undirected graphs generation with odd nodes amount (it can"
+                      "generate directed graphs instead)".format(setup['n']))
 
     if not save_test_to_file:
         # if you don't want to store the file permanently they are however placed inside temp folder
@@ -256,6 +276,7 @@ shuffle = {shuffle}
 verbose = {verbose}
 time_distr_class = {time_distr_class}
 time_distr_param = {time_distr_param}
+time_const_weight = {time_const_weight}
 """.format(**setup)
 
     # save descriptor file
@@ -291,6 +312,7 @@ time_distr_param = {time_distr_param}
             verbose=setup['verbose'],
             time_distr_class=setup['time_distr_class'],
             time_distr_param=setup['time_distr_param'],
+            time_const_weight=setup['time_const_weight'],
             node_error_mean=setup['node_error_mean'],
             node_error_std_dev=setup['node_error_std_dev'],
             starting_weights_domain=setup['starting_weights_domain'],

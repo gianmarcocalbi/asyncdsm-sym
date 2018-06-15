@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 
 def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
@@ -20,7 +21,7 @@ def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
     return adjacency_matrix
 
 
-def generate_d_regular_graph_by_edges(N, edges):
+def generate_d_regular_graph_by_edges(N, edges, force_symmetry=False):
     """
     Generate a d-regular adjacency graph matrix starting from the
     general form of the edges formatted as a string "i->f(i)" so
@@ -33,10 +34,42 @@ def generate_d_regular_graph_by_edges(N, edges):
     :param edges: list of strings formatted as "i->f(i)"
     :return: adjacency numpy matrix
     """
-    return generate_graph_by_edges(N, edges)
+    return generate_graph_by_edges(N, edges, force_symmetry)
 
 
-def generate_graph_by_edges(N, edges):
+def enforce_symmetry_to_matrix(adjacency_matrix, symmetry_source='sup'):
+    N = adjacency_matrix.shape[0]
+    for i in range(N):
+        for j in range(i + 1, N):
+            if symmetry_source != 'inf':
+                adjacency_matrix[j][i] = adjacency_matrix[i][j]
+            else:
+                adjacency_matrix[i][j] = adjacency_matrix[j][i]
+
+    return adjacency_matrix
+
+
+def is_regular(adjacency_matrix):
+    d = np.sum(adjacency_matrix[0])
+    for i in range(1, adjacency_matrix.shape[0]):
+        if np.sum(adjacency_matrix[i]) != d:
+            return False
+    return True
+
+
+def is_undirected(adjacency_matrix):
+    N = adjacency_matrix.shape[0]
+    for i in range(N):
+        for j in range(i, N):
+            if adjacency_matrix[j][i] != adjacency_matrix[i][j]:
+                return False
+    return True
+
+def is_symmetric(adjacency_matrix):
+    return is_undirected(adjacency_matrix)
+
+
+def generate_graph_by_edges(N, edges, force_symmetry=False):
     """
     Generate a graph given the list of its edges, where each edge (element of
     the list, must be a string "{u} -> {v}" such that u and v follow one of the
@@ -64,6 +97,9 @@ def generate_graph_by_edges(N, edges):
     edges : list or tuple of str
         List of edges of the graph.
 
+    force_symmetry : bool
+        Whether force the adjacency matrix to be symmetric (undirected graph)
+
     Returns
     -------
     adjacency_matrix : numpy.ndarray
@@ -74,6 +110,12 @@ def generate_graph_by_edges(N, edges):
         for e in edges:
             u, v = e.replace(" ", "").split("->")
             adjacency_matrix[eval(u) % N][eval(v) % N] = 1
+
+    if force_symmetry:
+        adjacency_matrix = enforce_symmetry_to_matrix(adjacency_matrix)
+        if not is_regular(adjacency_matrix):
+            warnings.warn("generate_graph_by_edges has generated a non-regular graph")
+
     return adjacency_matrix
 
 
@@ -106,7 +148,7 @@ def generate_d_regular_graph_by_degree(N, K):
         edges = []
     else:
         edges = ["i->i+1"]
-        for i in range(K-1):
+        for i in range(K - 1):
             edges.append("i->i+{}".format(int((i + 1) * N / K)))
 
     return generate_d_regular_graph_by_edges(N, edges)

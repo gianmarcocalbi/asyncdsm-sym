@@ -1,5 +1,6 @@
 from src import statistics
 
+#"""
 graphs = (
     ("0_diagonal", 0),
     ("1_cycle", 1),
@@ -17,11 +18,12 @@ graphs = (
 for graph, degree in graphs:
     try:
         print("{} speed = {}".format(graph, statistics.single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(
-            "./test_log/test_006_pareto3-2_10ktime1e-4alphaXin0-2_classic.conflict.1", graph, 99, 10000)))
+            "./test_log/test_010_uniform0-2_0.5c_10ktime1e-4alpha_classic", graph, 100, 10000)))
     except IOError:
         pass
     except:
         raise
+#"""
 
 """
 Ks = [0,1,2,3,4,8,20,50,99]
