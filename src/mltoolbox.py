@@ -14,10 +14,11 @@ class Task:
 class Trainer(Task):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, X, y, y_hat, starting_weights_domain, activation_func=None):
+    def __init__(self, X, y, real_w, y_hat, starting_weights_domain, activation_func=None):
 
         self.X = X
         self.y = y
+        self.real_w = real_w
         self.y_hat = y_hat
         self.N = self.X.shape[0]
         self.iteration = 0
@@ -63,9 +64,9 @@ class Trainer(Task):
 class GradientDescentTrainerAbstract(Trainer):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, X, y, y_hat, starting_weights_domain, activation_func, loss, penalty,
+    def __init__(self, X, y, real_w, y_hat, starting_weights_domain, activation_func, loss, penalty,
                  alpha, learning_rate, metrics, shuffle, verbose):
-        super().__init__(X, y, y_hat, starting_weights_domain, activation_func)
+        super().__init__(X, y, real_w, y_hat, starting_weights_domain, activation_func)
         self.loss = loss
         self.penalty = penalty
         self.alpha = alpha
@@ -147,8 +148,7 @@ class GradientDescentTrainerAbstract(Trainer):
         return mse
 
     def compute_real_mean_squared_error(self):
-        real_w = np.ones(len(self.get_w()))
-        real_values = self.activation_func(self.y_hat.f(self.X, real_w))
+        real_values = self.activation_func(self.y_hat.f(self.X, self.real_w))
         rmse = compute_mse(
             self.get_w(),
             self.X,
@@ -249,11 +249,13 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
 
 
 class DualAveragingGradientDescentTrainer(GradientDescentTrainerAbstract):
-    def __init__(self, r, X, y, y_hat, starting_weights_domain, activation_func, loss, penalty,
+    def __init__(self, r, X, y, real_w, y_hat, starting_weights_domain, activation_func, loss, penalty,
                  alpha, learning_rate, metrics, shuffle, verbose):
         if learning_rate != "root_decreasing":
-            warnings.warn("Dual averaging method is running with wrong alpha (={}), it should bel root_decreasing".format(learning_rate))
-        super().__init__(X, y, y_hat, starting_weights_domain, activation_func, loss, penalty,
+            warnings.warn(
+                "Dual averaging method is running with wrong alpha (={}), it should bel root_decreasing".format(
+                    learning_rate))
+        super().__init__(X, y, real_w, y_hat, starting_weights_domain, activation_func, loss, penalty,
                          alpha, learning_rate, metrics, shuffle, verbose)
         self.z = [np.zeros(len(self.get_w()))]
         self.r = r
@@ -266,7 +268,7 @@ class DualAveragingGradientDescentTrainer(GradientDescentTrainerAbstract):
         z = avg_z + gradient
         self.z.append(z)
         phi = -self.get_alpha() * z
-        phi_norm_2= math.sqrt(np.inner(phi, phi))
+        phi_norm_2 = math.sqrt(np.inner(phi, phi))
         if phi_norm_2 > self.r:
             input("X")
             phi = (phi / phi_norm_2) * self.r
@@ -287,6 +289,7 @@ class DualAveragingGradientDescentTrainer(GradientDescentTrainerAbstract):
 
     def set_z_at_iteration(self, new_z, iteration):
         self.z[iteration] = new_z
+
 
 class LossFunctionAbstract:
     __metaclass__ = abc.ABCMeta
@@ -366,6 +369,26 @@ class SampleGenerator:
         pass
 
 
+def svm_dual_averaging_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):
+    X = []
+    y = np.zeros(n_samples)
+    w = np.random.normal(0, 1, n_features)
+    w_norm_2 = math.sqrt(np.inner(w, w))
+    if w > 5:
+        w = w / w_norm_2 * 5
+    e = np.random.normal(0, 1, n_features)
+
+    for i in range(n_samples):
+        x = np.random.uniform(0, 1, n_features)
+        x /= math.sqrt(np.inner(x, x))
+        X.append(x)
+        y[i] = np.sign(x.T.dot(w))
+        x = np.sign(x.T.dot(e)) * x  # + np.random.normal(error_mean, error_std_dev)
+        if np.random.uniform(0, 1) <= 0.05:
+            x *= -1
+
+    return np.array(X), y, w
+
 
 def sample_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
                          error_mean=0, error_std_dev=1):
@@ -400,17 +423,17 @@ def sample_from_function(n_samples, n_features, func, domain_radius=0.5, domain_
 
     X = []
     y = np.zeros(n_samples)
-    w = np.ones(n_features)
+    w = np.ones(n_features+1)
     K = np.random.uniform(domain_center - domain_radius, domain_center + domain_radius, n_features)
 
     for i in range(n_samples):
-        x = np.zeros(n_features)
+        x = np.ones(n_features+1)
         for j in range(n_features):
-            x[j] = np.random.uniform(-K[j] + domain_radius, K[j] + domain_radius)
+            x[j+1] = np.random.uniform(-K[j] + domain_radius, K[j] + domain_radius)
         X.append(x)
         y[i] = func(x, w) + np.random.normal(error_mean, error_std_dev)
 
-    return np.array(X), y
+    return [np.array(X), y, w]
 
 
 def sample_from_function_old(n_samples, n_features, func, domain_radius=1, domain_center=0,
@@ -479,9 +502,11 @@ def rosenbrock_function(_X, _w):
         v += 100 * (_X[i + 1] - _X[i] ** 2) + (1 - _X[i]) ** 2
     return v
 
+
 def estimate_linear_regression_beta(_X, _y):
     # return np.linalg.inv(_X.T.dot(_X)).dot(_X.T).dot(_y)
     return np.linalg.lstsq(_X, _y, rcond=None)[0]
+
 
 def estimate_unbiased_beta(_X, _y):
     _X = np.delete(_X, 0, axis=1)

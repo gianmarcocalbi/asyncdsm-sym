@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
 from sklearn import linear_model
-from src.model import Cluster
+from src.cluster import Cluster
 from src import mltoolbox, graph_generator, statistics
 from src.plotter import Plotter, plot_from_files
 import matplotlib.pyplot as plt
@@ -133,7 +133,7 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_subfolder = "test_009_exp1lambda_10ktime1e-4alpha_6degreeComparison_classic"  # test folder inside test_log/
 
     # OUTPUT ALMOST FIXED SETUP
@@ -194,11 +194,19 @@ Summary:
     ### BEGIN TRAINING SET GEN ###
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
-    # """
-    X, y = mltoolbox.sample_from_function(
+    """
+    [X, y, w] = mltoolbox.sample_from_function(
         setup['n_samples'], setup['n_features'], setup['sample_function'],
         domain_radius=setup['domain_radius'],
         domain_center=setup['domain_center'],
+        error_mean=setup['error_mean'],
+        error_std_dev=setup['error_std_dev']
+    )
+    """
+
+    # """
+    X, y, w = mltoolbox.svm_dual_averaging_training_set(
+        setup['n_samples'], setup['n_features'],
         error_mean=setup['error_mean'],
         error_std_dev=setup['error_std_dev']
     )
@@ -293,7 +301,7 @@ time_const_weight = {time_const_weight}
         cluster = Cluster(adjmat, graph_name=graph)
 
         cluster.setup(
-            X, y, setup['yhat'],
+            X, y, w, setup['yhat'],
             max_iter=setup['max_iter'],
             max_time=setup['max_time'],
             method=setup['method'],
