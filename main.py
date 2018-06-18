@@ -2,7 +2,7 @@ import random, math, time, os, pickle, shutil, datetime, pprint, warnings
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import normalize
-from sklearn import linear_model
+from sklearn import linear_model, svm
 from src.cluster import Cluster
 from src import mltoolbox, graph_generator, statistics
 from src.plotter import Plotter, plot_from_files
@@ -57,7 +57,7 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = 1529054767  # int(time.time())
+    setup['seed'] = int(time.time())
     setup['n'] = 100
 
     setup['graphs'] = {
@@ -65,19 +65,15 @@ Summary:
         # "1_cycle": CYCLE(setup['n']),  # degree = 1
         # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
         # "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
+        "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
         "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-
-        "3_regular-bi": graph_generator.generate_graph_by_edges(100, ["i->i+1", "i->i-1", "i->i+50"]),
-        "3_5-regular-100n": graph_generator.generate_graph_by_edges(
-            100, ["i->i+1", "i->i-1", "i->i+34", "i+66->i"]),
-        "6_regular": REGULAR(setup['n'], 5),
-        "6_regular-bi-100n": graph_generator.generate_graph_by_edges(
-            100, ["i->i+1", "i->i-1", "i->i+33", "i+33->i", "i+66->i", "i->i+66"]),
-        "12_regular": REGULAR(setup['n'], 12),
-
-        # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        "5_regular": REGULAR(setup['n'], 5),  # degree = 5
+        "6_regular": REGULAR(setup['n'], 6),  # degree = 6
+        "7_regular": REGULAR(setup['n'], 7),  # degree = 7
+        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
+        # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
         # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
         # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
         # "n-1_clique": CLIQUE(setup['n']),  # degree = n
@@ -108,14 +104,15 @@ Summary:
     setup['max_iter'] = None
     setup['max_time'] = 10000  # seconds
     setup['method'] = "classic"
-    setup['dual_averaging_radius'] = 1000
+    setup['dual_averaging_radius'] = 10
     setup['alpha'] = 1e-4
     setup['learning_rate'] = "constant"  # constant, root_decreasing
+    setup['metrics'] = ()  # "all"
     setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
-    setup['time_distr_class'] = statistics.ExponentialDistribution
-    setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
-    setup['time_const_weight'] = 0
+    setup['time_distr_class'] = statistics.Type2ParetoDistribution
+    setup['time_distr_param'] = [3, 2]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
+    setup['time_const_weight'] = 0.5
 
     # CLUSTER ALMOST FIXED SETUP
     setup['yhat'] = mltoolbox.LinearYHatFunction
@@ -124,7 +121,6 @@ Summary:
     setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
     setup['epsilon'] = None
-    setup['metrics'] = "all"
     setup['shuffle'] = True
     setup['verbose'] = False
 
@@ -133,8 +129,8 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_subfolder = "test_009_exp1lambda_10ktime1e-4alpha_6degreeComparison_classic"  # test folder inside test_log/
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    test_subfolder = "test_010_pareto3-2_0.5c_10ktime1e-4alpha_lowDegreeComparison_classic"  # test folder inside test_log/
 
     # OUTPUT ALMOST FIXED SETUP
     test_root = "test_log"  # don't touch this
@@ -144,10 +140,10 @@ Summary:
     delete_folder_on_errors = True
     instant_plot = True  # instantly plot single simulations results
     plots = (
-        # "mse_iter",
-        # "real-mse_iter",
-        # "mse_time",
-        # "real-mse_time",
+        "mse_iter",
+        "real-mse_iter",
+        "mse_time",
+        "real-mse_time",
     )
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
@@ -194,7 +190,7 @@ Summary:
     ### BEGIN TRAINING SET GEN ###
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
-    """
+    #"""
     [X, y, w] = mltoolbox.sample_from_function(
         setup['n_samples'], setup['n_features'], setup['sample_function'],
         domain_radius=setup['domain_radius'],
@@ -202,15 +198,15 @@ Summary:
         error_mean=setup['error_mean'],
         error_std_dev=setup['error_std_dev']
     )
-    """
+    #"""
 
-    # """
+    """
     X, y, w = mltoolbox.svm_dual_averaging_training_set(
         setup['n_samples'], setup['n_features'],
         error_mean=setup['error_mean'],
         error_std_dev=setup['error_std_dev']
     )
-    # """
+    """
 
     """
     X, y = mltoolbox.sample_from_function_old(
@@ -392,12 +388,14 @@ def main1():
 
 
 def main2():
-    X, y = mltoolbox.sample_from_function(1000, 10, mltoolbox.linear_function, 1, error_std_dev=1, )
-    cls = linear_model.SGDRegressor(penalty='none', alpha=0.01, max_iter=1000, shuffle=False,
-                                    learning_rate='constant')
+    X, y, w = mltoolbox.svm_dual_averaging_training_set(
+        100000, 100,
+        error_mean=0,
+        error_std_dev=0
+    )
+    cls = svm.LinearSVC(max_iter=1000, verbose=True)
     cls.fit(X, y)
     print(cls.score(X, y))
-    print(cls.predict(np.array([2, 4, 8]).reshape(1, -1)))
 
 
 switch = 0

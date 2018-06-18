@@ -303,11 +303,13 @@ class Cluster:
                 )
             gmae /= len(self.metrics_nodes)
         else:
-            w = self.get_w_at_iteration(self.iteration)
-            N = self.X.shape[0]
-            predictions = self.activation_func(self.y_hat.f(self.X, w))
-            linear_error = np.absolute(self.y - predictions)
-            gmae = np.sum(linear_error) / N
+            gmae = mltoolbox.compute_mae(
+                self.get_w_at_iteration(self.iteration),
+                self.X,
+                self.y,
+                self.activation_func,
+                self.y_hat.f
+            )
 
         if len(self.global_mean_absolute_error_log) == self.iteration:
             self.global_mean_absolute_error_log.append(gmae)

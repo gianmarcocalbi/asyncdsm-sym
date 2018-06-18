@@ -1,6 +1,6 @@
 import copy, math, random, time, types, sys, warnings, tqdm, collections
 import numpy as np
-from src import mltoolbox, statistics
+from src import mltoolbox, statistics, tasks
 from src.functions import *
 
 class Node:
@@ -31,7 +31,7 @@ class Node:
 
         # instantiate training model for the node
         if method == "stochastic":
-            self.training_task = mltoolbox.StochasticGradientDescentTrainer(
+            self.training_task = tasks.StochasticGradientDescentTrainer(
                 X, y, real_w, y_hat,
                 starting_weights_domain,
                 activation_func,
@@ -44,7 +44,7 @@ class Node:
                 verbose
             )
         elif method == "batch":
-            self.training_task = mltoolbox.BatchGradientDescentTrainer(
+            self.training_task = tasks.BatchGradientDescentTrainer(
                 batch_size,
                 starting_weights_domain,
                 X, y, real_w, y_hat,
@@ -58,7 +58,7 @@ class Node:
                 verbose
             )
         elif method == "linear_regression":
-            self.training_task = mltoolbox.LinearRegressionGradientDescentTrainer(
+            self.training_task = tasks.LinearRegressionGradientDescentTrainer(
                 X, y, real_w, y_hat,
                 starting_weights_domain,
                 activation_func,
@@ -71,7 +71,7 @@ class Node:
                 verbose
             )
         elif method == "dual_averaging":
-            self.training_task = mltoolbox.DualAveragingGradientDescentTrainer(
+            self.training_task = tasks.DualAveragingGradientDescentTrainer(
                 dual_averaging_radius,
                 X, y, real_w, y_hat,
                 starting_weights_domain,
@@ -88,7 +88,7 @@ class Node:
             if method != "classic":
                 warnings.warn('Method "{}" does not exist, using classic gradient descent instead'.format(method))
 
-            self.training_task = mltoolbox.GradientDescentTrainer(
+            self.training_task = tasks.GradientDescentTrainer(
                 X, y, real_w, y_hat,
                 starting_weights_domain,
                 activation_func,
