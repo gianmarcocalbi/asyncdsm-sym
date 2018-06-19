@@ -138,7 +138,13 @@ class GradientDescentTrainerAbstract(Trainer):
         return mae
 
     def compute_mean_squared_error(self):
-        mse = mltoolbox.compute_mse(self.get_w(), self.X, self.y, self.activation_func, self.y_hat.f)
+        mse = mltoolbox.compute_mse(
+            self.get_w(),
+            self.X,
+            self.y,
+            self.activation_func,
+            self.y_hat.f
+        )
         if len(self.mean_squared_error_log) == self.iteration:
             self.mean_squared_error_log.append(mse)
         elif len(self.mean_squared_error_log) == self.iteration + 1:

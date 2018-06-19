@@ -200,8 +200,9 @@ class Cluster:
             beg = prev_end
             end = beg + node_X_size
 
-            for j in range(beg, end):
-                self.y[j] += nodes_errors[i]
+            if not (node_error_mean == node_error_std_dev == 0):
+                for j in range(beg, end):
+                    self.y[j] += nodes_errors[i]
 
             # assign the correct subsample to this node
             node_X = copy.deepcopy(self.X[beg:end])  # instances
@@ -525,7 +526,6 @@ class Cluster:
                     # this node needs
                     node.set_local_clock(max_local_clock)
 
-                output = ""
                 output = "[{}] >>> ".format(self.graph_name.upper())
 
                 if not self.max_time is None:
@@ -601,4 +601,3 @@ class Cluster:
                 pass
 
             event = self.dequeue_event()
-        pass

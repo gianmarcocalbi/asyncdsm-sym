@@ -61,36 +61,42 @@ Summary:
     setup['n'] = 100
 
     setup['graphs'] = {
-        # "0_diagonal": DIAGONAL(setup['n']),
-        # "1_cycle": CYCLE(setup['n']),  # degree = 1
+        "0_diagonal": DIAGONAL(setup['n']),
+        "1_cycle": CYCLE(setup['n']),  # degree = 1
         # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
         # "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        "5_regular": REGULAR(setup['n'], 5),  # degree = 5
-        "6_regular": REGULAR(setup['n'], 6),  # degree = 6
-        "7_regular": REGULAR(setup['n'], 7),  # degree = 7
-        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        # "5_regular": REGULAR(setup['n'], 5),  # degree = 5
+        # "6_regular": REGULAR(setup['n'], 6),  # degree = 6
+        # "7_regular": REGULAR(setup['n'], 7),  # degree = 7
+        # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
         # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
         # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
         # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
-        # "n-1_clique": CLIQUE(setup['n']),  # degree = n
+        "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
     # TRAINING SET SETUP
+
     setup['n_samples'] = 100000
     setup['n_features'] = 100
 
+    setup['generator_function'] = 'reg2'  # svm, reg, reg2
+
+    setup['smv_label_flip_prob'] = 0.05  # <-- ONLY FOR SVM
+
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1  # <--
+    setup['error_std_dev'] = 1 # <--
 
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 0  # <--
 
-    # TRAINING SET ALMOST FIXED STUP
+    # TRAINING SET ALMOST FIXED SETUP
+    # SETUP USED ONLY BY REGRESSION 'reg':
     setup['sample_function'] = mltoolbox.LinearYHatFunction.f
     setup['domain_radius'] = 6
     setup['domain_center'] = 0
@@ -101,24 +107,25 @@ Summary:
     setup['starting_weights_domain'] = [c - r, c + r]
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = None
-    setup['max_time'] = 10000  # seconds
+    setup['max_iter'] = 1000
+    setup['max_time'] = None  # seconds
     setup['method'] = "classic"
-    setup['dual_averaging_radius'] = 10
-    setup['alpha'] = 1e-4
+    setup['dual_averaging_radius'] = 1000
+    setup['alpha'] = 1e-2
     setup['learning_rate'] = "constant"  # constant, root_decreasing
-    setup['metrics'] = ()  # "all"
+    setup['metrics'] = "all"
     setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
-    setup['time_distr_class'] = statistics.Type2ParetoDistribution
-    setup['time_distr_param'] = [3, 2]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
-    setup['time_const_weight'] = 0.5
+    setup['time_distr_class'] = statistics.ExponentialDistribution
+    setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
+    setup['time_const_weight'] = 0
+
+    setup['loss'] = mltoolbox.SquaredLossFunction  # <--
+    setup['activation_func'] = None  # <--
 
     # CLUSTER ALMOST FIXED SETUP
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['batch_size'] = 20
-    setup['activation_func'] = None
-    setup['loss'] = mltoolbox.SquaredLossFunction
     setup['penalty'] = 'l2'
     setup['epsilon'] = None
     setup['shuffle'] = True
@@ -129,7 +136,7 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_subfolder = "test_010_pareto3-2_0.5c_10ktime1e-4alpha_lowDegreeComparison_classic"  # test folder inside test_log/
 
     # OUTPUT ALMOST FIXED SETUP
@@ -152,9 +159,9 @@ Summary:
     np.random.seed(setup['seed'])
     random.seed(setup['seed'])
 
-    if setup['n'] % 2 != 0:
+    if setup['n'] % 2 != 0 and setup['n'] > 1:
         warnings.warn("Amount of nodes is odd (N={}), keep in mind graph generator "
-                      "can misbehave in undirected graphs generation with odd nodes amount (it can"
+                      "can misbehave in undirected graphs generation with odd nodes amount (it can "
                       "generate directed graphs instead)".format(setup['n']))
 
     if not save_test_to_file:
@@ -190,23 +197,28 @@ Summary:
     ### BEGIN TRAINING SET GEN ###
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
-    #"""
-    [X, y, w] = mltoolbox.sample_from_function(
-        setup['n_samples'], setup['n_features'], setup['sample_function'],
-        domain_radius=setup['domain_radius'],
-        domain_center=setup['domain_center'],
-        error_mean=setup['error_mean'],
-        error_std_dev=setup['error_std_dev']
-    )
-    #"""
-
-    """
-    X, y, w = mltoolbox.svm_dual_averaging_training_set(
-        setup['n_samples'], setup['n_features'],
-        error_mean=setup['error_mean'],
-        error_std_dev=setup['error_std_dev']
-    )
-    """
+    if setup['generator_function'] == 'reg':
+        [X, y, w] = mltoolbox.generate_regression_training_set_from_function(
+            setup['n_samples'], setup['n_features'], setup['sample_function'],
+            domain_radius=setup['domain_radius'],
+            domain_center=setup['domain_center'],
+            error_mean=setup['error_mean'],
+            error_std_dev=setup['error_std_dev']
+        )
+    elif setup['generator_function'] == 'reg2':
+        X, y, w = mltoolbox.generate_regression_training_set(
+            setup['n_samples'], setup['n_features'],
+            error_mean=setup['error_mean'],
+            error_std_dev=setup['error_std_dev']
+        )
+    elif setup['generator_function'] == 'svm':
+        X, y, w = mltoolbox.svm_dual_averaging_training_set(
+            setup['n_samples'], setup['n_features'],
+            label_flip_prob=setup['smv_label_flip_prob']
+        )
+    else:
+        delete_test_dir()
+        raise Exception("{} is not a good training set generator function".format(setup['generator_function']))
 
     """
     X, y = mltoolbox.sample_from_function_old(
@@ -251,9 +263,11 @@ graphs = {string_graphs}
 # TRAINING SET SETUP
 n_samples = {n_samples}
 n_features = {n_features}
+generator_function = {generator_function}
 sample_function = {sample_function}
 domain_radius = {domain_radius}
 domain_center = {domain_center}
+smv_label_flip_prob = {smv_label_flip_prob}
 error_mean = {error_mean}
 error_std_dev = {error_std_dev}
 starting_weights_domain = {starting_weights_domain}
@@ -376,12 +390,13 @@ time_const_weight = {time_const_weight}
             plots=plots
         )
 
+    pass
         # console.stdout.close()
 
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    X, y = mltoolbox.sample_from_function(100000, 10, mltoolbox.linear_function, 1, error_std_dev=1)
+    X, y = mltoolbox.generate_regression_training_set_from_function(100000, 10, mltoolbox.linear_function, 1, error_std_dev=1)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
     cls.fit(X, y)
     print(cls.score(X, y))
@@ -389,9 +404,7 @@ def main1():
 
 def main2():
     X, y, w = mltoolbox.svm_dual_averaging_training_set(
-        100000, 100,
-        error_mean=0,
-        error_std_dev=0
+        100000, 100
     )
     cls = svm.LinearSVC(max_iter=1000, verbose=True)
     cls.fit(X, y)

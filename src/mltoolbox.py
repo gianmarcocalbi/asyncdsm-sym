@@ -113,29 +113,39 @@ class SampleGenerator:
         pass
 
 
-def svm_dual_averaging_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):
+def svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05):
     X = []
     y = np.zeros(n_samples)
     w = np.random.normal(0, 1, n_features)
     w_norm_2 = math.sqrt(np.inner(w, w))
     if w_norm_2 > 5:
         w = w / w_norm_2 * 5
-    e = np.random.normal(0, 1, n_features)
+    # e = np.random.normal(0, 1, n_features)
 
     for i in range(n_samples):
-        x = np.random.uniform(0, 1, n_features)
+        x = np.random.normal(0, 1, n_features)
         x /= math.sqrt(np.inner(x, x))
-        y[i] = np.sign(x.T.dot(w))
-        x = np.sign(x.T.dot(e)) * x  # + np.random.normal(error_mean, error_std_dev)
-        if np.random.uniform(0, 1) <= 0.05:
-            x *= -1
         X.append(x)
+        flip = 1
+        if np.random.uniform(0, 1) <= label_flip_prob:
+            flip = -1
+        y[i] = flip * np.sign(x.T.dot(w))
+
+        # x = np.sign(x.T.dot(e)) * x  # + np.random.normal(error_mean, error_std_dev)
+
 
     return np.array(X), y, w
 
+def generate_regression_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):
+    w = np.ones(n_features + 1)
+    X = np.c_[np.ones(n_samples), np.random.normal(0,1,(n_samples, n_features))]
+    y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
 
-def sample_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
-                         error_mean=0, error_std_dev=1):
+    return X, y, w
+
+
+def generate_regression_training_set_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
+                                                   error_mean=0, error_std_dev=1):
     """
     Parameters
     ----------
