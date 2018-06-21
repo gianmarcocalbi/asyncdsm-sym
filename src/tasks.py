@@ -24,7 +24,6 @@ class Trainer(Task):
         self.N = self.X.shape[0]
         self.iteration = 0
 
-        # self.W = np.zeros(X.shape[1])
         self.w = [
             np.random.uniform(
                 starting_weights_domain[0],
@@ -32,6 +31,7 @@ class Trainer(Task):
                 size=(self.X.shape[1],)
             )
         ]
+        # self.W = np.zeros(X.shape[1])
 
         if not activation_func is types.FunctionType:
             if activation_func == "sigmoid":
@@ -277,7 +277,6 @@ class DualAveragingGradientDescentTrainer(GradientDescentTrainerAbstract):
         phi = -self.get_alpha() * z
         phi_norm_2 = math.sqrt(np.inner(phi, phi))
         if phi_norm_2 > self.r:
-            input("X")
             phi = (phi / phi_norm_2) * self.r
 
         self.w.append(phi)

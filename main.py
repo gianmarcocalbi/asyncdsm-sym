@@ -1,6 +1,6 @@
 import random, math, time, os, pickle, shutil, datetime, pprint, warnings
 import numpy as np
-from sklearn.datasets.samples_generator import make_blobs
+from sklearn.datasets.samples_generator import make_blobs, make_regression
 from sklearn.preprocessing import normalize
 from sklearn import linear_model, svm
 from src.cluster import Cluster
@@ -68,13 +68,13 @@ Summary:
         "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
         # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
         # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        # "5_regular": REGULAR(setup['n'], 5),  # degree = 5
+        #"5_regular": REGULAR(setup['n'], 5),  # degree = 5
         # "6_regular": REGULAR(setup['n'], 6),  # degree = 6
         # "7_regular": REGULAR(setup['n'], 7),  # degree = 7
-        # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
         # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
-        # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
         # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
@@ -82,15 +82,15 @@ Summary:
 
     # TRAINING SET SETUP
 
-    setup['n_samples'] = 100000
+    setup['n_samples'] = 500
     setup['n_features'] = 100
 
-    setup['generator_function'] = 'reg2'  # svm, reg, reg2
+    setup['generator_function'] = 'svm'  # svm, reg, reg2, skreg
 
     setup['smv_label_flip_prob'] = 0.05  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1 # <--
+    setup['error_std_dev'] = 1  # <--
 
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 0  # <--
@@ -107,20 +107,23 @@ Summary:
     setup['starting_weights_domain'] = [c - r, c + r]
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 1000
+    setup['max_iter'] = 200
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
-    setup['dual_averaging_radius'] = 1000
-    setup['alpha'] = 1e-2
-    setup['learning_rate'] = "constant"  # constant, root_decreasing
-    setup['metrics'] = "all"
-    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
+    setup['dual_averaging_radius'] = 10
+
+    setup['alpha'] = 1e-4
+    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
+
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
     setup['time_const_weight'] = 0
 
-    setup['loss'] = mltoolbox.SquaredLossFunction  # <--
+    setup['metrics'] = 'all'
+    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
+
+    setup['loss'] = mltoolbox.HingeLossFunction  # <--
     setup['activation_func'] = None  # <--
 
     # CLUSTER ALMOST FIXED SETUP
@@ -137,7 +140,7 @@ Summary:
 
     # OUTPUT SETUP
     save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_subfolder = "test_010_pareto3-2_0.5c_10ktime1e-4alpha_lowDegreeComparison_classic"  # test folder inside test_log/
+    test_subfolder = "test_011_nodeErr100_metric0_exp1lambda_500iter1e-4alpha_lowDegreeComparison_classic"  # test folder inside test_log/
 
     # OUTPUT ALMOST FIXED SETUP
     test_root = "test_log"  # don't touch this
@@ -149,8 +152,6 @@ Summary:
     plots = (
         "mse_iter",
         "real-mse_iter",
-        "mse_time",
-        "real-mse_time",
     )
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
@@ -215,6 +216,20 @@ Summary:
         X, y, w = mltoolbox.svm_dual_averaging_training_set(
             setup['n_samples'], setup['n_features'],
             label_flip_prob=setup['smv_label_flip_prob']
+        )
+    elif setup['generator_function'] == 'skreg':
+        X, y, w = make_regression(
+            n_samples=setup['n_samples'],
+            n_features=setup['n_features'],
+            n_informative=setup['n_features'],
+            n_targets=1,
+            bias=0.0,
+            effective_rank=None,
+            tail_strength=1.0,
+            noise=setup['error_std_dev'],
+            shuffle=True,
+            coef=True,
+            random_state=None
         )
     else:
         delete_test_dir()
@@ -391,12 +406,13 @@ time_const_weight = {time_const_weight}
         )
 
     pass
-        # console.stdout.close()
+    # console.stdout.close()
 
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    X, y = mltoolbox.generate_regression_training_set_from_function(100000, 10, mltoolbox.linear_function, 1, error_std_dev=1)
+    X, y = mltoolbox.generate_regression_training_set_from_function(100000, 10, mltoolbox.linear_function, 1,
+                                                                    error_std_dev=1)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
     cls.fit(X, y)
     print(cls.score(X, y))

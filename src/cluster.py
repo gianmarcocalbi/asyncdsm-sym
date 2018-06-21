@@ -270,9 +270,6 @@ class Cluster:
         else:
             return math.inf
 
-    def compute_global_score(self):
-        # todo
-        pass
 
     def compute_avg_w(self):
         w = np.zeros(len(self.nodes[0].training_task.get_w()))
@@ -398,6 +395,44 @@ class Cluster:
             raise Exception('Unexpected global_mean_squared_error_log size')
 
         if math.isnan(grmse) or math.isinf(grmse):
+            raise Exception("Computation has diverged to infinite")
+
+
+    def compute_global_score(self):
+        return
+
+        score = 0
+        if self.metrics_type == 1:
+            for node in self.metrics_nodes:
+                score += node.training_task.score_log[self.iteration]
+            score /= len(self.metrics_nodes)
+        elif self.metrics_type == 2:
+            for node in self.metrics_nodes:
+                score += mltoolbox.compute_score(
+                    node.training_task.get_w_at_iteration(self.iteration),
+                    self.X,
+                    self.y,
+                    self.activation_func,
+                    self.y_hat.f
+                )
+            score /= len(self.metrics_nodes)
+        else:
+            score = mltoolbox.compute_score(
+                self.get_w_at_iteration(self.iteration),
+                self.X,
+                self.y,
+                self.activation_func,
+                self.y_hat.f
+            )
+
+        if len(self.global_mean_squared_error_log) == self.iteration:
+            self.global_mean_squared_error_log.append(score)
+        elif len(self.global_mean_squared_error_log) == self.iteration + 1:
+            self.global_mean_squared_error_log[self.iteration] = score
+        else:
+            raise Exception('Unexpected global_mean_squared_error_log size')
+
+        if math.isnan(score) or math.isinf(score):
             raise Exception("Computation has diverged to infinite")
 
     def _compute_metrics(self):

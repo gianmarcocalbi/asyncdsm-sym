@@ -1,6 +1,7 @@
 # import the necessary packages
 import numpy as np
 import abc, types, warnings, math
+from sklearn.metrics import accuracy_score
 
 
 class LossFunctionAbstract:
@@ -39,22 +40,32 @@ class HingeLossFunction(LossFunctionAbstract):
         for i in range(N):
             if h[i] > 0:
                 G[i] = - y[i] * y_hat_f_gradient[i]
+            elif h[i] == 0:
+                for j in range(len(y_hat_f_gradient[i])):
+                    inf = min(0, y_hat_f_gradient[i][j])
+                    sup = max(0, y_hat_f_gradient[i][j])
+                    G[i][j] = np.random.uniform(inf, sup)
+                G[i] *= -y[i]
         G = np.sum(G, axis=0)
 
         return G
 
     @staticmethod
     def f_gradient2(y, y_hat_f, y_hat_f_gradient):
-        _f = HingeLossFunction.f(y, y_hat_f)
-        _f_gradient = np.zeros(y_hat_f_gradient.shape[1])
-        for i in range(len(y)):
-            if _f[i] > 0:
+        N = len(y)
+        P = y_hat_f_gradient.shape[1]
+        h = HingeLossFunction.f(y, y_hat_f)
+        G = np.zeros((N, P))
+        for i in range(N):
+            if h[i] > 0:
+                G[i] = - y[i] * y_hat_f_gradient[i]
+            elif h[i] == 0:
                 for j in range(len(y_hat_f_gradient[i])):
-                    _f_gradient[j] += - y[i] * y_hat_f_gradient[i][j]
-
-        # the minus sign from the derivative of "- y_hat_f" is represented as follows:
-        #   - (y - y_hat_f) = y_hat_f - y
-        return _f_gradient
+                    inf = min(0, y_hat_f_gradient[i][j])
+                    sup = max(0, y_hat_f_gradient[i][j])
+                    G[i][j] = np.random.uniform(inf, sup)
+                G[i] *= -y[i]
+        G = np.sum(G, axis=0)
 
 
 class SquaredLossFunction(LossFunctionAbstract):
@@ -137,8 +148,9 @@ def svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05)
     return np.array(X), y, w
 
 def generate_regression_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):
-    w = np.ones(n_features + 1)
-    X = np.c_[np.ones(n_samples), np.random.normal(0,1,(n_samples, n_features))]
+    w = 10 * np.ones(n_features + 1)
+    #X = np.c_[np.ones(n_samples), np.random.normal(0,1,(n_samples, n_features))]
+    X = np.c_[np.ones(n_samples), np.random.uniform(0,2,(n_samples, n_features))]
     y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
 
     return X, y, w
@@ -285,3 +297,7 @@ def compute_mae(w, X, y, activation_func, y_hat_func):
     predictions = activation_func(y_hat_func(X, w))
     linear_error = np.absolute(y - predictions)
     return np.sum(linear_error) / N
+
+
+def compute_score(w, X, y, activation_func, y_hat_func):
+    return accuracy_score(y, activation_func(y_hat_func(X, w)), normalize=True)

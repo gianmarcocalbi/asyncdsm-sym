@@ -1,6 +1,7 @@
 from src import statistics, mltoolbox
 import numpy as np
 
+"""
 y = np.array([-1, 1, 1, 1, -1, 1])
 y_hat_f = np.array([-1, -1, -1, 1, -1, 1])
 X = np.array([[0, 1, 2, 3],
@@ -12,8 +13,8 @@ X = np.array([[0, 1, 2, 3],
 
 print(mltoolbox.HingeLossFunction.f_gradient(y, y_hat_f, X))
 print(mltoolbox.HingeLossFunction.f_gradient2(y, y_hat_f, X))
-
 """
+# """
 graphs = (
     ("0_diagonal", 0),
     ("1_cycle", 1),
@@ -21,7 +22,11 @@ graphs = (
     ("2_root-expander", 2),
     ("3_regular", 3),
     ("4_regular", 4),
+    ("5_regular", 5),
+    ("6_regular", 6),
+    ("7_regular", 7),
     ("8_regular", 8),
+    ("9_regular", 9),
     ("20_regular", 20),
     ("50_regular", 50),
     ("n-1_clique", 99),
@@ -31,12 +36,13 @@ graphs = (
 for graph, degree in graphs:
     try:
         print("{} speed = {}".format(graph, statistics.single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(
-            "./test_log/test_010_uniform0-2_0.5c_10ktime1e-4alpha_classic", graph, 100, 10000)))
+            "./test_log/test_010_pareto3-2_0.5c_10ktime1e-4alpha_lowDegreeComparison_classic", graph, 100,
+            10000)))
     except IOError:
         pass
     except:
         raise
-"""
+# """
 
 """
 Ks = [0,1,2,3,4,8,20,50,99]
