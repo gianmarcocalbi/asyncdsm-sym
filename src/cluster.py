@@ -1,5 +1,6 @@
 import copy, types, warnings
 from src import mltoolbox, statistics
+import src.metrics as mtr
 from src.functions import *
 from src.node import Node
 
@@ -37,20 +38,34 @@ class Cluster:
         self.avg_iterations_time_log = [(0.0, 0.0)]
         self.iterations_time_log = [0.0]  # 'iteration i-th' => clock value at which i-th iteration has been completed
 
+        self.obj_function_log = []
+        self.real_obj_function_log = []
+
+        self.metrics = {}
+        self.metrics_type = 0
+        self.metrics_nodes_id = []
+        self.metrics_nodes = []
+
+        self.logs = {
+            "obj_function": [],
+            "real_obj_function": [],
+            "dynamics": [],
+            "iter_time": [0.0],
+            "max_iter_time": [(0.0, 0.0)],
+            "min_iter_time": [(0.0, 0.0)],
+            "metrics": {}
+        }
+
         self.global_mean_absolute_error_log = []  # 'iteration' => global MAE
         self.global_mean_squared_error_log = []  # 'iteration' => global MSE
         self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
 
         self.epsilon = 0.0  # acceptance threshold
-        self.metrics_type = 0  # use alternative metrics
-        self.metrics_nodes_id = []
-        self.metrics_nodes = []
-
         self.linear_regression_beta = None
 
-    def setup(self, X, y, real_w, y_hat, method="classic", max_iter=None, max_time=None, batch_size=5,
-              dual_averaging_radius=None, activation_func=None, loss=mltoolbox.SquaredLossFunction, penalty='l2',
-              epsilon=0.0, alpha=0.0001, learning_rate="constant",
+    def setup(self, X, y, real_w, y_hat, obj_function=mtr.MeanSquaredError, method="classic", max_iter=None,
+              max_time=None, batch_size=5, dual_averaging_radius=10, activation_func=None,
+              loss=mltoolbox.SquaredLossFunction, penalty=None, epsilon=0.0, alpha=0.0001, learning_rate="constant",
               metrics="all", metrics_type=0, metrics_nodes='all', shuffle=True, verbose=False,
               time_distr_class=statistics.ExponentialDistribution, time_distr_param=(), time_const_weight=0,
               node_error_mean=0, node_error_std_dev=1, starting_weights_domain=(0, 5)):
@@ -64,8 +79,14 @@ class Cluster:
         y : array of float
             Training set sample target function values.
 
+        real_w : array of float
+            Real weight vector used to generate the training set.
+
         y_hat : class inheriting from YHatFunctionAbstract
             Class inherited from YHatFunctionAbstract.
+
+        obj_function : class
+            Class of the objective function to minimize.
 
         method : 'classic', 'stochastic', 'batch' or 'linear_regression', optional
             Method used to minimize error function.
@@ -82,6 +103,9 @@ class Cluster:
 
         batch_size : int, optional
             Batch size only taken into account for method = 'batch'.
+
+        dual_averaging_radius: float, optional
+            Radius r of circle used in dual averaging method.
 
         activation_func : None or function, optional
             Activation function applied to normalized output of target function or y hat.
@@ -101,11 +125,15 @@ class Cluster:
             Learning rate type (actually not exploited yet).
 
         metrics : str or list of str, optional
-            Choose any in ['all', 'score', 'mean_absolute_error', 'mean_squared_error', real_mean_squared_error']
+            Choose any in ['all', 'score', 'mse', 'mae', rmse']
             or 'all'.
 
         metrics_type : int, optional
             0 : normal metric, 1 : alt metric, 2 : new alt metric.
+
+        metrics_nodes : int or list of int or anything else, optional
+            Node considered in the computation of metrics.
+            If anything else then all nodes will be taken into account.
 
         shuffle : bool, optional
             True if the cluster may shuffle the training set before splitting it (always suggested).
@@ -118,6 +146,18 @@ class Cluster:
 
         time_distr_param : list, optional
             Params' list to pass to distribution sample method.
+
+        time_const_weight : float, optional
+            Weight of constant part in computation time of nodes Time(t) = c * E[X] + (1-c) * X(t).
+
+        node_error_mean : float, optional
+            Mean of the error inside nodes.
+
+        node_error_std_dev : float, optional
+            Standard deviation of error inside nodes.
+
+        starting_weights_domain : tuple of two floats
+            Domain extremes of nodes' starting weights.
 
         Returns
         -------
@@ -155,6 +195,20 @@ class Cluster:
             else:
                 metrics_nodes = list(range(N))
         self.metrics_nodes_id = metrics_nodes
+
+        if not (isinstance(metrics, list) or isinstance(metrics, tuple)):
+            if metrics in mtr.METRICS:
+                self.metrics[metrics] = mtr.METRICS[metrics]
+            elif metrics.lower() == 'all':
+                self.metrics = mtr.METRICS
+        else:
+            for m in metrics:
+                if m in mtr.METRICS:
+                    self.metrics[m] = mtr.METRICS[m]
+                else:
+                    warnings.warn("Metric {} does not exists".format(m))
+            if len(self.metrics) == 0:
+                warnings.warn("No metrics specified")
 
         self.X = X
         self.y = y
@@ -269,7 +323,6 @@ class Cluster:
             return self.global_real_mean_squared_error_log[index]
         else:
             return math.inf
-
 
     def compute_avg_w(self):
         w = np.zeros(len(self.nodes[0].training_task.get_w()))
@@ -396,7 +449,6 @@ class Cluster:
 
         if math.isnan(grmse) or math.isinf(grmse):
             raise Exception("Computation has diverged to infinite")
-
 
     def compute_global_score(self):
         return

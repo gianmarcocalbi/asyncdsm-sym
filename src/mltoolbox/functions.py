@@ -9,18 +9,18 @@ class LossFunctionAbstract:
 
     @staticmethod
     @abc.abstractmethod
-    def f(y, y_hat_f):
+    def compute_value(y, y_hat_f):
         raise NotImplementedError('f method not implemented in LossFunctionAbstract --> child class')
 
     @staticmethod
     @abc.abstractmethod
-    def f_gradient(y, y_hat_f, y_hat_f_gradient):
+    def compute_gradient(y, y_hat_f, y_hat_f_gradient):
         raise NotImplementedError('f_gradient method not implemented in LossFunctionAbstract child class')
 
 
 class HingeLossFunction(LossFunctionAbstract):
     @staticmethod
-    def f(y, y_hat_f):
+    def compute_value(y, y_hat_f):
         return (1 - y * y_hat_f).clip(min=0)
 
     @staticmethod
@@ -32,10 +32,15 @@ class HingeLossFunction(LossFunctionAbstract):
         return _f
 
     @staticmethod
-    def f_gradient(y, y_hat_f, y_hat_f_gradient):
+    def compute_gradient(y, y_hat_f, y_hat_f_gradient):
+        h = HingeLossFunction.compute_value(y, y_hat_f)
+        return (-y * y_hat_f_gradient.T).T * np.sign(h)
+
+    @staticmethod
+    def f_gradient2(y, y_hat_f, y_hat_f_gradient):
         N = len(y)
         P = y_hat_f_gradient.shape[1]
-        h = HingeLossFunction.f(y, y_hat_f)
+        h = HingeLossFunction.compute_value(y, y_hat_f)
         G = np.zeros((N, P))
         for i in range(N):
             if h[i] > 0:
@@ -50,31 +55,14 @@ class HingeLossFunction(LossFunctionAbstract):
 
         return G
 
-    @staticmethod
-    def f_gradient2(y, y_hat_f, y_hat_f_gradient):
-        N = len(y)
-        P = y_hat_f_gradient.shape[1]
-        h = HingeLossFunction.f(y, y_hat_f)
-        G = np.zeros((N, P))
-        for i in range(N):
-            if h[i] > 0:
-                G[i] = - y[i] * y_hat_f_gradient[i]
-            elif h[i] == 0:
-                for j in range(len(y_hat_f_gradient[i])):
-                    inf = min(0, y_hat_f_gradient[i][j])
-                    sup = max(0, y_hat_f_gradient[i][j])
-                    G[i][j] = np.random.uniform(inf, sup)
-                G[i] *= -y[i]
-        G = np.sum(G, axis=0)
-
 
 class SquaredLossFunction(LossFunctionAbstract):
     @staticmethod
-    def f(y, y_hat_f):
+    def compute_value(y, y_hat_f):
         return pow(2, y - y_hat_f) / 2
 
     @staticmethod
-    def f_gradient(y, y_hat_f, y_hat_f_gradient):
+    def compute_gradient(y, y_hat_f, y_hat_f_gradient):
         # the minus sign from the derivative of "- y_hat_f" is represented as follows:
         #   - (y - y_hat_f) = y_hat_f - y
         return y_hat_f_gradient.T.dot(y_hat_f - y)
@@ -85,32 +73,32 @@ class YHatFunctionAbstract:
 
     @staticmethod
     @abc.abstractmethod
-    def f(X, W):
+    def compute_value(X, W):
         raise NotImplementedError('f method not implemented in YHatFunctionAbstract child class')
 
     @staticmethod
     @abc.abstractmethod
-    def f_gradient(X, W):
+    def compute_gradient(X, W):
         raise NotImplementedError('f_gradient method not implemented in YHatFunctionAbstract child class')
 
 
 class LinearYHatFunction(YHatFunctionAbstract):
     @staticmethod
-    def f(X, W):
+    def compute_value(X, W):
         return X.dot(W)
 
     @staticmethod
-    def f_gradient(X, W):
+    def compute_gradient(X, W):
         return X
 
 
 class ParaboloidYHatFunction(YHatFunctionAbstract):
     @staticmethod
-    def f(X, W):
+    def compute_value(X, W):
         return np.power(X, 2).dot(W)
 
     @staticmethod
-    def f_gradient(X, W):
+    def compute_gradient(X, W):
         return np.power(X, 2)
 
 

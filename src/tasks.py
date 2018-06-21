@@ -15,14 +15,14 @@ class Task:
 class Trainer(Task):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, X, y, real_w, y_hat, starting_weights_domain, activation_func=None):
+    def __init__(self, X, y, real_w, obj_function, starting_weights_domain):
 
         self.X = X
         self.y = y
         self.real_w = real_w
-        self.y_hat = y_hat
         self.N = self.X.shape[0]
         self.iteration = 0
+        self.obj_function = obj_function
 
         self.w = [
             np.random.uniform(
@@ -33,6 +33,7 @@ class Trainer(Task):
         ]
         # self.W = np.zeros(X.shape[1])
 
+        """
         if not activation_func is types.FunctionType:
             if activation_func == "sigmoid":
                 activation_func = mltoolbox.sigmoid
@@ -44,6 +45,7 @@ class Trainer(Task):
                 activation_func = lambda x: x
 
         self.activation_func = activation_func
+        """
 
     @abc.abstractmethod
     def step(self, *args):
@@ -200,8 +202,8 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
 
     def step(self):
         # update W following the steepest gradient descent
-        y_hat_f = self.y_hat.f(self.X, self.get_w())
-        y_hat_f_gradient = self.y_hat.f_gradient(self.X, self.y)
+        y_hat = self.y_hat.f(self.X, self.get_w())
+        y_hat_gradient = self.y_hat.f_gradient(self.X, self.y)
         loss_f_gradient = self.loss.f_gradient(self.y, y_hat_f, y_hat_f_gradient)
         gradient = loss_f_gradient / self.N
 

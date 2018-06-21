@@ -6,7 +6,7 @@ from sklearn import linear_model, svm
 from src.cluster import Cluster
 from src import mltoolbox, graph_generator, statistics
 from src.plotter import Plotter, plot_from_files
-import matplotlib.pyplot as plt
+import src.metrics as mtr
 
 # degree = 0
 DIAGONAL = lambda n: np.diag(np.ones(n))
@@ -68,7 +68,7 @@ Summary:
         "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
         # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
         # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        #"5_regular": REGULAR(setup['n'], 5),  # degree = 5
+        # "5_regular": REGULAR(setup['n'], 5),  # degree = 5
         # "6_regular": REGULAR(setup['n'], 6),  # degree = 6
         # "7_regular": REGULAR(setup['n'], 7),  # degree = 7
         "8_regular": REGULAR(setup['n'], 8),  # degree = 8
@@ -101,9 +101,7 @@ Summary:
     setup['domain_radius'] = 6
     setup['domain_center'] = 0
     r = np.random.uniform(4, 6)
-    c = np.random.uniform(1, 3.8)
-    if np.random.choice([True, False]):
-        c = -c
+    c = np.random.uniform(1, 3.8) * np.random.choice([-1, 1])
     setup['starting_weights_domain'] = [c - r, c + r]
 
     # CLUSTER SETUP 1
@@ -126,10 +124,12 @@ Summary:
     setup['loss'] = mltoolbox.HingeLossFunction  # <--
     setup['activation_func'] = None  # <--
 
+    setup['obj_function'] = mtr.MeanSquaredError
+
     # CLUSTER ALMOST FIXED SETUP
     setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['batch_size'] = 20
-    setup['penalty'] = 'l2'
+    setup['penalty'] = None
     setup['epsilon'] = None
     setup['shuffle'] = True
     setup['verbose'] = False
@@ -269,48 +269,11 @@ Summary:
     setup['string_graphs'] = pprint.PrettyPrinter(indent=4).pformat(setup['graphs']).replace('array([', 'np.array([')
 
     # Fill descriptor with setup dictionary
-    descriptor += """
-### BEGIN SETUP ###
-n = {n}
-seed = {seed}
-graphs = {string_graphs}
 
-# TRAINING SET SETUP
-n_samples = {n_samples}
-n_features = {n_features}
-generator_function = {generator_function}
-sample_function = {sample_function}
-domain_radius = {domain_radius}
-domain_center = {domain_center}
-smv_label_flip_prob = {smv_label_flip_prob}
-error_mean = {error_mean}
-error_std_dev = {error_std_dev}
-starting_weights_domain = {starting_weights_domain}
-node_error_mean = {node_error_mean}
-node_error_std_dev = {node_error_std_dev}
+    for k, v in setup.items():
+        descriptor += "{} = {}\n".format(k, v)
 
-# CLUSTER SETUP
-max_iter = {max_iter}
-max_time = {max_time}
-yhat = {yhat}
-method = {method}
-batch_size = {batch_size}
-dual_averaging_radius={dual_averaging_radius}
-activation_func = {activation_func}
-loss = {loss}
-penalty = {penalty}
-epsilon = {epsilon}
-alpha = {alpha}
-learning_rate = {learning_rate}
-metrics = {metrics}
-metrics_type = {metrics_type}
-metrics_nodes = {metrics_nodes}
-shuffle = {shuffle}
-verbose = {verbose}
-time_distr_class = {time_distr_class}
-time_distr_param = {time_distr_param}
-time_const_weight = {time_const_weight}
-""".format(**setup)
+    descriptor += "\n"
 
     # save descriptor file
     if save_descriptor:
@@ -327,6 +290,7 @@ time_const_weight = {time_const_weight}
 
         cluster.setup(
             X, y, w, setup['yhat'],
+            obj_function=setup['obj_function'],
             max_iter=setup['max_iter'],
             max_time=setup['max_time'],
             method=setup['method'],
