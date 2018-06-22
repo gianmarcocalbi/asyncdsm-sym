@@ -1,6 +1,7 @@
 import copy, types, warnings
 from src import mltoolbox, statistics
-import src.metrics as mtr
+from src.mltoolbox.metrics import METRICS
+from src.mltoolbox import functions
 from src.functions import *
 from src.node import Node
 
@@ -27,21 +28,12 @@ class Cluster:
         self.iteration = 0
         self.X = None  # keep whole training set examples
         self.y = None  # keep whole training set target function values
+        self.real_y = None
         self.real_w = None
-        self.y_hat = None
-        self.loss = None
-        self.activation_func = None
-        self.dynamic_log = []  # log containing for each iteration i a pair (t0_i, tf_i)
         self.w = []  # log 'iteration i-th' => value of weight vector at iteration i-th
-
-        self.max_iterations_time_log = [(0.0, 0.0)]
-        self.avg_iterations_time_log = [(0.0, 0.0)]
-        self.iterations_time_log = [0.0]  # 'iteration i-th' => clock value at which i-th iteration has been completed
-
-        self.obj_function_log = []
-        self.real_obj_function_log = []
-
+        self.obj_function = None
         self.metrics = {}
+        self.real_metrics = {}
         self.metrics_type = 0
         self.metrics_nodes_id = []
         self.metrics_nodes = []
@@ -51,24 +43,37 @@ class Cluster:
             "real_obj_function": [],
             "dynamics": [],
             "iter_time": [0.0],
+            "avg_iter_time": [(0.0, 0.0)],
             "max_iter_time": [(0.0, 0.0)],
-            "min_iter_time": [(0.0, 0.0)],
-            "metrics": {}
+            "metrics": {},
+            "real_metrics": {}
         }
-
-        self.global_mean_absolute_error_log = []  # 'iteration' => global MAE
-        self.global_mean_squared_error_log = []  # 'iteration' => global MSE
-        self.global_real_mean_squared_error_log = []  # 'iteration' => global RMSE
 
         self.epsilon = 0.0  # acceptance threshold
         self.linear_regression_beta = None
 
-    def setup(self, X, y, real_w, y_hat, obj_function=mtr.MeanSquaredError, method="classic", max_iter=None,
-              max_time=None, batch_size=5, dual_averaging_radius=10, activation_func=None,
-              loss=mltoolbox.SquaredLossFunction, penalty=None, epsilon=0.0, alpha=0.0001, learning_rate="constant",
-              metrics="all", metrics_type=0, metrics_nodes='all', shuffle=True, verbose=False,
-              time_distr_class=statistics.ExponentialDistribution, time_distr_param=(), time_const_weight=0,
-              node_error_mean=0, node_error_std_dev=1, starting_weights_domain=(0, 5)):
+    def setup(self, X, y, real_w,
+              obj_function=METRICS["mse"],
+              method="classic",
+              max_iter=None,
+              max_time=None,
+              batch_size=5,
+              dual_averaging_radius=10,
+              epsilon=0.0,
+              alpha=1e-4,
+              learning_rate="constant",
+              metrics="all",
+              real_metrics="all",
+              metrics_type=0,
+              metrics_nodes='all',
+              shuffle=True,
+              verbose=False,
+              time_distr_class=statistics.ExponentialDistribution,
+              time_distr_param=(),
+              time_const_weight=0,
+              node_error_mean=0,
+              node_error_std_dev=1,
+              starting_weights_domain=(0, 5)):
         """Cluster setup.
 
         Parameters
@@ -81,9 +86,6 @@ class Cluster:
 
         real_w : array of float
             Real weight vector used to generate the training set.
-
-        y_hat : class inheriting from YHatFunctionAbstract
-            Class inherited from YHatFunctionAbstract.
 
         obj_function : class
             Class of the objective function to minimize.
@@ -107,14 +109,6 @@ class Cluster:
         dual_averaging_radius: float, optional
             Radius r of circle used in dual averaging method.
 
-        activation_func : None or function, optional
-            Activation function applied to normalized output of target function or y hat.
-
-        loss : class inheriting from LossFunctionAbstract, optional
-
-        penalty : str, optional
-            Penalty applied to avoid overfitting (actually not used at the moment).
-
         epsilon : float, optional
             Error acceptance threshold under which the cluster terminates the execution.
 
@@ -125,6 +119,10 @@ class Cluster:
             Learning rate type (actually not exploited yet).
 
         metrics : str or list of str, optional
+            Choose any in ['all', 'score', 'mse', 'mae', rmse']
+            or 'all'.
+
+        real_metrics : str or list of str, optional
             Choose any in ['all', 'score', 'mse', 'mae', rmse']
             or 'all'.
 
@@ -189,6 +187,12 @@ class Cluster:
         self.epsilon = epsilon
         self.metrics_type = metrics_type
 
+        if not obj_function in METRICS:
+            raise Exception("'{}' is not a viable objective function")
+
+        self.obj_function = METRICS[obj_function]
+
+        # Setup of nodes to take into account for metrics calculations
         if not (isinstance(metrics_nodes, list) or isinstance(metrics_nodes, tuple)):
             if isinstance(metrics_nodes, int):
                 metrics_nodes = [metrics_nodes]
@@ -196,42 +200,56 @@ class Cluster:
                 metrics_nodes = list(range(N))
         self.metrics_nodes_id = metrics_nodes
 
+        # Fill self.metrics with instances of metrics objects
         if not (isinstance(metrics, list) or isinstance(metrics, tuple)):
-            if metrics in mtr.METRICS:
-                self.metrics[metrics] = mtr.METRICS[metrics]
+            if metrics in METRICS:
+                self.metrics[metrics] = METRICS[metrics]
             elif metrics.lower() == 'all':
-                self.metrics = mtr.METRICS
+                self.metrics = METRICS
         else:
             for m in metrics:
-                if m in mtr.METRICS:
-                    self.metrics[m] = mtr.METRICS[m]
+                if m in METRICS:
+                    self.metrics[m] = METRICS[m]
                 else:
                     warnings.warn("Metric {} does not exists".format(m))
-            if len(self.metrics) == 0:
-                warnings.warn("No metrics specified")
+        if len(self.metrics) == 0:
+            warnings.warn("No metrics specified")
+
+        # Fill self.real_metrics with instances of metrics objects
+        if not (isinstance(real_metrics, list) or isinstance(real_metrics, tuple)):
+            if real_metrics in METRICS:
+                self.real_metrics[real_metrics] = METRICS[real_metrics]
+            elif real_metrics.lower() == 'all':
+                self.real_metrics = METRICS
+        else:
+            for m in real_metrics:
+                if m in METRICS:
+                    self.real_metrics[m] = METRICS[m]
+                else:
+                    warnings.warn("Metric {} does not exists".format(m))
+        if len(self.real_metrics) == 0:
+            warnings.warn("No real_metrics specified")
+
+        # add objective function to metrics and real metrics
+        if not self.obj_function.id in self.metrics:
+            self.metrics[self.obj_function.id] = self.obj_function
+        if not self.obj_function.id in self.real_metrics:
+            self.real_metrics[self.obj_function.id] = self.obj_function
+
+        # instantiate logs list for each metrics and real_metrics
+        for mk in self.metrics.keys():
+            self.logs["metrics"][mk] = []
+        for rmk in self.real_metrics.keys():
+            self.logs["real_metrics"][rmk] = []
+
+        self.logs["obj_function"] = self.logs["metrics"][self.obj_function.id]
+        self.logs["real_obj_function"] = self.logs["real_metrics"][self.obj_function.id]
 
         self.X = X
         self.y = y
         self.real_w = real_w
-        self.y_hat = y_hat
-        self.loss = loss
 
         del y, X
-
-        if activation_func is None:
-            activation_func = "identity"
-
-        if not activation_func is types.FunctionType:
-            if activation_func == "sigmoid":
-                activation_func = mltoolbox.sigmoid
-            elif activation_func == "sign":
-                activation_func = np.sign
-            elif activation_func == "tanh":
-                activation_func = np.tanh
-            else:
-                activation_func = lambda x: x
-
-        self.activation_func = activation_func
 
         if shuffle:
             Xy = np.c_[self.X, self.y]
@@ -239,6 +257,8 @@ class Cluster:
             self.X = np.delete(Xy, -1, 1)
             self.y = np.take(Xy, -1, 1)
             del Xy
+
+        self.real_y = self.obj_function.y_hat_func.compute_value(self.X, self.real_w)
 
         nodes_errors = np.random.normal(node_error_mean, node_error_std_dev, N)
         subX_size = int(math.floor(self.X.shape[0] / N))
@@ -267,10 +287,27 @@ class Cluster:
             """
             # instantiate new node for the just-selected subsample
             self.nodes.append(
-                Node(i, node_X, node_y, real_w, y_hat, method, batch_size, dual_averaging_radius, activation_func, loss,
-                     penalty, alpha, learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param,
-                     time_const_weight, starting_weights_domain, ))
-            self.dynamic_log.append([])
+                Node(
+                    i,
+                    node_X,
+                    node_y,
+                    self.real_w,
+                    self.obj_function,
+                    method,
+                    batch_size,
+                    dual_averaging_radius,
+                    alpha,
+                    learning_rate,
+                    self.metrics,
+                    self.real_metrics,
+                    shuffle,
+                    verbose,
+                    time_distr_class,
+                    time_distr_param,
+                    time_const_weight,
+                    starting_weights_domain
+                ))
+            self.logs["dynamics"].append([])
 
             prev_end = end
 
@@ -297,8 +334,8 @@ class Cluster:
         for i in self.metrics_nodes_id:
             self.metrics_nodes.append(self.nodes[i])
 
-        self.linear_regression_beta = mltoolbox.estimate_linear_regression_beta(self.X, self.y)
-        self._compute_metrics()
+        self.linear_regression_beta = functions.estimate_linear_regression_beta(self.X, self.y)
+        self._compute_all_metrics()
 
     def get_w_at_iteration(self, iteration):
         return np.copy(self.w[iteration])
@@ -306,23 +343,13 @@ class Cluster:
     def get_w(self):
         return np.copy(self.w[-1])
 
-    def get_global_mean_absolute_error(self, index=-1):
-        if index < len(self.global_mean_absolute_error_log) > 0:
-            return self.global_mean_absolute_error_log[index]
-        else:
-            return math.inf
+    def get_obj_function_value(self):
+        return self.logs["obj_function"][-1]
 
-    def get_global_mean_squared_error(self, index=-1):
-        if index < len(self.global_mean_squared_error_log) > 0:
-            return self.global_mean_squared_error_log[index]
-        else:
-            return math.inf
-
-    def get_global_real_mean_squared_error(self, index=-1):
-        if index < len(self.global_real_mean_squared_error_log) > 0:
-            return self.global_real_mean_squared_error_log[index]
-        else:
-            return math.inf
+    def get_metrics_value(self, met, real=False):
+        if real:
+            return self.logs["real_metrics"][met][-1]
+        return self.logs["metrics"][met][-1]
 
     def compute_avg_w(self):
         w = np.zeros(len(self.nodes[0].training_task.get_w()))
@@ -337,161 +364,57 @@ class Cluster:
         else:
             raise Exception('Unexpected w(t) size')
 
-    def compute_global_mean_absolute_error(self):
-        gmae = 0
-        if self.metrics_type == 1:
-            for node in self.metrics_nodes:
-                gmae += node.training_task.mean_absolute_error_log[self.iteration]
-            gmae /= len(self.metrics_nodes)
-        elif self.metrics_type == 2:
-            for node in self.metrics_nodes:
-                gmae += mltoolbox.compute_mae(
-                    node.training_task.get_w_at_iteration(self.iteration),
-                    self.X,
-                    self.y,
-                    self.activation_func,
-                    self.y_hat.f
-                )
-            gmae /= len(self.metrics_nodes)
+    def _compute_all_metrics(self):
+        for m in self.metrics:
+            self._compute_metrics(m, real=False)
+        for rm in self.real_metrics:
+            self._compute_metrics(rm, real=True)
+
+    def _compute_metrics(self, m, real=False):
+        if not real:
+            y = self.y
+            metrics = self.metrics
+            metrics_log = self.logs["metrics"]
         else:
-            gmae = mltoolbox.compute_mae(
-                self.get_w_at_iteration(self.iteration),
+            y = self.real_y
+            metrics = self.real_metrics
+            metrics_log = self.logs["real_metrics"]
+
+        val = 0
+        if self.metrics_type == 1:
+            # average of local metrics in nodes
+            for node in self.metrics_nodes:
+                val += node.training_task.get_metrics_value_at_iteration(m, self.iteration, real=real)
+            val /= len(self.metrics_nodes)
+        elif self.metrics_type == 2:
+            # average of metrics computed used local w_u of nodes in self.metrics_nodes
+            # on the whole training set
+            for node in self.metrics_nodes:
+                val += metrics[m].compute_value(
+                    self.X,
+                    y,
+                    node.training_task.get_w_at_iteration(self.iteration)
+                )
+            val /= len(self.metrics_nodes)
+        else:
+            val = metrics[m].compute_value(
                 self.X,
-                self.y,
-                self.activation_func,
-                self.y_hat.f
+                y,
+                self.get_w_at_iteration(self.iteration)
             )
 
-        if len(self.global_mean_absolute_error_log) == self.iteration:
-            self.global_mean_absolute_error_log.append(gmae)
-        elif len(self.global_mean_absolute_error_log) == self.iteration + 1:
-            self.global_mean_absolute_error_log[self.iteration] = gmae
+        if len(metrics_log[m]) == self.iteration:
+            metrics_log[m].append(val)
+        elif len(metrics_log[m]) == self.iteration + 1:
+            metrics_log[m][self.iteration] = val
+            warnings.warn("Unexpected behaviour: metrics {} already computed in cluster".format(m))
         else:
-            raise Exception('Unexpected global_mean_absolute_error_log size')
+            raise Exception('Unexpected metrics {} log size'.format(m))
 
-        if math.isnan(gmae) or math.isinf(gmae):
+        if math.isnan(val) or math.isinf(val):
             raise Exception("Computation has diverged to infinite")
 
-    def compute_global_mean_squared_error(self):
-        gmse = 0
-        if self.metrics_type == 1:
-            for node in self.metrics_nodes:
-                gmse += node.training_task.mean_squared_error_log[self.iteration]
-            gmse /= len(self.metrics_nodes)
-        elif self.metrics_type == 2:
-            for node in self.metrics_nodes:
-                gmse += mltoolbox.compute_mse(
-                    node.training_task.get_w_at_iteration(self.iteration),
-                    self.X,
-                    self.y,
-                    self.activation_func,
-                    self.y_hat.f
-                )
-            gmse /= len(self.metrics_nodes)
-        else:
-            gmse = mltoolbox.compute_mse(
-                self.get_w_at_iteration(self.iteration),
-                self.X,
-                self.y,
-                self.activation_func,
-                self.y_hat.f
-            )
-
-        if len(self.global_mean_squared_error_log) == self.iteration:
-            self.global_mean_squared_error_log.append(gmse)
-        elif len(self.global_mean_squared_error_log) == self.iteration + 1:
-            self.global_mean_squared_error_log[self.iteration] = gmse
-        else:
-            raise Exception('Unexpected global_mean_squared_error_log size')
-
-        if math.isnan(gmse) or math.isinf(gmse):
-            raise Exception("Computation has diverged to infinite")
-
-    def compute_global_real_mean_squared_error(self):
-        grmse = 0
-
-        if self.metrics_type == 1:
-            for node in self.metrics_nodes:
-                grmse += node.training_task.real_mean_squared_error_log[self.iteration]
-            grmse /= len(self.metrics_nodes)
-
-        elif self.metrics_type == 2:
-            for node in self.metrics_nodes:
-                w = node.training_task.get_w_at_iteration(self.iteration)
-                real_values = self.activation_func(self.y_hat.f(self.X, self.real_w))
-                grmse += mltoolbox.compute_mse(
-                    w,
-                    self.X,
-                    real_values,
-                    self.activation_func,
-                    self.y_hat.f
-                )
-            grmse /= len(self.metrics_nodes)
-
-        else:
-            w = self.get_w_at_iteration(self.iteration)
-            real_values = self.activation_func(self.y_hat.f(self.X, self.real_w))
-
-            grmse = mltoolbox.compute_mse(
-                w,
-                self.X,
-                real_values,
-                self.activation_func,
-                self.y_hat.f
-            )
-
-        if len(self.global_real_mean_squared_error_log) == self.iteration:
-            self.global_real_mean_squared_error_log.append(grmse)
-        elif len(self.global_real_mean_squared_error_log) == self.iteration + 1:
-            self.global_real_mean_squared_error_log[self.iteration] = grmse
-        else:
-            raise Exception('Unexpected global_mean_squared_error_log size')
-
-        if math.isnan(grmse) or math.isinf(grmse):
-            raise Exception("Computation has diverged to infinite")
-
-    def compute_global_score(self):
-        return
-
-        score = 0
-        if self.metrics_type == 1:
-            for node in self.metrics_nodes:
-                score += node.training_task.score_log[self.iteration]
-            score /= len(self.metrics_nodes)
-        elif self.metrics_type == 2:
-            for node in self.metrics_nodes:
-                score += mltoolbox.compute_score(
-                    node.training_task.get_w_at_iteration(self.iteration),
-                    self.X,
-                    self.y,
-                    self.activation_func,
-                    self.y_hat.f
-                )
-            score /= len(self.metrics_nodes)
-        else:
-            score = mltoolbox.compute_score(
-                self.get_w_at_iteration(self.iteration),
-                self.X,
-                self.y,
-                self.activation_func,
-                self.y_hat.f
-            )
-
-        if len(self.global_mean_squared_error_log) == self.iteration:
-            self.global_mean_squared_error_log.append(score)
-        elif len(self.global_mean_squared_error_log) == self.iteration + 1:
-            self.global_mean_squared_error_log[self.iteration] = score
-        else:
-            raise Exception('Unexpected global_mean_squared_error_log size')
-
-        if math.isnan(score) or math.isinf(score):
-            raise Exception("Computation has diverged to infinite")
-
-    def _compute_metrics(self):
-        self.compute_avg_w()
-        for metric in self.nodes[0].training_task.metrics:
-            # todo: remove eval!!!
-            eval("self.compute_global_" + metric + "()")
+        return val
 
     def enqueue_event(self, e):
         """
@@ -538,20 +461,18 @@ class Cluster:
                 'node': _node
             })
 
-        # bar = tqdm.tqdm(total=self.max_time)
         stop_condition = False  # todo: stop condition (tolerance)
         event = self.dequeue_event()
         while not stop_condition and not event is None:
-            # console.stdout.screen.clrtoeol()
+
             prev_clock = self.clock
             self.clock = event["time"]
 
             if event["type"] in ("node_step", "node_endstep"):
                 node = event["node"]
 
-                # todo: add node_endstep
                 if node.can_run() and event["type"] == "node_step":
-                    self.dynamic_log[node.get_id()].append(node.step())
+                    self.logs["dynamics"][node.get_id()].append(node.step())
 
                     # when this node finishes iteration "i", it checks if all the others
                     # have already performed the iteration i-th, if so then the global
@@ -567,8 +488,8 @@ class Cluster:
                         if _node.iteration > max_iter:
                             max_iter = _node.iteration
 
-                    if max_iter > self.max_iterations_time_log[-1][1]:
-                        self.max_iterations_time_log.append((self.clock, max_iter))
+                    if max_iter > self.logs["max_iter_time"][-1][1]:
+                        self.logs["max_iter_time"].append((self.clock, max_iter))
 
                     if min_iter == self.iteration + 1:
                         self.iteration += 1
@@ -579,16 +500,16 @@ class Cluster:
                             if node_clock_at_iter > last_to_complete_iteration_clock:
                                 last_to_complete_iteration_clock = node_clock_at_iter
 
-                        self.iterations_time_log.append(last_to_complete_iteration_clock)
+                        self.logs["iter_time"].append(last_to_complete_iteration_clock)
 
                         avg_iter = 0
                         for __node in self.nodes:
                             avg_iter += __node.get_iteration_at_local_clock(self.clock)
                         avg_iter /= len(self.nodes)
 
-                        self.avg_iterations_time_log.append((self.clock, avg_iter))
+                        self.logs["avg_iter_time"].append((self.clock, avg_iter))
 
-                        self._compute_metrics()
+                        self._compute_all_metrics()
 
                         """max_error = -math.inf
                         for _node in self.nodes:
@@ -621,51 +542,43 @@ class Cluster:
                 if not self.max_iter is None:
                     output += "Iter: ({}/{}) ".format(self.iteration, self.max_iter)
 
-                try:
-                    mse = str(int(self.get_global_mean_squared_error() * 100) / 100)
-                except OverflowError:
-                    mse = str(self.get_global_mean_squared_error())
+                for m in self.metrics:
+                    try:
+                        mval = int(self.get_metrics_value(m) * 100) / 100
+                    except OverflowError:
+                        mval = self.get_metrics_value(m)
+                    output += "{}={} ".format(m, mval)
 
-                try:
-                    rmse = str(int(self.get_global_real_mean_squared_error() * 100) / 100)
-                except OverflowError:
-                    rmse = str(self.get_global_real_mean_squared_error())
-
-                output += "MSE={} RMSE={}".format(mse, rmse)
+                for rm in self.real_metrics:
+                    try:
+                        rmval = int(self.get_metrics_value(rm, real=True) * 100) / 100
+                    except OverflowError:
+                        rmval = self.get_metrics_value(rm, real=True)
+                    output += "r{}={} ".format(rm, rmval)
 
                 sys.stdout.write('\x1b[2K')
                 sys.stdout.write(output + "\r")
                 sys.stdout.flush()
-
-                # bar.update(int((self.clock - prev_clock) * 100) / 100)
-
-                # Print node's informations
-                """print("Node: {} | iter: {} | time: {} | meanSqError: {}".format(
-                    node.get_id(),
-                    node.iteration,
-                    str(int(node.local_clock)),
-                    str(int(node.training_task.get_mean_squared_error() * 100)/100)
-                ))"""
 
                 # check for the stop condition
                 stop_condition = False
                 if self.iteration >= self.max_iter:
                     stop_condition = True
                     print(output)
-                    print("Cluster stopped due to global iteration ({}) being equal to max_iter ({})".format(
+                    print("Cluster stopped due to global iteration (={}) being equal to max_iter (={})".format(
                         self.iteration, self.max_iter))
 
                 if self.clock >= self.max_time:
                     stop_condition = True
                     print(output)
-                    print("Cluster stopped due to global clock ({}) being grater than or equal to max_time ({})".
+                    print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
                           format(self.clock, self.max_time))
 
-                if self.get_global_mean_squared_error() <= self.epsilon:
+                if self.get_obj_function_value() <= self.epsilon:
                     stop_condition = True
                     print(output)
-                    print("Cluster stopped due to error ({}) being less than or equal to epsilon ({})".format(
-                        self.get_global_mean_squared_error(),
+                    print("Cluster stopped due to error (={}) being less than or equal to epsilon (={})".format(
+                        self.get_obj_function_value(),
                         self.epsilon
                     ))
 

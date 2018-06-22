@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os, warnings, glob, pickle
 from src.functions import *
 from src import statistics
+from src.mltoolbox.metrics import METRICS
 
 
 def plot_from_files(**kwargs):
@@ -129,25 +130,25 @@ class Plotter:
         for graph in self.graphs:
             self.degrees[graph] = compute_graph_degree_from_adjacency_matrix(self.setup['graphs'][graph])
 
-        self.mse_log = {}
-        self.real_mse_log = {}
-        self.iter_log = {}
-        self.avg_iter_log = {}
-        self.max_iter_log = {}
+        self.logs = {
+            "iter_time": {},
+            "avg_iter_time": {},
+            "max_iter_time": {},
+            "metrics" : {}
+        }
+
+        for m in self.setup["metrics"]:
+            self.logs["metrics"][m] = {}
+        for rm in self.setup["real_metrics"]:
+            self.logs["metrics"]["real_" + rm] = {}
 
         # it's important to loop on a copy of self.graphs and not on the original one
         # since the original in modified inside the loop
         for graph in self.graphs[:]:
-            mse_log_path = "{}/{}_global_mean_squared_error_log".format(self.test_folder_path, graph)
-            real_mse_log_path = "{}/{}_global_real_mean_squared_error_log".format(self.test_folder_path, graph)
-            iter_log_path = "{}/{}_iterations_time_log".format(self.test_folder_path, graph)
-            avg_iter_log_path = "{}/{}_avg_iterations_time_log".format(self.test_folder_path, graph)
-            max_iter_log_path = "{}/{}_max_iterations_time_log".format(self.test_folder_path, graph)
+            iter_log_path = "{}/{}_iter_time_log".format(self.test_folder_path, graph)
+            avg_iter_log_path = "{}/{}_avg_iter_time_log".format(self.test_folder_path, graph)
+            max_iter_log_path = "{}/{}_max_iter_time_log".format(self.test_folder_path, graph)
 
-            if os.path.isfile(mse_log_path + ".gz"):
-                mse_log_path += '.gz'
-            if os.path.isfile(real_mse_log_path + ".gz"):
-                real_mse_log_path += '.gz'
             if os.path.isfile(iter_log_path + ".gz"):
                 iter_log_path += '.gz'
             if os.path.isfile(avg_iter_log_path + ".gz"):
@@ -156,15 +157,32 @@ class Plotter:
                 max_iter_log_path += '.gz'
 
             try:
-                self.mse_log[graph] = np.loadtxt(mse_log_path)
-                self.real_mse_log[graph] = np.loadtxt(real_mse_log_path)
-                self.iter_log[graph] = np.loadtxt(iter_log_path)
-                self.avg_iter_log[graph] = [tuple(s.split(",")) for s in np.loadtxt(avg_iter_log_path, str)]
-                self.max_iter_log[graph] = [tuple(s.split(",")) for s in np.loadtxt(max_iter_log_path, str)]
-
+                self.logs["iter_time"][graph] = np.loadtxt(iter_log_path)
+                self.logs["avg_iter_log"][graph] = [tuple(s.split(",")) for s in np.loadtxt(avg_iter_log_path, str)]
+                self.logs["max_iter_log"][graph] = [tuple(s.split(",")) for s in np.loadtxt(max_iter_log_path, str)]
             except OSError:
                 warnings.warn('Graph "{}" not found in folder {}'.format(graph, self.test_folder_path))
                 self.graphs.remove(graph)
+                continue
+
+            for metrics_log in self.logs["metrics"]:
+                metrics_log_path = "{}/{}_{}_log".format(self.test_folder_path, metrics_log, graph)
+                if os.path.isfile(metrics_log_path + ".gz"):
+                    metrics_log_path += '.gz'
+
+                try:
+                    self.logs["metrics"][metrics_log][graph] = np.loadtxt(metrics_log_path)
+                except OSError:
+                    warnings.warn('Graph "{}" not found in folder {}'.format(graph, self.test_folder_path))
+                    self.graphs.remove(graph)
+                    continue
+
+        # TEMPORARY BACKWARD COMPATIBILITY
+        self.mse_log = self.logs["metrics"]["mse"]
+        self.real_mse_log = self.logs["metrics"]["real_mse"]
+        self.iter_log = self.logs["iter_time"]
+        self.avg_iter_log = self.logs["avg_iter_time"]
+        self.max_iter_log = self.logs["max_iter_time"]
 
         if self.moving_average_window != 0:
             avg_real_mse_log = {}

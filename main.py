@@ -6,7 +6,8 @@ from sklearn import linear_model, svm
 from src.cluster import Cluster
 from src import mltoolbox, graph_generator, statistics
 from src.plotter import Plotter, plot_from_files
-import src.metrics as mtr
+import src.mltoolbox.metrics as mtr
+from src.mltoolbox import functions
 
 # degree = 0
 DIAGONAL = lambda n: np.diag(np.ones(n))
@@ -71,10 +72,10 @@ Summary:
         # "5_regular": REGULAR(setup['n'], 5),  # degree = 5
         # "6_regular": REGULAR(setup['n'], 6),  # degree = 6
         # "7_regular": REGULAR(setup['n'], 7),  # degree = 7
-        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
         # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
-        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
         # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
@@ -85,7 +86,7 @@ Summary:
     setup['n_samples'] = 500
     setup['n_features'] = 100
 
-    setup['generator_function'] = 'svm'  # svm, reg, reg2, skreg
+    setup['generator_function'] = 'reg'  # svm, reg, reg2, skreg
 
     setup['smv_label_flip_prob'] = 0.05  # <-- ONLY FOR SVM
 
@@ -97,7 +98,6 @@ Summary:
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
-    setup['sample_function'] = mltoolbox.LinearYHatFunction.f
     setup['domain_radius'] = 6
     setup['domain_center'] = 0
     r = np.random.uniform(4, 6)
@@ -117,19 +117,15 @@ Summary:
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
     setup['time_const_weight'] = 0
 
-    setup['metrics'] = 'all'
+    setup['obj_function'] = 'mse'  # mse, hinge_loss, edgy_hinge_loss, score
+
+    setup['metrics'] = 'mse'
+    setup['real_metrics'] = 'mse'
     setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
 
-    setup['loss'] = mltoolbox.HingeLossFunction  # <--
-    setup['activation_func'] = None  # <--
-
-    setup['obj_function'] = mtr.MeanSquaredError
-
     # CLUSTER ALMOST FIXED SETUP
-    setup['yhat'] = mltoolbox.LinearYHatFunction
     setup['batch_size'] = 20
-    setup['penalty'] = None
     setup['epsilon'] = None
     setup['shuffle'] = True
     setup['verbose'] = False
@@ -199,21 +195,21 @@ Summary:
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
     if setup['generator_function'] == 'reg':
-        [X, y, w] = mltoolbox.generate_regression_training_set_from_function(
-            setup['n_samples'], setup['n_features'], setup['sample_function'],
+        [X, y, w] = functions.generate_regression_training_set_from_function(
+            setup['n_samples'], setup['n_features'], functions.LinearYHatFunction.compute_value,
             domain_radius=setup['domain_radius'],
             domain_center=setup['domain_center'],
             error_mean=setup['error_mean'],
             error_std_dev=setup['error_std_dev']
         )
     elif setup['generator_function'] == 'reg2':
-        X, y, w = mltoolbox.generate_regression_training_set(
+        X, y, w = functions.generate_regression_training_set(
             setup['n_samples'], setup['n_features'],
             error_mean=setup['error_mean'],
             error_std_dev=setup['error_std_dev']
         )
     elif setup['generator_function'] == 'svm':
-        X, y, w = mltoolbox.svm_dual_averaging_training_set(
+        X, y, w = functions.svm_dual_averaging_training_set(
             setup['n_samples'], setup['n_features'],
             label_flip_prob=setup['smv_label_flip_prob']
         )
@@ -269,10 +265,8 @@ Summary:
     setup['string_graphs'] = pprint.PrettyPrinter(indent=4).pformat(setup['graphs']).replace('array([', 'np.array([')
 
     # Fill descriptor with setup dictionary
-
     for k, v in setup.items():
         descriptor += "{} = {}\n".format(k, v)
-
     descriptor += "\n"
 
     # save descriptor file
@@ -289,20 +283,18 @@ Summary:
         cluster = Cluster(adjmat, graph_name=graph)
 
         cluster.setup(
-            X, y, w, setup['yhat'],
+            X, y, w,
             obj_function=setup['obj_function'],
+            method=setup['method'],
             max_iter=setup['max_iter'],
             max_time=setup['max_time'],
-            method=setup['method'],
             batch_size=setup['batch_size'],
             dual_averaging_radius=setup['dual_averaging_radius'],
-            activation_func=setup['activation_func'],
-            loss=setup['loss'],
-            penalty=setup['penalty'],
             epsilon=setup['epsilon'],
             alpha=setup['alpha'],
             learning_rate=setup['learning_rate'],
             metrics=setup['metrics'],
+            real_metrics=setup["real_metrics"],
             metrics_type=setup['metrics_type'],
             metrics_nodes=setup['metrics_nodes'],
             shuffle=setup['shuffle'],
@@ -327,33 +319,38 @@ Summary:
         if compress:
             extension = '.gz'
 
-        # create output log files
         np.savetxt(
-            os.path.join(test_path, "{}_global_mean_squared_error_log{}".format(graph, extension)),
-            cluster.global_mean_squared_error_log,
-            delimiter=','
-        )
-        np.savetxt(
-            os.path.join(test_path, "{}_global_real_mean_squared_error_log{}".format(graph, extension)),
-            cluster.global_real_mean_squared_error_log,
+            os.path.join(test_path, "{}_iter_time_log{}".format(graph, extension)),
+            cluster.logs["iter_time"],
             delimiter=','
         )
 
         np.savetxt(
-            os.path.join(test_path, "{}_iterations_time_log{}".format(graph, extension)),
-            cluster.iterations_time_log,
+            os.path.join(test_path, "{}_avg_iter_time_log{}".format(graph, extension)),
+            cluster.logs["avg_iter_time"],
             delimiter=','
         )
         np.savetxt(
-            os.path.join(test_path, "{}_avg_iterations_time_log{}".format(graph, extension)),
-            cluster.avg_iterations_time_log,
+            os.path.join(test_path, "{}_max_iter_time_log{}".format(graph, extension)),
+            cluster.logs["max_iter_time"],
             delimiter=','
         )
-        np.savetxt(
-            os.path.join(test_path, "{}_max_iterations_time_log{}".format(graph, extension)),
-            cluster.max_iterations_time_log,
-            delimiter=','
-        )
+
+        # Save metrics logs
+        for metrics_id, metrics_log in cluster.logs["metrics"].items():
+            np.savetxt(
+                os.path.join(test_path, "{}_{}_log{}".format(graph, metrics_id, extension)),
+                metrics_log,
+                delimiter=','
+            )
+
+        # Save real metrics logs
+        for real_metrics_id, real_metrics_log in cluster.logs["real_metrics"].items():
+            np.savetxt(
+                os.path.join(test_path, "{}_real_{}_log{}".format(graph, real_metrics_id, extension)),
+                real_metrics_log,
+                delimiter=','
+            )
 
         print("Logs of {} simulation created at {}".format(graph, test_path))
 
@@ -369,13 +366,10 @@ Summary:
             plots=plots
         )
 
-    pass
-    # console.stdout.close()
-
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    X, y = mltoolbox.generate_regression_training_set_from_function(100000, 10, mltoolbox.linear_function, 1,
+    X, y = functions.generate_regression_training_set_from_function(100000, 10, functions.linear_function, 1,
                                                                     error_std_dev=1)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
     cls.fit(X, y)
@@ -383,7 +377,7 @@ def main1():
 
 
 def main2():
-    X, y, w = mltoolbox.svm_dual_averaging_training_set(
+    X, y, w = functions.svm_dual_averaging_training_set(
         100000, 100
     )
     cls = svm.LinearSVC(max_iter=1000, verbose=True)

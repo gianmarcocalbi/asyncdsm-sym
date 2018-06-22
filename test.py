@@ -2,20 +2,15 @@ from src import statistics, mltoolbox
 import numpy as np
 
 class Parent:
-    field = None
+    f = None
 
-    def __init__(self):
-        self.f = self.field
-
-    def do(self, x):
-        return self.f(x)
+    @staticmethod
+    def name():
+        Parent.f("Rocco")
 
 
 class Child(Parent):
-    field = np.sign
-
-    def __init__(self):
-        super().__init__()
+    f = print
 
 
 """

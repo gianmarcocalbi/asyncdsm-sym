@@ -24,20 +24,12 @@ class HingeLossFunction(LossFunctionAbstract):
         return (1 - y * y_hat_f).clip(min=0)
 
     @staticmethod
-    def f2(y, y_hat_f):
-        _f = 1 - y * y_hat_f
-        for i in range(len(_f)):
-            if _f[i] < 0:
-                _f[i] = 0
-        return _f
-
-    @staticmethod
     def compute_gradient(y, y_hat_f, y_hat_f_gradient):
         h = HingeLossFunction.compute_value(y, y_hat_f)
         return (-y * y_hat_f_gradient.T).T * np.sign(h)
 
     @staticmethod
-    def f_gradient2(y, y_hat_f, y_hat_f_gradient):
+    def compute_gradient2(y, y_hat_f, y_hat_f_gradient):
         N = len(y)
         P = y_hat_f_gradient.shape[1]
         h = HingeLossFunction.compute_value(y, y_hat_f)
@@ -55,6 +47,35 @@ class HingeLossFunction(LossFunctionAbstract):
 
         return G
 
+
+class EdgyHingeLossFunction(LossFunctionAbstract):
+    @staticmethod
+    def compute_value(y, y_hat_f):
+        return (1 - y * np.sign(y_hat_f)).clip(min=0)
+
+    @staticmethod
+    def compute_gradient(y, y_hat_f, y_hat_f_gradient):
+        h = HingeLossFunction.compute_value(y, y_hat_f)
+        return (-y * y_hat_f_gradient.T).T * np.sign(h)
+
+    @staticmethod
+    def compute_gradient2(y, y_hat_f, y_hat_f_gradient):
+        N = len(y)
+        P = y_hat_f_gradient.shape[1]
+        h = HingeLossFunction.compute_value(y, y_hat_f)
+        G = np.zeros((N, P))
+        for i in range(N):
+            if h[i] > 0:
+                G[i] = - y[i] * y_hat_f_gradient[i]
+            elif h[i] == 0:
+                for j in range(len(y_hat_f_gradient[i])):
+                    inf = min(0, y_hat_f_gradient[i][j])
+                    sup = max(0, y_hat_f_gradient[i][j])
+                    G[i][j] = np.random.uniform(inf, sup)
+                G[i] *= -y[i]
+        G = np.sum(G, axis=0)
+
+        return G
 
 class SquaredLossFunction(LossFunctionAbstract):
     @staticmethod

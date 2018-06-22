@@ -1,15 +1,15 @@
-import copy, math, random, time, types, sys, warnings, tqdm, collections
-import numpy as np
-from src import mltoolbox, statistics, tasks
+import warnings
+from src import tasks
 from src.functions import *
+
 
 class Node:
     """
     Represent a computational node.
     """
 
-    def __init__(self, _id, X, y, real_w, y_hat, method, batch_size, dual_averaging_radius, activation_func, loss, penalty,
-                 alpha, learning_rate, metrics, shuffle, verbose, time_distr_class, time_distr_param,
+    def __init__(self, _id, X, y, real_w, obj_function, method, batch_size, dual_averaging_radius,
+                 alpha, learning_rate, metrics, real_metrics, shuffle, verbose, time_distr_class, time_distr_param,
                  time_const_weight, starting_weights_domain):
         self._id = _id  # id number of the node
         self.dependencies = []  # list of node dependencies
@@ -32,14 +32,12 @@ class Node:
         # instantiate training model for the node
         if method == "stochastic":
             self.training_task = tasks.StochasticGradientDescentTrainer(
-                X, y, real_w, y_hat,
+                X, y, real_w, obj_function,
                 starting_weights_domain,
-                activation_func,
-                loss,
-                penalty,
                 alpha,
                 learning_rate,
                 metrics,
+                real_metrics,
                 shuffle,
                 verbose
             )
@@ -47,40 +45,34 @@ class Node:
             self.training_task = tasks.BatchGradientDescentTrainer(
                 batch_size,
                 starting_weights_domain,
-                X, y, real_w, y_hat,
-                activation_func,
-                loss,
-                penalty,
+                X, y, real_w, obj_function,
                 alpha,
                 learning_rate,
                 metrics,
+                real_metrics,
                 shuffle,
                 verbose
             )
         elif method == "linear_regression":
             self.training_task = tasks.LinearRegressionGradientDescentTrainer(
-                X, y, real_w, y_hat,
+                X, y, real_w, obj_function,
                 starting_weights_domain,
-                activation_func,
-                loss,
-                penalty,
                 alpha,
                 learning_rate,
                 metrics,
+                real_metrics,
                 shuffle,
                 verbose
             )
         elif method == "dual_averaging":
             self.training_task = tasks.DualAveragingGradientDescentTrainer(
                 dual_averaging_radius,
-                X, y, real_w, y_hat,
+                X, y, real_w, obj_function,
                 starting_weights_domain,
-                activation_func,
-                loss,
-                penalty,
                 alpha,
                 learning_rate,
                 metrics,
+                real_metrics,
                 shuffle,
                 verbose
             )
@@ -89,14 +81,12 @@ class Node:
                 warnings.warn('Method "{}" does not exist, using classic gradient descent instead'.format(method))
 
             self.training_task = tasks.GradientDescentTrainer(
-                X, y, real_w, y_hat,
+                X, y, real_w, obj_function,
                 starting_weights_domain,
-                activation_func,
-                loss,
-                penalty,
                 alpha,
                 learning_rate,
                 metrics,
+                real_metrics,
                 shuffle,
                 verbose
             )
