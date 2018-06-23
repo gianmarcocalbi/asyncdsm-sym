@@ -137,6 +137,18 @@ class Plotter:
             "metrics" : {}
         }
 
+        # Fill self.metrics with instances of metrics objects
+        if not (isinstance(self.setup["metrics"], list) or isinstance(self.setup["metrics"], tuple)):
+            if self.setup["metrics"] in METRICS:
+                self.setup["metrics"] = [self.setup["metrics"]]
+            elif self.setup["metrics"].lower() == 'all':
+                self.setup["metrics"] = list(METRICS.keys())
+        if not (isinstance(self.setup["real_metrics"], list) or isinstance(self.setup["real_metrics"], tuple)):
+            if self.setup["real_metrics"] in METRICS:
+                self.setup["real_metrics"] = [self.setup["real_metrics"]]
+            elif self.setup["real_metrics"].lower() == 'all':
+                self.setup["real_metrics"] = list(METRICS.keys())
+
         for m in self.setup["metrics"]:
             self.logs["metrics"][m] = {}
         for rm in self.setup["real_metrics"]:
@@ -158,15 +170,15 @@ class Plotter:
 
             try:
                 self.logs["iter_time"][graph] = np.loadtxt(iter_log_path)
-                self.logs["avg_iter_log"][graph] = [tuple(s.split(",")) for s in np.loadtxt(avg_iter_log_path, str)]
-                self.logs["max_iter_log"][graph] = [tuple(s.split(",")) for s in np.loadtxt(max_iter_log_path, str)]
+                self.logs["avg_iter_time"][graph] = [tuple(s.split(",")) for s in np.loadtxt(avg_iter_log_path, str)]
+                self.logs["max_iter_time"][graph] = [tuple(s.split(",")) for s in np.loadtxt(max_iter_log_path, str)]
             except OSError:
                 warnings.warn('Graph "{}" not found in folder {}'.format(graph, self.test_folder_path))
                 self.graphs.remove(graph)
                 continue
 
             for metrics_log in self.logs["metrics"]:
-                metrics_log_path = "{}/{}_{}_log".format(self.test_folder_path, metrics_log, graph)
+                metrics_log_path = "{}/{}_{}_log".format(self.test_folder_path, graph, metrics_log)
                 if os.path.isfile(metrics_log_path + ".gz"):
                     metrics_log_path += '.gz'
 

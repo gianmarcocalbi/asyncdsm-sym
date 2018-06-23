@@ -58,7 +58,7 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = int(time.time())
+    setup['seed'] = 1529488110 #int(time.time())
     setup['n'] = 100
 
     setup['graphs'] = {
@@ -67,11 +67,11 @@ Summary:
         # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
         # "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        # "5_regular": REGULAR(setup['n'], 5),  # degree = 5
-        # "6_regular": REGULAR(setup['n'], 6),  # degree = 6
-        # "7_regular": REGULAR(setup['n'], 7),  # degree = 7
+        #"3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        #"4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        "5_regular": REGULAR(setup['n'], 5),  # degree = 5
+        #"6_regular": REGULAR(setup['n'], 6),  # degree = 6
+        #"7_regular": REGULAR(setup['n'], 7),  # degree = 7
         # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
         # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
@@ -83,7 +83,7 @@ Summary:
 
     # TRAINING SET SETUP
 
-    setup['n_samples'] = 500
+    setup['n_samples'] = 11000
     setup['n_features'] = 100
 
     setup['generator_function'] = 'reg'  # svm, reg, reg2, skreg
@@ -91,7 +91,7 @@ Summary:
     setup['smv_label_flip_prob'] = 0.05  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1  # <--
+    setup['error_std_dev'] = 2  # <--
 
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 0  # <--
@@ -105,13 +105,13 @@ Summary:
     setup['starting_weights_domain'] = [c - r, c + r]
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 200
+    setup['max_iter'] = 500
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
     setup['alpha'] = 1e-4
-    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
+    setup['learning_rate'] = "constant"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
@@ -135,8 +135,8 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_subfolder = "test_011_nodeErr100_metric0_exp1lambda_500iter1e-4alpha_lowDegreeComparison_classic"  # test folder inside test_log/
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    test_subfolder = "test_011_exp1lambda_10ktime1e-4alpha_postReengine2_classic"  # test folder inside test_log/
 
     # OUTPUT ALMOST FIXED SETUP
     test_root = "test_log"  # don't touch this
@@ -280,39 +280,45 @@ Summary:
         np.random.seed(setup['seed'])
         random.seed(setup['seed'])
 
-        cluster = Cluster(adjmat, graph_name=graph)
-
-        cluster.setup(
-            X, y, w,
-            obj_function=setup['obj_function'],
-            method=setup['method'],
-            max_iter=setup['max_iter'],
-            max_time=setup['max_time'],
-            batch_size=setup['batch_size'],
-            dual_averaging_radius=setup['dual_averaging_radius'],
-            epsilon=setup['epsilon'],
-            alpha=setup['alpha'],
-            learning_rate=setup['learning_rate'],
-            metrics=setup['metrics'],
-            real_metrics=setup["real_metrics"],
-            metrics_type=setup['metrics_type'],
-            metrics_nodes=setup['metrics_nodes'],
-            shuffle=setup['shuffle'],
-            verbose=setup['verbose'],
-            time_distr_class=setup['time_distr_class'],
-            time_distr_param=setup['time_distr_param'],
-            time_const_weight=setup['time_const_weight'],
-            node_error_mean=setup['node_error_mean'],
-            node_error_std_dev=setup['node_error_std_dev'],
-            starting_weights_domain=setup['starting_weights_domain'],
-        )
+        cluster = None
 
         try:
+            cluster = Cluster(adjmat, graph_name=graph)
+
+            cluster.setup(
+                X, y, w,
+                obj_function=setup['obj_function'],
+                method=setup['method'],
+                max_iter=setup['max_iter'],
+                max_time=setup['max_time'],
+                batch_size=setup['batch_size'],
+                dual_averaging_radius=setup['dual_averaging_radius'],
+                epsilon=setup['epsilon'],
+                alpha=setup['alpha'],
+                learning_rate=setup['learning_rate'],
+                metrics=setup['metrics'],
+                real_metrics=setup["real_metrics"],
+                metrics_type=setup['metrics_type'],
+                metrics_nodes=setup['metrics_nodes'],
+                shuffle=setup['shuffle'],
+                verbose=setup['verbose'],
+                time_distr_class=setup['time_distr_class'],
+                time_distr_param=setup['time_distr_param'],
+                time_const_weight=setup['time_const_weight'],
+                node_error_mean=setup['node_error_mean'],
+                node_error_std_dev=setup['node_error_std_dev'],
+                starting_weights_domain=setup['starting_weights_domain'],
+            )
+
             cluster.run()
         except:
             # if the cluster throws an exception then delete the folder created to host its output files
             # the most common exception in cluster.run() is thrown when the SGD computation diverges
             delete_test_dir()
+            print(
+                "Exception in cluster object\n",
+                "cluster.iteration=" + str(cluster.iteration)
+            )
             raise
 
         extension = ''

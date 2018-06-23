@@ -6,8 +6,8 @@ D = decimal.Decimal
 decimal.getcontext().prec = 256
 
 def single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(test_folder_path, graph, nodes_amount, max_time):
-    graph_avg_iter_log_path = "{}/{}_avg_iterations_time_log".format(test_folder_path, graph)
-    diag_avg_iter_log_path = "{}/0_diagonal_avg_iterations_time_log".format(test_folder_path)
+    graph_avg_iter_log_path = "{}/{}_avg_iter_time_log".format(test_folder_path, graph)
+    diag_avg_iter_log_path = "{}/0_diagonal_avg_iter_time_log".format(test_folder_path)
 
     if os.path.isfile(graph_avg_iter_log_path + ".gz"):
         graph_avg_iter_log_path += '.gz'

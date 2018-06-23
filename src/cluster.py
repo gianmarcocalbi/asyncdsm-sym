@@ -24,7 +24,7 @@ class Cluster:
         self.adjacency_matrix = adjacency_matrix
         self.max_iter = None
         self.max_time = None
-        self.clock = 0
+        self.clock = 0.0
         self.iteration = 0
         self.X = None  # keep whole training set examples
         self.y = None  # keep whole training set target function values
@@ -351,7 +351,7 @@ class Cluster:
             return self.logs["real_metrics"][met][-1]
         return self.logs["metrics"][met][-1]
 
-    def compute_avg_w(self):
+    def _compute_avg_w(self):
         w = np.zeros(len(self.nodes[0].training_task.get_w()))
         for node in self.nodes:
             w += node.training_task.get_w_at_iteration(self.iteration)
@@ -365,6 +365,7 @@ class Cluster:
             raise Exception('Unexpected w(t) size')
 
     def _compute_all_metrics(self):
+        self._compute_avg_w()
         for m in self.metrics:
             self._compute_metrics(m, real=False)
         for rm in self.real_metrics:

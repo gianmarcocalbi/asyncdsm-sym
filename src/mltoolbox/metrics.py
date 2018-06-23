@@ -12,11 +12,11 @@ class Metrics:
         return np.sum(self.loss_func.compute_value(y, self.y_hat_func.compute_value(X, w))) / len(y)
 
     def compute_gradient(self, X, y, w):
-        return np.sum(self.loss_func.compute_gradient(
+        return self.loss_func.compute_gradient(
             y,
             self.y_hat_func.compute_value(X, w),
             self.y_hat_func.compute_gradient(X, w)
-        ), axis=1) / len(y)
+        ) / len(y)
 
 
 class MeanSquaredError(Metrics):

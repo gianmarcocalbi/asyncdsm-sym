@@ -80,7 +80,7 @@ class EdgyHingeLossFunction(LossFunctionAbstract):
 class SquaredLossFunction(LossFunctionAbstract):
     @staticmethod
     def compute_value(y, y_hat_f):
-        return pow(2, y - y_hat_f) / 2
+        return np.power(y - y_hat_f, 2) / 2
 
     @staticmethod
     def compute_gradient(y, y_hat_f, y_hat_f_gradient):
@@ -157,7 +157,7 @@ def svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05)
     return np.array(X), y, w
 
 def generate_regression_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):
-    w = 10 * np.ones(n_features + 1)
+    w = 40 * np.ones(n_features + 1)
     #X = np.c_[np.ones(n_samples), np.random.normal(0,1,(n_samples, n_features))]
     X = np.c_[np.ones(n_samples), np.random.uniform(0,2,(n_samples, n_features))]
     y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
