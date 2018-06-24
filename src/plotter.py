@@ -25,8 +25,10 @@ class Plotter:
             yscale='log',  # linear or log
             scatter=False,
             points_size=0.5,
+            verbose=False
     ):
 
+        self.verbose = verbose
         self.test_folder_root = test_folder_root
         self.test_folder_name = test_folder_name
         self.test_folder_path = test_folder_path

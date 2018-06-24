@@ -26,7 +26,7 @@ class HingeLossFunction(LossFunctionAbstract):
     @staticmethod
     def compute_gradient(y, y_hat_f, y_hat_f_gradient):
         h = HingeLossFunction.compute_value(y, y_hat_f)
-        return (-y * y_hat_f_gradient.T).T * np.sign(h)
+        return np.sum(((-y * y_hat_f_gradient.T) * np.sign(h)).T, axis=0)
 
     @staticmethod
     def compute_gradient2(y, y_hat_f, y_hat_f_gradient):
@@ -76,6 +76,7 @@ class EdgyHingeLossFunction(LossFunctionAbstract):
         G = np.sum(G, axis=0)
 
         return G
+
 
 class SquaredLossFunction(LossFunctionAbstract):
     @staticmethod
@@ -153,13 +154,13 @@ def svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05)
 
         # x = np.sign(x.T.dot(e)) * x  # + np.random.normal(error_mean, error_std_dev)
 
-
     return np.array(X), y, w
+
 
 def generate_regression_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):
     w = 40 * np.ones(n_features + 1)
-    #X = np.c_[np.ones(n_samples), np.random.normal(0,1,(n_samples, n_features))]
-    X = np.c_[np.ones(n_samples), np.random.uniform(0,2,(n_samples, n_features))]
+    # X = np.c_[np.ones(n_samples), np.random.normal(0,1,(n_samples, n_features))]
+    X = np.c_[np.ones(n_samples), np.random.uniform(0, 2, (n_samples, n_features))]
     y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
 
     return X, y, w

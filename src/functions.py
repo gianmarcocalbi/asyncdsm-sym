@@ -1,5 +1,6 @@
 import math, sys, random
 import numpy as np
+from termcolor import colored as col
 
 def iteration_speed_lower_bound_new(distr_name, param):
     pass
@@ -48,3 +49,10 @@ def progress(current_progress, total_progress, bar_length=50, text_before='', te
     sys.stdout.write('{}[{}] {}% {}\r'.format(text_before, bar, percents, text_after))
     sys.stdout.flush()
 
+def print_verbose(level, msg, no_input=False):
+    if level == 0:
+        return
+    elif level == 1 or (level == 2 and no_input):
+        print(msg)
+    elif level == 2:
+        input(str(msg) + col(" [PRESS ENTER]", 'red'))

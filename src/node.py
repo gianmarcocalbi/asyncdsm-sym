@@ -9,8 +9,9 @@ class Node:
     """
 
     def __init__(self, _id, X, y, real_w, obj_function, method, batch_size, dual_averaging_radius,
-                 alpha, learning_rate, metrics, real_metrics, shuffle, verbose, time_distr_class, time_distr_param,
-                 time_const_weight, starting_weights_domain):
+                 alpha, learning_rate, metrics, real_metrics, shuffle, time_distr_class, time_distr_param,
+                 time_const_weight, starting_weights_domain, verbose, verbose_task):
+        self.verbose = verbose
         self._id = _id  # id number of the node
         self.dependencies = []  # list of node dependencies
         self.recipients = []
@@ -39,7 +40,7 @@ class Node:
                 metrics,
                 real_metrics,
                 shuffle,
-                verbose
+                verbose_task
             )
         elif method == "batch":
             self.training_task = tasks.BatchGradientDescentTrainer(
@@ -51,7 +52,7 @@ class Node:
                 metrics,
                 real_metrics,
                 shuffle,
-                verbose
+                verbose_task
             )
         elif method == "linear_regression":
             self.training_task = tasks.LinearRegressionGradientDescentTrainer(
@@ -62,7 +63,7 @@ class Node:
                 metrics,
                 real_metrics,
                 shuffle,
-                verbose
+                verbose_task
             )
         elif method == "dual_averaging":
             self.training_task = tasks.DualAveragingGradientDescentTrainer(
@@ -74,7 +75,7 @@ class Node:
                 metrics,
                 real_metrics,
                 shuffle,
-                verbose
+                verbose_task
             )
         else:
             if method != "classic":
@@ -88,7 +89,7 @@ class Node:
                 metrics,
                 real_metrics,
                 shuffle,
-                verbose
+                verbose_task
             )
 
     def get_id(self):
@@ -177,6 +178,7 @@ class Node:
 
         self.iteration += 1
         self.log.append(self.local_clock)
+        return t0, tf
 
     def linear_regression_step(self):
         self.training_task.step()

@@ -4,6 +4,7 @@ from src.mltoolbox.metrics import METRICS
 from src.mltoolbox import functions
 from src.functions import *
 from src.node import Node
+from termcolor import colored as col
 
 
 class Cluster:
@@ -11,13 +12,14 @@ class Cluster:
 
     """
 
-    def __init__(self, adjacency_matrix, graph_name="undefined"):
+    def __init__(self, adjacency_matrix, graph_name="undefined", verbose=False):
         """
         Parameters
         ----------
         adjacency_matrix : ndarray
             Adjacency matrix of the dependency graph.
         """
+        self.verbose = verbose
         self.graph_name = graph_name
         self.future_event_list = {}  # FEL of the discrete event simulator
         self.nodes = []  # computational unites (nodes) list
@@ -67,13 +69,15 @@ class Cluster:
               metrics_type=0,
               metrics_nodes='all',
               shuffle=True,
-              verbose=False,
               time_distr_class=statistics.ExponentialDistribution,
               time_distr_param=(),
               time_const_weight=0,
               node_error_mean=0,
               node_error_std_dev=1,
-              starting_weights_domain=(0, 5)):
+              starting_weights_domain=(0, 5),
+              verbose_node=False,
+              verbose_task=False
+              ):
         """Cluster setup.
 
         Parameters
@@ -301,11 +305,12 @@ class Cluster:
                     self.metrics,
                     self.real_metrics,
                     shuffle,
-                    verbose,
                     time_distr_class,
                     time_distr_param,
                     time_const_weight,
-                    starting_weights_domain
+                    starting_weights_domain,
+                    verbose_node,
+                    verbose_task
                 ))
             self.logs["dynamics"].append([])
 
@@ -465,15 +470,23 @@ class Cluster:
         stop_condition = False  # todo: stop condition (tolerance)
         event = self.dequeue_event()
         while not stop_condition and not event is None:
-
             prev_clock = self.clock
             self.clock = event["time"]
+
+            print_verbose(self.verbose, "Event type='{}' for node=[{}] starting at CLOCK={}".format(
+                event["type"], col(event["node"].get_id(), 'cyan'), col(np.around(self.clock, 4), 'green')
+            ))
 
             if event["type"] in ("node_step", "node_endstep"):
                 node = event["node"]
 
                 if node.can_run() and event["type"] == "node_step":
-                    self.logs["dynamics"][node.get_id()].append(node.step())
+                    t0, tf = node.step()
+                    self.logs["dynamics"][node.get_id()].append((t0, tf))
+
+                    print_verbose(self.verbose, "Node {} run from {} to {}".format(
+                        node.get_id(), col(np.around(t0, 4), 'green'), col(np.around(tf, 4), 'green')
+                    ))
 
                     # when this node finishes iteration "i", it checks if all the others
                     # have already performed the iteration i-th, if so then the global
@@ -484,10 +497,11 @@ class Cluster:
                     max_iter = -1
 
                     for _node in self.nodes:
-                        if _node.iteration < min_iter:
-                            min_iter = _node.iteration
-                        if _node.iteration > max_iter:
-                            max_iter = _node.iteration
+                        _node_iter = _node.get_iteration_at_local_clock(self.clock)
+                        if _node_iter < min_iter:
+                            min_iter = _node_iter
+                        if _node_iter > max_iter:
+                            max_iter = _node_iter
 
                     if max_iter > self.logs["max_iter_time"][-1][1]:
                         self.logs["max_iter_time"].append((self.clock, max_iter))
@@ -508,9 +522,23 @@ class Cluster:
                             avg_iter += __node.get_iteration_at_local_clock(self.clock)
                         avg_iter /= len(self.nodes)
 
+                        print_verbose(
+                            self.verbose,
+                            "Cluster ITER++. min_iter={}, avg_iter={}, max_iter={}".format(
+                                min_iter, avg_iter, max_iter
+                            )
+                        )
+
                         self.logs["avg_iter_time"].append((self.clock, avg_iter))
 
                         self._compute_all_metrics()
+
+                        if self.verbose <= 0:
+                            sys.stdout.write('\x1b[2K')
+                            sys.stdout.write(self._step_output() + "\r")
+                            sys.stdout.flush()
+                        else:
+                            print_verbose(self.verbose, self._step_output())
 
                         """max_error = -math.inf
                         for _node in self.nodes:
@@ -535,49 +563,25 @@ class Cluster:
                     # this node needs
                     node.set_local_clock(max_local_clock)
 
-                output = "[{}] >>> ".format(self.graph_name.upper())
-
-                if not self.max_time is None:
-                    output += "Time: ({}/{}) ".format(int(self.clock * 100) / 100, self.max_time)
-
-                if not self.max_iter is None:
-                    output += "Iter: ({}/{}) ".format(self.iteration, self.max_iter)
-
-                for m in self.metrics:
-                    try:
-                        mval = int(self.get_metrics_value(m) * 100) / 100
-                    except OverflowError:
-                        mval = self.get_metrics_value(m)
-                    output += "{}={} ".format(m, mval)
-
-                for rm in self.real_metrics:
-                    try:
-                        rmval = int(self.get_metrics_value(rm, real=True) * 100) / 100
-                    except OverflowError:
-                        rmval = self.get_metrics_value(rm, real=True)
-                    output += "r{}={} ".format(rm, rmval)
-
-                sys.stdout.write('\x1b[2K')
-                sys.stdout.write(output + "\r")
-                sys.stdout.flush()
+                    print_verbose(self.verbose, "Node cannot run, so node.clock is set from {} to {}".format(
+                        col(np.around(event['time'], 4), 'green'), col(np.around(max_local_clock, 4), 'green')
+                    ))
 
                 # check for the stop condition
                 stop_condition = False
                 if self.iteration >= self.max_iter:
                     stop_condition = True
-                    print(output)
+                    print(self._step_output())
                     print("Cluster stopped due to global iteration (={}) being equal to max_iter (={})".format(
                         self.iteration, self.max_iter))
-
-                if self.clock >= self.max_time:
+                elif self.clock >= self.max_time:
                     stop_condition = True
-                    print(output)
+                    print(self._step_output())
                     print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
                           format(self.clock, self.max_time))
-
-                if self.get_obj_function_value() <= self.epsilon:
+                elif self.get_obj_function_value() <= self.epsilon:
                     stop_condition = True
-                    print(output)
+                    print(self._step_output())
                     print("Cluster stopped due to error (={}) being less than or equal to epsilon (={})".format(
                         self.get_obj_function_value(),
                         self.epsilon
@@ -588,6 +592,22 @@ class Cluster:
                     new_event_type = 'node_endstep'
                     if node.iteration < self.max_iter and node.local_clock < self.max_time:
                         new_event_type = 'node_step'
+                    else:
+                        stop_reason = ""
+                        if node.iteration >= self.max_iter:
+                            stop_reason += "node.iteration = {} >= {} = self.max_iter".format(
+                                node.iteration, self.max_iter
+                            )
+
+                        if node.iteration >= self.max_iter and node.local_clock >= self.max_time:
+                            stop_reason += " | "
+
+                        if node.local_clock >= self.max_time:
+                            stop_reason += "node.local_clock = {} >= {} = self.max_time".format(
+                                node.local_clock, self.max_time
+                            )
+
+                        print_verbose(self.verbose, "Node has finished computation due to " + stop_reason)
 
                     new_event = {
                         'time': node.local_clock,
@@ -602,3 +622,44 @@ class Cluster:
                 pass
 
             event = self.dequeue_event()
+
+        print_verbose(self.verbose, "Cluster simulation run ended at iter={} and clock={}".format(
+            self.iteration, self.clock
+        ))
+
+    def _step_output(self):
+        output = "[{}] >>> ".format(self.graph_name.upper())
+
+        if not self.max_time is None:
+            output += "Time: ({}/{}) ".format(
+                col(np.around(self.clock, 2), 'yellow'),
+                col(self.max_time, 'blue')
+            )
+
+        if not self.max_iter is None:
+            output += "Iter: ({}/{}) ".format(
+                col(self.iteration, 'yellow'),
+                col(self.max_iter, 'blue')
+            )
+
+        for m in self.metrics:
+            try:
+                mval = np.around(self.get_metrics_value(m), 2)
+            except OverflowError:
+                mval = self.get_metrics_value(m)
+            output += "{}={} ".format(
+                m,
+                col(mval, 'red')
+            )
+
+        for rm in self.real_metrics:
+            try:
+                rmval = np.around(self.get_metrics_value(rm, real=True), 2)
+            except OverflowError:
+                rmval = self.get_metrics_value(rm, real=True)
+            output += "real_{}={} ".format(
+                rm,
+                col(rmval, 'red')
+            )
+
+        return output

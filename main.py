@@ -8,6 +8,7 @@ from src import mltoolbox, graph_generator, statistics
 from src.plotter import Plotter, plot_from_files
 import src.mltoolbox.metrics as mtr
 from src.mltoolbox import functions
+from termcolor import colored as col
 
 # degree = 0
 DIAGONAL = lambda n: np.diag(np.ones(n))
@@ -58,7 +59,7 @@ Summary:
 
     setup = dict()
 
-    setup['seed'] = 1529488110 #int(time.time())
+    setup['seed'] = int(time.time())
     setup['n'] = 100
 
     setup['graphs'] = {
@@ -88,10 +89,10 @@ Summary:
 
     setup['generator_function'] = 'reg'  # svm, reg, reg2, skreg
 
-    setup['smv_label_flip_prob'] = 0.05  # <-- ONLY FOR SVM
+    setup['smv_label_flip_prob'] = 0.00  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 2  # <--
+    setup['error_std_dev'] = 1  # <--
 
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 0  # <--
@@ -105,13 +106,13 @@ Summary:
     setup['starting_weights_domain'] = [c - r, c + r]
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 500
+    setup['max_iter'] = 10
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
     setup['alpha'] = 1e-4
-    setup['learning_rate'] = "constant"  # constant, root_decreasing
+    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
@@ -119,8 +120,8 @@ Summary:
 
     setup['obj_function'] = 'mse'  # mse, hinge_loss, edgy_hinge_loss, score
 
-    setup['metrics'] = 'mse'
-    setup['real_metrics'] = 'mse'
+    setup['metrics'] = ['mse']
+    setup['real_metrics'] = ['mse']
     setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
 
@@ -128,15 +129,25 @@ Summary:
     setup['batch_size'] = 20
     setup['epsilon'] = None
     setup['shuffle'] = True
-    setup['verbose'] = False
+
+    # VERBOSE FLAGS
+    # verbose <  0: no print at all except from errors
+    # verbose == 0: default messages
+    # verbose == 1: verbose + default messages
+    # verbose == 2: verbose + default messages + input required to continue after each message
+    verbose_main = verbose = 0
+    verbose_cluster = 0
+    verbose_node = 0
+    verbose_task = 0
+    verbose_plotter = 0
 
     if setup_from_file:
         with open(setup_file_path, 'rb') as setup_file:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_subfolder = "test_011_exp1lambda_10ktime1e-4alpha_postReengine2_classic"  # test folder inside test_log/
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    test_subfolder = "test_011_exp1lambda_200iter1e-2alpha_postReengine2_classic"  # test folder inside test_log/
 
     # OUTPUT ALMOST FIXED SETUP
     test_root = "test_log"  # don't touch this
@@ -219,7 +230,7 @@ Summary:
             n_features=setup['n_features'],
             n_informative=setup['n_features'],
             n_targets=1,
-            bias=0.0,
+            bias=1,
             effective_rank=None,
             tail_strength=1.0,
             noise=setup['error_std_dev'],
@@ -283,7 +294,7 @@ Summary:
         cluster = None
 
         try:
-            cluster = Cluster(adjmat, graph_name=graph)
+            cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
             cluster.setup(
                 X, y, w,
@@ -301,13 +312,14 @@ Summary:
                 metrics_type=setup['metrics_type'],
                 metrics_nodes=setup['metrics_nodes'],
                 shuffle=setup['shuffle'],
-                verbose=setup['verbose'],
                 time_distr_class=setup['time_distr_class'],
                 time_distr_param=setup['time_distr_param'],
                 time_const_weight=setup['time_const_weight'],
                 node_error_mean=setup['node_error_mean'],
                 node_error_std_dev=setup['node_error_std_dev'],
                 starting_weights_domain=setup['starting_weights_domain'],
+                verbose_node=verbose_node,
+                verbose_task=verbose_task
             )
 
             cluster.run()
@@ -369,7 +381,8 @@ Summary:
             test_folder_path=test_path,
             save_plots_to_test_folder=save_plot_to_file,
             instant_plot=instant_plot,
-            plots=plots
+            plots=plots,
+            verbose=verbose_plotter
         )
 
 

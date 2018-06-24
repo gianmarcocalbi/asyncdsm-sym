@@ -17,7 +17,8 @@ class Task:
 class Trainer(Task):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, X, y, real_w, obj_function, starting_weights_domain):
+    def __init__(self, X, y, real_w, obj_function, starting_weights_domain, verbose):
+        self.verbose = verbose
         self.obj_function = obj_function
         self.X = X
         self.y = y
@@ -57,12 +58,11 @@ class GradientDescentTrainerAbstract(Trainer):
 
     def __init__(self, X, y, real_w, obj_function, starting_weights_domain, alpha, learning_rate, metrics, real_metrics,
                  shuffle, verbose):
-        super().__init__(X, y, real_w, obj_function, starting_weights_domain)
+        super().__init__(X, y, real_w, obj_function, starting_weights_domain, verbose)
 
         self.alpha = alpha
         self.learning_rate = learning_rate
         self.shuffle = shuffle
-        self.verbose = verbose
         self.metrics = metrics
         self.real_metrics = real_metrics
 
@@ -117,7 +117,10 @@ class GradientDescentTrainerAbstract(Trainer):
             metrics_log = self.logs["real_metrics"]
 
         if len(metrics_log[m]) == self.iteration:
-            val = metrics[m].compute_value(self.X, y, self.get_w())
+            try:
+                val = metrics[m].compute_value(self.X, y, self.get_w())
+            except:
+                raise
             metrics_log[m].append(val)
         elif len(metrics_log[m]) == self.iteration + 1:
             val = metrics_log[m][self.iteration]
