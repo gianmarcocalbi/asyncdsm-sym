@@ -23,6 +23,7 @@ class Node:
             time_distr_param = [time_distr_param]
         self.time_distr_param = time_distr_param
         self.time_const_weight = time_const_weight
+        self.is_running = True
 
         # buffer of incoming weights from dependencies
         # it store a queue for each dependency. Such queue can be accessed by
@@ -138,7 +139,7 @@ class Node:
         return math.inf
 
     def get_iteration_at_local_clock(self, local_clock):
-        i = np.searchsorted(self.log, local_clock) - 1
+        i = np.searchsorted(self.log, local_clock, side='right') - 1
         if i < 0:
             return 0
         return i
