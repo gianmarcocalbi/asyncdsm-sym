@@ -606,13 +606,14 @@ class Cluster:
                 # todo: remove following snippet because it just slows down the computation
                 # check whether one node's local_clock has been left behind the cluster clock
                 # that is completely unexpected, so in such case raise an exception
-                min_clock = math.inf
+                """min_clock = math.inf
                 for _node in self.nodes:
                     if _node.local_clock < min_clock:
                         min_clock = _node.local_clock
                 if min_clock < self.clock:
                     raise Exception("Cluster clock is higher than clock of some node and this is a "
                                     "completely unexpected behaviour")
+                """
 
                 # the node step has been almost completed, now check if all the others
                 # have already performed the iteration i-th, if so then the global
@@ -936,7 +937,7 @@ class Cluster:
                 rmval = np.around(self.get_metrics_value(rm, real=True), 2)
             except OverflowError:
                 rmval = self.get_metrics_value(rm, real=True)
-            output += "real_{}={} ".format(
+            output += "real-{}={} ".format(
                 rm,
                 col(rmval, 'red')
             )

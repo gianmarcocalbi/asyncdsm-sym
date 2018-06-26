@@ -84,7 +84,7 @@ Summary:
 
     # TRAINING SET SETUP
 
-    setup['n_samples'] = 20000
+    setup['n_samples'] = 500
     setup['n_features'] = 100
 
     setup['generator_function'] = 'reg2'  # svm, reg, reg2, skreg
@@ -92,10 +92,10 @@ Summary:
     setup['smv_label_flip_prob'] = 0.00  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 5 # <--
+    setup['error_std_dev'] = 10 # <--
 
     setup['node_error_mean'] = 0
-    setup['node_error_std_dev'] = 0  # <--
+    setup['node_error_std_dev'] = 0.0  # <--
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -106,13 +106,13 @@ Summary:
     setup['starting_weights_domain'] = [c - r, c + r]
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = None
-    setup['max_time'] = 500  # seconds
+    setup['max_iter'] = 40
+    setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
     setup['alpha'] = 1e-2
-    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
+    setup['learning_rate'] = "constant"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform

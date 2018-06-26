@@ -734,12 +734,15 @@ class Plotter:
 
     def plot_metrics(self, x_label, metrics_id):
         filename = "2_" + metrics_id
+        prefix = ""
+        if 'real' in metrics_id:
+            prefix = "Real "
         self._plot_init(
             title_center="",
-            title_left=METRICS[metrics_id].fullname,
+            title_left=prefix + METRICS[metrics_id].fullname,
             title_right=self.time_distr_name,
             xlabel=x_label,
-            ylabel=METRICS[metrics_id].shortname)
+            ylabel=prefix + METRICS[metrics_id].shortname)
         if x_label == 'iter':
             self._plot_metrics_over_iter_lines(metrics_id)
         elif x_label == 'time':
