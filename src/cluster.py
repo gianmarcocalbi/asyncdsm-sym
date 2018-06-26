@@ -20,6 +20,8 @@ class Cluster:
             Adjacency matrix of the dependency graph.
         """
         self.verbose = verbose
+        self.verbose_node = False
+        self.verbose_task = False
         self.graph_name = graph_name
         self.future_event_list = {}  # FEL of the discrete event simulator
         self.nodes = []  # computational unites (nodes) list
@@ -167,6 +169,8 @@ class Cluster:
 
         """
 
+        self.verbose_node=verbose_node
+        self.verbose_task=verbose_task
         N = self.adjacency_matrix.shape[0]
 
         # if X and y have different sizes then the training set is bad formatted

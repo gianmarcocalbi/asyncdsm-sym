@@ -3,6 +3,8 @@ import numpy as np
 from src.plotter import plot_from_files
 
 
+plot_from_files(plots=['real_mse_iter', 'mse_iter'])
+
 def compute_velocities():
     graphs = (
         ("0_diagonal", 0),

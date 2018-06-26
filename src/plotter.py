@@ -43,29 +43,29 @@ class Plotter:
 
         self.available_plots = [
             "iter_time",
-            "avg-iter_time",
-            # "avg-iter_time-memoryless-lb",
-            # "avg-iter_time-residual-lifetime-lb",
-            # "avg-iter_time-ub",
-            # "avg-iter_time-don-bound",
+            "avg_iter_time",
+            # "avg_iter_time_memoryless_lb",
+            # "avg_iter_time_residual_lifetime_lb",
+            # "avg_iter_time_ub",
+            # "avg_iter_time_don_bound",
 
-            # "iter-memoryless-lb-error_degree",
-            # "iter-residual-lifetime-lb-error_degree",
-            # "iter-ub-error_degree",
-            # "iter-all-bounds-error_degree",
+            # "iter_memoryless_lb_error_degree",
+            # "iter_residual_lifetime_lb_error_degree",
+            # "iter_ub_error_degree",
+            # "iter_all_bounds_error_degree",
 
-            # "iter-memoryless-lb-velocity_degree",
-            # "iter-residual-lifetime-lb-velocity_degree",
-            # "iter-ub-velocity_degree",
-            # "iter-all-bounds-velocity_degree",
+            # "iter_memoryless_lb_velocity_degree",
+            # "iter_residual_lifetime_lb_velocity_degree",
+            # "iter_ub_velocity_degree",
+            # "iter_all_bounds_velocity_degree",
         ]
 
         # add all metrics plots to available_plots
         for m in METRICS:
             self.available_plots.append(m + "_iter")
             self.available_plots.append(m + "_time")
-            self.available_plots.append('real-' + m + "_iter")
-            self.available_plots.append('real-' + m + "_time")
+            self.available_plots.append('real_' + m + "_iter")
+            self.available_plots.append('real_' + m + "_time")
 
         # determine test_folder_path
         if self.test_folder_name is None and test_folder_path is None:
@@ -264,40 +264,40 @@ class Plotter:
         if "iter_time" in self.plots:
             self.plot_iter_over_time()
 
-        if "avg-iter_time" in self.plots:
+        if "avg_iter_time" in self.plots:
             self.plot_avg_iter_over_time()
 
-        if "avg-iter_time-memoryless-lb" in self.plots:
+        if "avg_iter_time_memoryless_lb" in self.plots:
             self.plot_avg_iter_over_time_with_memoryless_lower_bound()
 
-        if "avg-iter_time-residual-lifetime-lb" in self.plots:
+        if "avg_iter_time_residual_lifetime_lb" in self.plots:
             self.plot_avg_iter_over_time_with_residual_lifetime_lower_bound()
 
-        if "avg-iter_time-ub" in self.plots:
+        if "avg_iter_time_ub" in self.plots:
             self.plot_avg_iter_over_time_with_upper_bound()
 
-        if "iter-memoryless-lb-error_degree" in self.plots:
+        if "iter_memoryless_lb_error_degree" in self.plots:
             self.plot_iter_memoryless_lower_bound_error_over_degree()
 
-        if "iter-residual-lifetime-lb-error_degree" in self.plots:
+        if "iter_residual_lifetime_lb_error_degree" in self.plots:
             self.plot_iter_residual_lifetime_lower_bound_error_over_degree()
 
-        if "iter-ub-error_degree" in self.plots:
+        if "iter_ub_error_degree" in self.plots:
             self.plot_iter_upper_bound_error_over_degree()
 
-        if "iter-all-bounds-error_degree" in self.plots:
+        if "iter_all_bounds_error_degree" in self.plots:
             self.plot_iter_all_bounds_error_over_degree()
 
-        if "iter-memoryless-lb-velocity_degree" in self.plots:
+        if "iter_memoryless_lb_velocity_degree" in self.plots:
             self.plot_iter_memoryless_lower_bound_velocity_over_degree()
 
-        if "iter-residual-lifetime-lb-velocity_degree" in self.plots:
+        if "iter_residual_lifetime_lb_velocity_degree" in self.plots:
             self.plot_iter_residual_lifetime_lower_bound_velocity_over_degree()
 
-        if "iter-ub-velocity_degree" in self.plots:
+        if "iter_ub_velocity_degree" in self.plots:
             self.plot_iter_upper_bound_velocity_over_degree()
 
-        if "iter-all-bounds-velocity_degree" in self.plots:
+        if "iter_all_bounds_velocity_degree" in self.plots:
             self.plot_iter_all_bounds_velocity_over_degrees_with_real_velocity()
 
     def _plot_init(self,
@@ -620,7 +620,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_avg_iter_over_time(self):
-        filename = "1_avg-iter_time"
+        filename = "1_avg_iter_time"
         self._plot_init(
             title_center="",
             title_left="Average iteration at time",
@@ -634,7 +634,7 @@ class Plotter:
     # PLOTS WITH BOUNDS BEGIN
 
     def plot_iter_over_time_memoryless_lower_bound_only(self):
-        filename = "1_iter_time-memoryless-lb-only"
+        filename = "1_iter_time_memoryless_lb_only"
         self._plot_init(
             title_center="",
             title_left="Iterations over time memoryless lower bound",
@@ -646,7 +646,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_over_time_residual_lifetime_lower_bound_only(self):
-        filename = "1_iter_time-residual-lifetime-lb-only"
+        filename = "1_iter_time_residual_lifetime_lb_only"
         self._plot_init(
             title_center="",
             title_left="Iterations over time residual time lower bound",
@@ -658,7 +658,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_over_time_upper_bound_only(self):
-        filename = "1_iter_time-ub-only"
+        filename = "1_iter_time_ub_only"
         self._plot_init(
             title_center="",
             title_left="Iterations over time upper bound",
@@ -670,7 +670,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_avg_iter_over_time_with_memoryless_lower_bound(self):
-        filename = "1_avg-iter_time-memoryless-lb"
+        filename = "1_avg_iter_time_memoryless_lb"
         self._plot_init(
             title_center="",
             title_left="Average iteration at time with memoryless lower bound",
@@ -686,7 +686,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_avg_iter_over_time_with_residual_lifetime_lower_bound(self):
-        filename = "1_avg-iter_time-residual-lifetime-lb"
+        filename = "1_avg_iter_time_residual_lifetime_lb"
         self._plot_init(
             title_center="",
             title_left="Average iteration at time with residual lifetime lower bound",
@@ -701,7 +701,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_avg_iter_over_time_with_upper_bound(self):
-        filename = "1_avg-iter_time-ub"
+        filename = "1_avg_iter_time_ub"
         self._plot_init(
             title_center="",
             title_left="Average iteration at time with upper bound",
@@ -716,7 +716,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_avg_iter_over_time_with_don_bound(self):
-        filename = "1_avg-iter_time-don-bound"
+        filename = "1_avg_iter_time_don_bound"
         self._plot_init(
             title_center="",
             title_left="Average iteration at time with \"Don\" bound for the fastest node",
@@ -734,15 +734,17 @@ class Plotter:
 
     def plot_metrics(self, x_label, metrics_id):
         filename = "2_" + metrics_id
+        METRICS_metrics_id = metrics_id
         prefix = ""
         if 'real' in metrics_id:
             prefix = "Real "
+            METRICS_metrics_id = metrics_id[5:]
         self._plot_init(
             title_center="",
-            title_left=prefix + METRICS[metrics_id].fullname,
+            title_left="{}{} over {}".format(prefix, METRICS[METRICS_metrics_id].fullname, x_label),
             title_right=self.time_distr_name,
             xlabel=x_label,
-            ylabel=prefix + METRICS[metrics_id].shortname)
+            ylabel=prefix + METRICS[METRICS_metrics_id].shortname)
         if x_label == 'iter':
             self._plot_metrics_over_iter_lines(metrics_id)
         elif x_label == 'time':
@@ -752,7 +754,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_memoryless_lower_bound_error_over_degree(self):
-        filename = "4_iter-memoryless-lb-error_degree"
+        filename = "4_iter_memoryless_lb_error_degree"
         self._plot_init(
             title_center="",
             title_left="Memoryless lower bound error over degree",
@@ -764,7 +766,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_residual_lifetime_lower_bound_error_over_degree(self):
-        filename = "4_iter-residual-lifetime-lb-error_degree"
+        filename = "4_iter_residual_lifetime_lb_error_degree"
         self._plot_init(
             title_center="",
             title_left="Residual lifetime lower bound error over degree",
@@ -776,7 +778,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_upper_bound_error_over_degree(self):
-        filename = "4_iter-ub-error_degree"
+        filename = "4_iter_ub_error_degree"
         self._plot_init(
             title_center="",
             title_left="Upper bound error over degree",
@@ -788,7 +790,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_don_bound_error_over_degree(self):
-        filename = "4_iter-don-b-error_degree"
+        filename = "4_iter_don_b_error_degree"
         self._plot_init(
             title_center="",
             title_left="\"Don\" bound error over degree",
@@ -800,7 +802,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_all_bounds_error_over_degree(self):
-        filename = "4_iter-all-b-error_degree"
+        filename = "4_iter_all_b_error_degree"
         self._plot_init(
             title_center="",
             title_left="All bounds' errors over degree",
@@ -815,7 +817,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_all_bounds_error_over_degree_with_real_velocity(self):
-        filename = "4_iter-all-b-error_degree"
+        filename = "4_iter_all_b_error_degree"
         self._plot_init(
             title_center="",
             title_left="All bounds' errors over degree",
@@ -831,7 +833,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_memoryless_lower_bound_velocity_over_degree(self):
-        filename = "5_iter-memoryless-lb-velocity_degree"
+        filename = "5_iter_memoryless_lb_velocity_degree"
         self._plot_init(
             title_center="",
             title_left="Memoryless lower bound velocity over degree",
@@ -843,7 +845,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_residual_lifetime_lower_bound_velocity_over_degree(self):
-        filename = "5_iter-residual_lifetime-lb-velocity_degree"
+        filename = "5_iter_residual_lifetime_lb_velocity_degree"
         self._plot_init(
             title_center="",
             title_left="Residual Lifetime lower bound velocity over degree",
@@ -855,7 +857,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_upper_bound_velocity_over_degree(self):
-        filename = "5_iter-ub-velocity_degree"
+        filename = "5_iter_ub_velocity_degree"
         self._plot_init(
             title_center="",
             title_left="Upper bound velocity over degree",
@@ -867,7 +869,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_don_bound_velocity_over_degree(self):
-        filename = "5_iter-don-b-velocity_degree"
+        filename = "5_iter_don_b_velocity_degree"
         self._plot_init(
             title_center="",
             title_left="Don bound velocity over degree",
@@ -879,7 +881,7 @@ class Plotter:
         self._plot_close(filename)
 
     def plot_iter_all_bounds_velocity_over_degrees_with_real_velocity(self):
-        filename = "5_iter-all-b-velocity_degree"
+        filename = "5_iter_all_b_velocity_degree"
         self._plot_init(
             title_center="",
             title_left="All bounds' velocities over degree",

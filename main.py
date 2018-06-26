@@ -63,7 +63,7 @@ Summary:
     setup['n'] = 100
 
     setup['graphs'] = {
-        "0_diagonal": DIAGONAL(setup['n']),
+        #"0_diagonal": DIAGONAL(setup['n']),
         "1_cycle": CYCLE(setup['n']),  # degree = 1
         # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
         "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
@@ -76,7 +76,7 @@ Summary:
         "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
         # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
-        # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
+        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
         # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
@@ -95,18 +95,19 @@ Summary:
     setup['error_std_dev'] = 10 # <--
 
     setup['node_error_mean'] = 0
-    setup['node_error_std_dev'] = 0.0  # <--
+    setup['node_error_std_dev'] = 50.0  # <--
+
+    r = np.random.uniform(4, 6)
+    c = np.random.uniform(1, 3.8) * np.random.choice([-1, 1])
+    setup['starting_weights_domain'] = [0, 0] # [c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
     setup['domain_radius'] = 6
     setup['domain_center'] = 0
-    r = np.random.uniform(4, 6)
-    c = np.random.uniform(1, 3.8) * np.random.choice([-1, 1])
-    setup['starting_weights_domain'] = [c - r, c + r]
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 40
+    setup['max_iter'] = 500
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
@@ -158,7 +159,7 @@ Summary:
     instant_plot = True  # instantly plot single simulations results
     plots = (
         "mse_iter",
-        "real-mse_iter",
+        "real_mse_iter",
     )
     save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file

@@ -1,6 +1,7 @@
 import warnings
 from src import tasks
 from src.functions import *
+from termcolor import colored as col
 
 
 class Node:
@@ -102,8 +103,13 @@ class Node:
         :param dependencies: list of nodes
         :return: None
         """
+        dep_ids = "["
         for dependency in dependencies:
             self.add_dependency(dependency)
+            dep_ids += "{}, ".format(dependency.get_id())
+        dep_ids = dep_ids[:-2]
+        dep_ids += "]"
+        print_verbose(self.verbose, "Set Node [{}] dependencies = {}".format(col(self._id, 'cyan'), dep_ids))
 
     def add_dependency(self, dependency):
         """
@@ -179,6 +185,7 @@ class Node:
 
         self.iteration += 1
         self.log.append(self.local_clock)
+
         return t0, tf
 
     def linear_regression_step(self):
@@ -215,15 +222,29 @@ class Node:
         :return: None
         """
         if len(self.dependencies) > 0:
-            # todo self.training_task.get_current_w()
             w = self.training_task.get_w()
             for dep in self.dependencies:
                 w += self.dequeue_incoming_data(dep.get_id())
             self.training_task.set_w(w / (len(self.dependencies) + 1))
 
+        print_verbose(self.verbose,
+                      "Node [{}] averages w({}) with dependencies' w({})".format(
+                          col(self._id,  'cyan'),
+                          self.iteration,
+                          self.iteration
+                      ))
+
     def broadcast_weight_to_recipients(self):
+        rec_ids = "["
         for recipient in self.recipients:
             recipient.enqueue_outgoing_data(self.get_id(), self.training_task.get_w())
+            rec_ids += "{}, ".format(recipient.get_id())
+
+        rec_ids = rec_ids[:-2]
+        rec_ids += "]"
+        print_verbose(self.verbose, "Node [{}] broadcasts w({}) to recipients = []".format(
+            col(self._id, 'cyan'), len(self.training_task.w), rec_ids
+        ))
 
     def avg_z_with_dependencies(self):
         z = self.training_task.get_z()  # self.training_task.get_z()
