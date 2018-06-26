@@ -1,5 +1,10 @@
 from src import statistics, mltoolbox
 import numpy as np
+from src.plotter import plot_from_files
+
+plot_from_files(
+    plots=('mse_iter',)
+)
 
 """
 y = np.array([-1, 1, 1, 1, -1, 1])
@@ -15,7 +20,7 @@ print(mltoolbox.HingeLossFunction.f_gradient(y, y_hat_f, X))
 print(mltoolbox.HingeLossFunction.f_gradient2(y, y_hat_f, X))
 """
 
-
+"""
 graphs = (
     ("0_diagonal", 0),
     ("1_cycle", 1),
@@ -43,7 +48,7 @@ for graph, degree in graphs:
         pass
     except:
         raise
-
+"""
 
 """
 Ks = [0,1,2,3,4,8,20,50,99]

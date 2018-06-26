@@ -41,33 +41,29 @@ class Plotter:
         self.scatter = scatter
         self.points_size = points_size
 
-        self.available_plots = [
+        self.available_plots = (
             "iter_time",
             "avg-iter_time",
-            # "avg-iter_time-memoryless-lb",
-            # "avg-iter_time-residual-lifetime-lb",
-            # "avg-iter_time-ub",
-            # "avg-iter_time-don-bound",
+            "avg-iter_time-memoryless-lb",
+            "avg-iter_time-residual-lifetime-lb",
+            "avg-iter_time-ub",
+            "avg-iter_time-don-bound",
+            "mse_iter",
+            "real-mse_iter",
+            "mse_time",
+            "real-mse_time",
 
-            # "iter-memoryless-lb-error_degree",
-            # "iter-residual-lifetime-lb-error_degree",
-            # "iter-ub-error_degree",
-            # "iter-all-bounds-error_degree",
+            "iter-memoryless-lb-error_degree",
+            "iter-residual-lifetime-lb-error_degree",
+            "iter-ub-error_degree",
+            "iter-all-bounds-error_degree",
 
-            # "iter-memoryless-lb-velocity_degree",
-            # "iter-residual-lifetime-lb-velocity_degree",
-            # "iter-ub-velocity_degree",
-            # "iter-all-bounds-velocity_degree",
-        ]
+            "iter-memoryless-lb-velocity_degree",
+            "iter-residual-lifetime-lb-velocity_degree",
+            "iter-ub-velocity_degree",
+            "iter-all-bounds-velocity_degree",
+        )
 
-        # add all metrics plots to available_plots
-        for m in METRICS:
-            self.available_plots.append(m + "_iter")
-            self.available_plots.append(m + "_time")
-            self.available_plots.append('real-' + m + "_iter")
-            self.available_plots.append('real-' + m + "_time")
-
-        # determine test_folder_path
         if self.test_folder_name is None and test_folder_path is None:
             if self.temp_test_folder_name == "":
                 raise Exception("No temp test to plot")
@@ -94,7 +90,6 @@ class Plotter:
 
         self.plot_folder_path = os.path.join(self.test_folder_path, "plot")
 
-        # create plot folder if it doesn't exist
         if self.save_plots_to_test_folder:
             if not os.path.exists(self.plot_folder_path):
                 os.makedirs(self.plot_folder_path)
@@ -141,7 +136,7 @@ class Plotter:
             "iter_time": {},
             "avg_iter_time": {},
             "max_iter_time": {},
-            "metrics": {}
+            "metrics" : {}
         }
 
         # Fill self.metrics with instances of metrics objects
@@ -155,12 +150,6 @@ class Plotter:
                 self.setup["real_metrics"] = [self.setup["real_metrics"]]
             elif self.setup["real_metrics"].lower() == 'all':
                 self.setup["real_metrics"] = list(METRICS.keys())
-
-        if not self.setup['obj_function'] in self.setup['metrics']:
-            self.setup['metrics'].insert(0, self.setup['obj_function'])
-
-        if not self.setup['obj_function'] in self.setup['real_metrics']:
-            self.setup['real_metrics'].insert(0, self.setup['obj_function'])
 
         for m in self.setup["metrics"]:
             self.logs["metrics"][m] = {}
@@ -202,12 +191,18 @@ class Plotter:
                     self.graphs.remove(graph)
                     continue
 
-        # TODO: update moving average with new metrics logs
-        """if self.moving_average_window != 0:
+        # TEMPORARY BACKWARD COMPATIBILITY
+        self.mse_log = self.logs["metrics"]["mse"]
+        self.real_mse_log = self.logs["metrics"]["real_mse"]
+        self.iter_log = self.logs["iter_time"]
+        self.avg_iter_log = self.logs["avg_iter_time"]
+        self.max_iter_log = self.logs["max_iter_time"]
+
+        if self.moving_average_window != 0:
             avg_real_mse_log = {}
             avg_mse_log = {}
             for graph in self.graphs:
-                n_iter = len(self.logs["metrics"]["mse"][graph])
+                n_iter = len(self.mse_log[graph])
                 avg_mse_log[graph] = np.zeros(n_iter)
                 avg_real_mse_log[graph] = np.zeros(n_iter)
 
@@ -216,7 +211,7 @@ class Plotter:
                     end = min((i + 1) * self.moving_average_window, n_iter)
                     avg_mse_log[graph] = np.concatenate([
                         avg_mse_log[graph][0:beg],
-                        np.full(end - beg, float(np.mean(self.logs["metrics"]["mse"][graph][beg:end]))),
+                        np.full(end - beg, float(np.mean(self.mse_log[graph][beg:end]))),
                         avg_mse_log[graph][end:]
                     ])
                     avg_real_mse_log[graph] = np.concatenate([
@@ -225,8 +220,8 @@ class Plotter:
                         avg_real_mse_log[graph][end:]
                     ])
 
-                self.logs["metrics"]["mse"][graph] = avg_mse_log[graph]
-                self.real_mse_log[graph] = avg_real_mse_log[graph]"""
+                self.mse_log[graph] = avg_mse_log[graph]
+                self.real_mse_log[graph] = avg_real_mse_log[graph]
 
     @staticmethod
     def get_temp_test_folder_name_by_index(index=0):
@@ -254,13 +249,6 @@ class Plotter:
     # PLOT MAIN UTILS METHODS - BEGIN
 
     def plot(self):
-
-        for metrics_id in self.logs['metrics']:
-            if metrics_id + "_iter" in self.plots:
-                self.plot_metrics('iter', metrics_id)
-            if metrics_id + "_time" in self.plots:
-                self.plot_metrics('time', metrics_id)
-
         if "iter_time" in self.plots:
             self.plot_iter_over_time()
 
@@ -275,6 +263,18 @@ class Plotter:
 
         if "avg-iter_time-ub" in self.plots:
             self.plot_avg_iter_over_time_with_upper_bound()
+
+        if "mse_iter" in self.plots:
+            self.plot_mse_over_iter()
+
+        if "real-mse_iter" in self.plots:
+            self.plot_real_mse_over_iter()
+
+        if "mse_time" in self.plots:
+            self.plot_mse_over_time()
+
+        if "real-mse_time" in self.plots:
+            self.plot_real_mse_over_time()
 
         if "iter-memoryless-lb-error_degree" in self.plots:
             self.plot_iter_memoryless_lower_bound_error_over_degree()
@@ -352,8 +352,8 @@ class Plotter:
     def _plot_iter_over_time_lines(self, **kwargs):
         for graph in self.graphs:
             self._plot_subroutine(
-                self.logs["iter_time"][graph],
-                list(range(len(self.logs["iter_time"][graph]))),
+                self.iter_log[graph],
+                list(range(len(self.iter_log[graph]))),
                 label=graph,
                 color=self.get_graph_color(graph),
                 **kwargs
@@ -361,8 +361,8 @@ class Plotter:
 
     def _plot_avg_iter_over_time_lines(self, **kwargs):
         for graph in self.graphs:
-            lx = [float(p[0]) for p in self.logs["avg_iter_time"][graph]]
-            ly = [float(p[1]) for p in self.logs["avg_iter_time"][graph]]
+            lx = [float(p[0]) for p in self.avg_iter_log[graph]]
+            ly = [float(p[1]) for p in self.avg_iter_log[graph]]
 
             self._plot_subroutine(
                 lx,
@@ -374,8 +374,8 @@ class Plotter:
 
     def _plot_max_iter_over_time_lines(self, **kwargs):
         for graph in self.graphs:
-            lx = [float(p[0]) for p in self.logs["max_iter_time"][graph]]
-            ly = [float(p[1]) for p in self.logs["max_iter_time"][graph]]
+            lx = [float(p[0]) for p in self.max_iter_log[graph]]
+            ly = [float(p[1]) for p in self.max_iter_log[graph]]
 
             self._plot_subroutine(
                 lx,
@@ -394,8 +394,8 @@ class Plotter:
             )
 
             # iter_log[graph] is an array indexed as "iter#" -> time of such iter completion
-            # so int(self.logs["iter_time"][graph][-1]) take the rightmost x value of iter_over_time line
-            lx = list(range(int(self.logs["iter_time"][graph][-1])))
+            # so int(self.iter_log[graph][-1]) take the rightmost x value of iter_over_time line
+            lx = list(range(int(self.iter_log[graph][-1])))
             ly = [slope * x for x in lx]
 
             self._plot_subroutine(
@@ -431,14 +431,54 @@ class Plotter:
 
     # PLOT ITER over TIME LINES - BEGIN
 
+    # PLOT ERROR over ITER LINES - BEGIN
+
+    def _plot_mse_over_iter_lines(self, **kwargs):
+        for graph in self.graphs:
+            self._plot_subroutine(
+                list(range(len(self.mse_log[graph]))),
+                self.mse_log[graph],
+                label=graph,
+                color=self.get_graph_color(graph),
+                **kwargs)
+
+    def _plot_real_mse_over_iter_lines(self, **kwargs):
+        for graph in self.graphs:
+            self._plot_subroutine(
+                list(range(len(self.real_mse_log[graph]))),
+                self.real_mse_log[graph],
+                label=graph,
+                color=self.get_graph_color(graph),
+                **kwargs)
+
+    def _plot_mse_over_time_lines(self, **kwargs):
+        for graph in self.graphs:
+            self._plot_subroutine(
+                self.iter_log[graph],
+                self.mse_log[graph],
+                label=graph,
+                color=self.get_graph_color(graph),
+                **kwargs)
+
+    def _plot_real_mse_over_time_lines(self, **kwargs):
+        for graph in self.graphs:
+            self._plot_subroutine(
+                self.iter_log[graph],
+                self.real_mse_log[graph],
+                label=graph,
+                color=self.get_graph_color(graph),
+                **kwargs)
+
+    # PLOT ERROR over ITER LINES - END
+
     # PLOT ITER BOUND ERROR over DEGREE LINES - BEGIN
 
     def _plot_iter_bound_error_over_degree_lines_subroutine(self, bound_func, **kwargs):
         p_x = []
         p_y = []
         for graph in self.graphs:
-            lx = [float(p[0]) for p in self.logs["avg_iter_time"][graph]]
-            ly = [float(p[1]) for p in self.logs["avg_iter_time"][graph]]
+            lx = [float(p[0]) for p in self.avg_iter_log[graph]]
+            ly = [float(p[1]) for p in self.avg_iter_log[graph]]
             v_lb = bound_func(
                 self.degrees[graph],
                 self.setup['time_distr_class'],
@@ -509,8 +549,8 @@ class Plotter:
         p_x = []
         p_y = []
         for graph in self.graphs:
-            lx = [float(p[0]) for p in self.logs["avg_iter_time"][graph]]
-            ly = [float(p[1]) for p in self.logs["avg_iter_time"][graph]]
+            lx = [float(p[0]) for p in self.avg_iter_log[graph]]
+            ly = [float(p[1]) for p in self.avg_iter_log[graph]]
             v_lb = bound_func(
                 self.degrees[graph],
                 self.setup['time_distr_class'],
@@ -532,8 +572,8 @@ class Plotter:
         p_x = []
         p_y = []
         for graph in self.graphs:
-            lx = [float(p[0]) for p in self.logs["avg_iter_time"][graph]]
-            ly = [float(p[1]) for p in self.logs["avg_iter_time"][graph]]
+            lx = [float(p[0]) for p in self.avg_iter_log[graph]]
+            ly = [float(p[1]) for p in self.avg_iter_log[graph]]
             v_real = ly[-1] / lx[-1]
 
             p_x.append(self.degrees[graph])
@@ -581,28 +621,6 @@ class Plotter:
         )
 
     # PLOT ITER BOUND VELOCITY over DEGREES LINES - END
-
-    # PLOT ERROR over ITER LINES - BEGIN
-
-    def _plot_metrics_over_iter_lines(self, metrics_id, **kwargs):
-        for graph in self.graphs:
-            self._plot_subroutine(
-                list(range(len(self.logs['metrics'][metrics_id][graph]))),
-                self.logs['metrics'][metrics_id][graph],
-                label=graph,
-                color=self.get_graph_color(graph),
-                **kwargs)
-
-    def _plot_metrics_over_time_lines(self, metrics_id, **kwargs):
-        for graph in self.graphs:
-            self._plot_subroutine(
-                self.logs['iter_time'][graph],
-                self.logs['metrics'][metrics_id][graph],
-                label=graph,
-                color=self.get_graph_color(graph),
-                **kwargs)
-
-    # PLOT ERROR over ITER LINES - END
 
     # PUBLIC INTERFACE - BEGIN
 
@@ -732,20 +750,48 @@ class Plotter:
 
     # PLOTS WITH BOUNDS BEGIN
 
-    def plot_metrics(self, x_label, metrics_id):
-        filename = "2_" + metrics_id
+    def plot_mse_over_iter(self):
+        filename = "2_mse_iter"
         self._plot_init(
             title_center="",
-            title_left=METRICS[metrics_id].fullname,
+            title_left="MSE over iterations",
             title_right=self.time_distr_name,
-            xlabel=x_label,
-            ylabel=METRICS[metrics_id].shortname)
-        if x_label == 'iter':
-            self._plot_metrics_over_iter_lines(metrics_id)
-        elif x_label == 'time':
-            self._plot_metrics_over_time_lines(metrics_id)
-        else:
-            raise Exception("Unexpected x_label {}".format(x_label))
+            xlabel="Iteration",
+            ylabel="MSE")
+        self._plot_mse_over_iter_lines()
+        self._plot_close(filename)
+
+    def plot_real_mse_over_iter(self):
+        filename = "2_real-mse_iter"
+        self._plot_init(
+            title_center="",
+            title_left="RMSE over iterations",
+            title_right=self.time_distr_name,
+            xlabel="Iteration",
+            ylabel="RMSE")
+        self._plot_real_mse_over_iter_lines()
+        self._plot_close(filename)
+
+    def plot_mse_over_time(self):
+        filename = "3_mse_time"
+        self._plot_init(
+            title_center="",
+            title_left="MSE over time",
+            title_right=self.time_distr_name,
+            xlabel="Time (s)",
+            ylabel="MSE")
+        self._plot_mse_over_time_lines()
+        self._plot_close(filename)
+
+    def plot_real_mse_over_time(self):
+        filename = "3_real-mse_time"
+        self._plot_init(
+            title_center="",
+            title_left="RMSE over time",
+            title_right=self.time_distr_name,
+            xlabel="Time (s)",
+            ylabel="RMSE")
+        self._plot_real_mse_over_time_lines()
         self._plot_close(filename)
 
     def plot_iter_memoryless_lower_bound_error_over_degree(self):

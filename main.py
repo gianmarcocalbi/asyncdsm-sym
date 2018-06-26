@@ -66,14 +66,14 @@ Summary:
         "0_diagonal": DIAGONAL(setup['n']),
         "1_cycle": CYCLE(setup['n']),  # degree = 1
         # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
-        # "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        #"3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        #"4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        "5_regular": REGULAR(setup['n'], 5),  # degree = 5
-        #"6_regular": REGULAR(setup['n'], 6),  # degree = 6
-        #"7_regular": REGULAR(setup['n'], 7),  # degree = 7
-        # "8_regular": REGULAR(setup['n'], 8),  # degree = 8
+        "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
+        # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
+        # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
+        # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        # "5_regular": REGULAR(setup['n'], 5),  # degree = 5
+        # "6_regular": REGULAR(setup['n'], 6),  # degree = 6
+        # "7_regular": REGULAR(setup['n'], 7),  # degree = 7
+        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
         # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
         # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
         # "20_regular": REGULAR(setup['n'], 20),  # degree = 20
@@ -84,15 +84,15 @@ Summary:
 
     # TRAINING SET SETUP
 
-    setup['n_samples'] = 11000
+    setup['n_samples'] = 20000
     setup['n_features'] = 100
 
-    setup['generator_function'] = 'reg'  # svm, reg, reg2, skreg
+    setup['generator_function'] = 'reg2'  # svm, reg, reg2, skreg
 
     setup['smv_label_flip_prob'] = 0.00  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 1  # <--
+    setup['error_std_dev'] = 5 # <--
 
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 0  # <--
@@ -106,12 +106,12 @@ Summary:
     setup['starting_weights_domain'] = [c - r, c + r]
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 200
-    setup['max_time'] = None  # seconds
+    setup['max_iter'] = None
+    setup['max_time'] = 500  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-4
+    setup['alpha'] = 1e-2
     setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
@@ -120,8 +120,8 @@ Summary:
 
     setup['obj_function'] = 'mse'  # mse, hinge_loss, edgy_hinge_loss, score
 
-    setup['metrics'] = ['mse']
-    setup['real_metrics'] = ['mse']
+    setup['metrics'] = []
+    setup['real_metrics'] = []
     setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
 
