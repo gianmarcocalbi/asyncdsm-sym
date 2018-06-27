@@ -38,7 +38,7 @@ CLIQUE = lambda n: graph_generator.generate_complete_graph(n)
 REGULAR = lambda n, k: graph_generator.generate_d_regular_graph_by_degree(n, k)
 
 
-def main0():
+def main0(n=None, n_samples=None, n_features=None):
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
@@ -46,12 +46,6 @@ def main0():
 
     begin_time = time.time()
     # descriptor text placed at the beginning of _descriptor.txt file within the test folder
-    descriptor = """>>> Test Descriptor File
-Title: test
-Date: {}
-Summary: 
-
-""".format(str(datetime.datetime.now()))
 
     setup_from_file = False
     setup_folder_path = Plotter.get_temp_test_folder_path_by_index()
@@ -60,16 +54,16 @@ Summary:
     setup = dict()
 
     setup['seed'] = int(time.time())
-    setup['n'] = 100
+    setup['n'] = n
 
     setup['graphs'] = {
-        #"0_diagonal": DIAGONAL(setup['n']),
+        # "0_diagonal": DIAGONAL(setup['n']),
         "1_cycle": CYCLE(setup['n']),  # degree = 1
         # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
         "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
         # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        # "4_regular": REGULAR(setup['n'], 4),  # degree = 4
+        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
         # "5_regular": REGULAR(setup['n'], 5),  # degree = 5
         # "6_regular": REGULAR(setup['n'], 6),  # degree = 6
         # "7_regular": REGULAR(setup['n'], 7),  # degree = 7
@@ -77,29 +71,29 @@ Summary:
         # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
         # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
         "20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        # "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
     # TRAINING SET SETUP
 
-    setup['n_samples'] = 500
-    setup['n_features'] = 100
+    setup['n_samples'] = n_samples
+    setup['n_features'] = n_features
 
     setup['generator_function'] = 'reg2'  # svm, reg, reg2, skreg
 
     setup['smv_label_flip_prob'] = 0.00  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0
-    setup['error_std_dev'] = 10 # <--
+    setup['error_std_dev'] = 10  # <--
 
     setup['node_error_mean'] = 0
     setup['node_error_std_dev'] = 50.0  # <--
 
     r = np.random.uniform(4, 6)
     c = np.random.uniform(1, 3.8) * np.random.choice([-1, 1])
-    setup['starting_weights_domain'] = [0, 0] # [c - r, c + r]
+    setup['starting_weights_domain'] = [0, 0]  # [c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -107,13 +101,13 @@ Summary:
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 500
+    setup['max_iter'] = 9
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-2
-    setup['learning_rate'] = "constant"  # constant, root_decreasing
+    setup['alpha'] = 2e-2
+    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
@@ -147,8 +141,11 @@ Summary:
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_subfolder = "test_011_exp1lambda_200iter1e-2alpha_postReengine2_classic"  # test folder inside test_log/
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    test_subfolder = "test_012_exp1lambda_reg2_10err50nodeErr_Win0-0_1e-2alpha_{}nodes{}samp{}feat_classic".format(
+        setup['n'], setup['n_samples'], setup['n_features']
+    )  # test folder inside test_log/
+    test_title = test_subfolder
 
     # OUTPUT ALMOST FIXED SETUP
     test_root = "test_log"  # don't touch this
@@ -156,12 +153,12 @@ Summary:
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
-    instant_plot = True  # instantly plot single simulations results
+    instant_plot = False  # instantly plot single simulations results
     plots = (
         "mse_iter",
-        "real_mse_iter",
+        #"real_mse_iter",
     )
-    save_plot_to_file = True
+    save_plot_to_file = False
     save_descriptor = True  # create _descriptor.txt file
     ### END SETUP ###
 
@@ -277,6 +274,16 @@ Summary:
     setup['string_graphs'] = pprint.PrettyPrinter(indent=4).pformat(setup['graphs']).replace('array([', 'np.array([')
 
     # Fill descriptor with setup dictionary
+    descriptor = """>>> Test Descriptor File
+Title: {}
+Date: {}
+Summary: 
+
+""".format(
+        test_title if save_test_to_file else '',
+        str(datetime.datetime.fromtimestamp(begin_time))
+    )
+
     for k, v in setup.items():
         descriptor += "{} = {}\n".format(k, v)
     descriptor += "\n"

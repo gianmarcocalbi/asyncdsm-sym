@@ -1,9 +1,30 @@
 from src import statistics, mltoolbox
 import numpy as np
 from src.plotter import plot_from_files
+import main
+from scripts import plot_topologies_mse_over_nodes_amount_comparison as ptmonac
 
 
-plot_from_files(plots=['real_mse_iter', 'mse_iter'])
+#"""
+for n in [800, 500, 300, 200, 100, 80, 60, 50, 20, 10]:
+    n_samples_list = [500, 1000, 5000, 12000]
+    if n == 200:
+        n_samples_list = [1000, 5000, 12000]
+    elif n >= 300:
+        n_samples_list = [5000, 12000]
+    for n_samples in n_samples_list:
+        for n_features in [2, 10, 50, 100]:
+            for _ in range(8):
+                try:
+                    main.main0(n, n_samples, n_features)
+                except:
+                    continue
+#"""
+
+#ptmonac.main()
+
+# plot_from_files(plots=['real_mse_iter', 'mse_iter'])
+
 
 def compute_velocities():
     graphs = (
@@ -26,13 +47,16 @@ def compute_velocities():
 
     for graph, degree in graphs:
         try:
-            print("{} speed = {}".format(graph, statistics.single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(
-                "./test_log/test_010_pareto3-2_0.5c_10ktime1e-4alpha_lowDegreeComparison_classic.conflict.0", graph, 100,
-                10000)))
+            print(
+                "{} speed = {}".format(graph, statistics.single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(
+                    "./test_log/test_010_pareto3-2_0.5c_10ktime1e-4alpha_lowDegreeComparison_classic.conflict.0", graph,
+                    100,
+                    10000)))
         except IOError:
             pass
         except:
             raise
+
 
 """
 y = np.array([-1, 1, 1, 1, -1, 1])

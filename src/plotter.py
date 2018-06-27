@@ -9,8 +9,25 @@ from src.mltoolbox.metrics import METRICS
 def plot_from_files(**kwargs):
     Plotter(**kwargs).plot()
 
+def plot_topologies_mse_over_nodes_amount_comparison(test_folders):
+    pass
 
 class Plotter:
+    colors = {
+        "0_diagonal": '#ba2eff',  # pink/purple
+        "1_cycle": '#ffc300',  # orange
+        "2_cycle-bi": '#ffea01',
+        "2_diam-expander": '#009713',  # green
+        "2_root-expander": '#BB0016',  # red
+        "3_regular": '#7ec2a0ff',
+        "4_regular": '#97a853ff',
+        "8_regular": '#c7bd30ff',
+        "20_regular": '#a57a00ff',
+        "50_regular": '#6b5c32ff',
+        "n-1_clique": '#1537dfff',  # blue
+        "n-1_star": '#F8FE21',  # yellow
+    }
+
     def __init__(
             self,
             test_folder_root="./test_log/",
@@ -106,21 +123,6 @@ class Plotter:
             # take only specified plots by making intersection between available plots and
             # passed parameter array
             self.plots = [graph for graph in plots if graph in self.available_plots]
-
-        self.colors = {
-            "0_diagonal": '#ba2eff',  # pink/purple
-            "1_cycle": '#ffc300',  # orange
-            "2_cycle-bi": '#ffea01',
-            "2_diam-expander": '#009713',  # green
-            "2_root-expander": '#BB0016',  # red
-            "3_regular": '#7ec2a0ff',
-            "4_regular": '#97a853ff',
-            "8_regular": '#c7bd30ff',
-            "20_regular": '#a57a00ff',
-            "50_regular": '#6b5c32ff',
-            "n-1_clique": '#1537dfff',  # blue
-            "n-1_star": '#F8FE21',  # yellow
-        }
 
         try:
             with open("{}/.setup.pkl".format(self.test_folder_path), 'rb') as setup_file:
@@ -242,9 +244,10 @@ class Plotter:
     def get_temp_test_folder_path_by_index(index=0):
         return os.path.normpath(os.path.join("./test_log/temp/", Plotter.get_temp_test_folder_name_by_index(index)))
 
-    def get_graph_color(self, graph):
-        if graph in self.colors:
-            return self.colors[graph]
+    @staticmethod
+    def get_graph_color(graph):
+        if graph in Plotter.colors:
+            return Plotter.colors[graph]
         else:
             h = hex(int(np.random.uniform(0, 0xffffff)))[2:] + "000000"
             h = "#" + h[0:6]
