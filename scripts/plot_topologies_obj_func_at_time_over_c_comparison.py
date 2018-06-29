@@ -1,14 +1,18 @@
-from src import cluster, functions, graph_generator, node, plotter, statistics, tasks
-from src.mltoolbox.metrics import METRICS
-import numpy as np
-import math, os, pickle, glob
+import glob
+import os
+import pickle
+
 import matplotlib.pyplot as plt
+import numpy as np
+
+from src import plotter
+from src.mltoolbox.metrics import METRICS
 
 
 def main():
     global points, time_distr_name, obj_func_shortname
 
-    t = 50
+    t = 8
     test_folders = [
 
     ]
@@ -24,7 +28,7 @@ def main():
     points = {}
     curves = {}
     time_distr_name = ''
-    test_folder_paths = list(glob.iglob("./test_log/test_014*"))
+    test_folder_paths = list(glob.iglob("./test_log/test_015*"))
     obj_func_shortname = ""
 
     if len(test_folder_paths) == 0:
@@ -108,6 +112,8 @@ def main():
             ly,
             label=graph,
             color=plotter.Plotter.get_graph_color(graph),
+            marker='o',
+            markersize=2
             # **kwargs
         )
 

@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from src import plotter
 from src.mltoolbox.metrics import METRICS
+from src.functions import *
 
 
 def main():
@@ -28,7 +29,19 @@ def main():
     points = {}
     curves = {}
     time_distr_name = ''
-    test_folder_paths = list(glob.iglob("./test_log/test_012*svm*"))
+
+    test_num = '012'  # 012, 013, 014, 015
+    dataset = 'svm'
+    n_samples = ''
+    n_features = ''
+
+    """test_folder_paths = list(glob.iglob("./test_log/test_{}*{}*{}samp*{}feat*".format(
+        test_num,
+        dataset,
+        n_samples,
+        n_features
+    )))"""
+    test_folder_paths = list(glob.iglob("./test_log/test_012_*reg2*_100nodes*100feat*"))
     obj_func_shortname = ""
 
     if len(test_folder_paths) == 0:
@@ -55,9 +68,10 @@ def main():
         N = setup['n']
         n_samples = setup['n_samples']
         n_features = setup['n_features']
-        x = N  # / (N * n_features)
+        x = (n_samples / N) / n_features
 
         for graph in setup['graphs']:
+            degree = compute_graph_degree_from_adjacency_matrix(setup['graphs'][graph])
             if not graph in points:
                 points[graph] = {}
             if not N in points[graph]:
@@ -107,6 +121,8 @@ def main():
             ly,
             label=graph,
             color=plotter.Plotter.get_graph_color(graph),
+            marker='o',
+            markersize=2
             # **kwargs
         )
 

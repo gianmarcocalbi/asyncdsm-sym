@@ -13,19 +13,19 @@ from termcolor import colored as col
 DIAGONAL = lambda n: np.diag(np.ones(n))
 
 # degree = 1
-CYCLE = lambda n: graph_generator.generate_d_regular_graph_by_edges(n, ["i->i+1"])
+CYCLE = lambda n: graph_generator.generate_graph_by_edges(n, ["i->i+1"])
 
 # degree = 2
-CYCLE_B = lambda n: graph_generator.generate_d_regular_graph_by_edges(n, ["i->i+1", "i->i-1"])
-DIAM_EXP = lambda n: graph_generator.generate_d_regular_graph_by_edges(
+CYCLE_B = lambda n: graph_generator.generate_graph_by_edges(n, ["i->i+1", "i->i-1"])
+DIAM_EXP = lambda n: graph_generator.generate_graph_by_edges(
     n,
     ["i->i+1", "i->i+{}".format(int(n / 2))])
-ROOT_EXP = lambda n: graph_generator.generate_d_regular_graph_by_edges(
+ROOT_EXP = lambda n: graph_generator.generate_graph_by_edges(
     n,
     ["i->i+1", "i->i+{}".format(int(math.sqrt(n)))])
 
 # degree = 3
-DIAM_EXP_B = lambda n: graph_generator.generate_d_regular_graph_by_edges(
+DIAM_EXP_B = lambda n: graph_generator.generate_graph_by_edges(
     n,
     ["i->i+1", "i->i-1", "i->i+{}".format(int(n / 2))])
 
@@ -34,7 +34,8 @@ STAR = lambda n: graph_generator.generate_graph_by_edges(n, ["i->0", "0->i"])
 CLIQUE = lambda n: graph_generator.generate_complete_graph(n)
 
 # regular
-REGULAR = lambda n, k: graph_generator.generate_d_regular_graph_by_degree(n, k)
+UNIFORM_EDGES_REGULAR = lambda n, k: graph_generator.generate_uniform_edges_d_regular_graph_by_degree(n, k)
+N_CYCLE_REGULAR = lambda n, k: graph_generator.generate_n_cycle_d_regular_graph_by_degree(n, k)
 
 
 def main0(
@@ -67,26 +68,26 @@ def main0(
         # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
         "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
         # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        # "3_regular": REGULAR(setup['n'], 3),  # degree = 3
-        "4_regular": REGULAR(setup['n'], 4),  # degree = 4
-        # "5_regular": REGULAR(setup['n'], 5),  # degree = 5
-        # "6_regular": REGULAR(setup['n'], 6),  # degree = 6
-        # "7_regular": REGULAR(setup['n'], 7),  # degree = 7
-        "8_regular": REGULAR(setup['n'], 8),  # degree = 8
-        # "9_regular": REGULAR(setup['n'], 9),  # degree = 9
-        # "10_regular": REGULAR(setup['n'], 10),  # degree = 10
-        "20_regular": REGULAR(setup['n'], 20),  # degree = 20
-        "50_regular": REGULAR(setup['n'], 50),  # degree = 50
+        # "3_regular": UNIFORM_EDGES_REGULAR(setup['n'], 3),  # degree = 3
+        "4_regular": UNIFORM_EDGES_REGULAR(setup['n'], 4),  # degree = 4
+        # "5_regular": UNIFORM_EDGES_REGULAR(setup['n'], 5),  # degree = 5
+        # "6_regular": UNIFORM_EDGES_REGULAR(setup['n'], 6),  # degree = 6
+        # "7_regular": UNIFORM_EDGES_REGULAR(setup['n'], 7),  # degree = 7
+        "8_regular": UNIFORM_EDGES_REGULAR(setup['n'], 8),  # degree = 8
+        # "9_regular": UNIFORM_EDGES_REGULAR(setup['n'], 9),  # degree = 9
+        # "10_regular": UNIFORM_EDGES_REGULAR(setup['n'], 10),  # degree = 10
+        "20_regular": UNIFORM_EDGES_REGULAR(setup['n'], 20),  # degree = 20
+        "50_regular": UNIFORM_EDGES_REGULAR(setup['n'], 50),  # degree = 50
         "n-1_clique": CLIQUE(setup['n']),  # degree = n
         # "n-1_star": STAR(setup['n']),
     }
 
     # TRAINING SET SETUP
 
-    setup['n_samples'] = 1000 if n_samples is None else n_samples
+    setup['n_samples'] = 500 if n_samples is None else n_samples
     setup['n_features'] = 100 if n_features is None else n_features
 
-    setup['generator_function'] = 'reg2'  # svm, reg, reg2, skreg
+    setup['generator_function'] = 'reg'  # svm, reg, reg2, skreg
 
     setup['smv_label_flip_prob'] = 0.10  # <-- ONLY FOR SVM
 
@@ -98,7 +99,7 @@ def main0(
 
     r = np.random.uniform(4, 6)
     c = np.random.uniform(1, 3.8) * np.random.choice([-1, 1])
-    setup['starting_weights_domain'] = [0, 0]  # [c - r, c + r]
+    setup['starting_weights_domain'] = [c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -146,7 +147,7 @@ def main0(
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
     test_subfolder = "test_015_exp1lambda_reg_err1_Win0-0_1e-2alpha_{}nodes{}samp{}feat_{}c_classic".format(
         setup['n'], setup['n_samples'], setup['n_features'], setup['time_const_weight']
     )  # test folder inside test_log/

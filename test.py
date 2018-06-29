@@ -2,21 +2,20 @@ from src import statistics, mltoolbox
 import numpy as np
 from src.plotter import plot_from_files
 import main, time
-from scripts import plot_topologies_obj_func_over_nodes_amount_comparison as ptofonac
-from scripts import plot_topologies_obj_func_at_time_over_c_comparison as ptofatocc
+from scripts import plot_topologies_obj_func_over_nodes_amount_comparison as plot_ofvsclique_over_n
+from scripts import plot_topologies_obj_func_at_time_over_c_comparison as plot_of_over_c
 
 
 """
 for _ in range(4):
-    seed = int(time.time())
-    for c in [1, 0.99, 0.97, 0.95, 0.90, 0.85, 0.7, 0.5, 0.25, 0]:
+    #seed = int(time.time())
+    seed = [1530197457, 1530198096, 1530198755, 1530199411][_]
+    for c in [0.999, 0.997, 0.995, 0.992, 0.985]:
         try:
             main.main0(seed=seed, time_const_weight=c)
         except:
             continue
 """
-
-#ptofatocc.main()
 
 """
 for n in [10, 20, 50, 60, 80, 100, 250]:
@@ -30,7 +29,8 @@ for n in [10, 20, 50, 60, 80, 100, 250]:
                     continue
 """
 
-ptofonac.main()
+plot_of_over_c.main()
+#plot_ofvsclique_over_n.main()
 
 # plot_from_files(plots=['real_mse_iter', 'mse_iter'])
 
