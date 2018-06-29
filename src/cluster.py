@@ -528,6 +528,12 @@ class Cluster:
                         # dependencies' informations or it is in the endstep event
                         # so it is not supposed to do anything else
                         max_local_clock = node.local_clock
+
+                        # todo perf-boost:
+                        # - get the row of local_clocks matrix (iter x nodes) as an array
+                        # - set to zero indices not in node.dependencies
+                        # - get the max in the array
+
                         for dep in node.dependencies:
                             if dep.get_local_clock_by_iteration(node.iteration) > max_local_clock:
                                 max_local_clock = max(max_local_clock, dep.local_clock)
@@ -593,6 +599,8 @@ class Cluster:
                     # if next event time is math.inf then it means that the future event list is empty
                     # e.g. the simulation will end right after this loop
 
+                    # todo performance boost:
+                    # rum max on last row of local clocks matrix
                     max_clock = -1
                     for _node in self.nodes:
                         if _node.local_clock > max_clock:

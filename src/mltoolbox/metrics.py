@@ -1,6 +1,7 @@
 import numpy as np
 import abc
 from src.mltoolbox import functions
+from sklearn.metrics import accuracy_score
 
 
 class Metrics:
@@ -47,6 +48,7 @@ class Score(Metrics):
     loss_func = functions.EdgyHingeLossFunction
 
     def compute_value(self, X, y, w):
+        # return accuracy_score(y, np.sign(self.y_hat_func.compute_value(X, w)))
         return 1 - (super().compute_value(X, y, w) / 2)
         # return 1 - (np.sum(self.loss_func.compute_value(y, np.sign(self.y_hat_func.compute_value(X, w)))) / len(y) / 2)
 

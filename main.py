@@ -1,4 +1,4 @@
-import random, math, time, os, pickle, shutil, datetime, pprint, warnings
+import random, math, time, os, pickle, shutil, datetime, pprint, warnings, argparse
 import numpy as np
 from sklearn.datasets.samples_generator import make_blobs, make_regression
 from sklearn.preprocessing import normalize
@@ -6,7 +6,6 @@ from sklearn import linear_model, svm
 from src.cluster import Cluster
 from src import mltoolbox, graph_generator, statistics
 from src.plotter import Plotter, plot_from_files
-import src.mltoolbox.metrics as mtr
 from src.mltoolbox import functions
 from termcolor import colored as col
 
@@ -38,7 +37,13 @@ CLIQUE = lambda n: graph_generator.generate_complete_graph(n)
 REGULAR = lambda n, k: graph_generator.generate_d_regular_graph_by_degree(n, k)
 
 
-def main0(n=None, n_samples=None, n_features=None):
+def main0(
+        seed=None,
+        n=None,
+        n_samples=None,
+        n_features=None,
+        time_const_weight=None
+):
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
@@ -53,8 +58,8 @@ def main0(n=None, n_samples=None, n_features=None):
 
     setup = dict()
 
-    setup['seed'] = int(time.time())
-    setup['n'] = n
+    setup['seed'] = int(time.time()) if seed is None else seed
+    setup['n'] = 100 if n is None else n
 
     setup['graphs'] = {
         # "0_diagonal": DIAGONAL(setup['n']),
@@ -78,18 +83,18 @@ def main0(n=None, n_samples=None, n_features=None):
 
     # TRAINING SET SETUP
 
-    setup['n_samples'] = n_samples
-    setup['n_features'] = n_features
+    setup['n_samples'] = 1000 if n_samples is None else n_samples
+    setup['n_features'] = 100 if n_features is None else n_features
 
     setup['generator_function'] = 'reg2'  # svm, reg, reg2, skreg
 
-    setup['smv_label_flip_prob'] = 0.00  # <-- ONLY FOR SVM
+    setup['smv_label_flip_prob'] = 0.10  # <-- ONLY FOR SVM
 
-    setup['error_mean'] = 0
-    setup['error_std_dev'] = 10  # <--
+    setup['error_mean'] = 0.0
+    setup['error_std_dev'] = 1.0  # <--
 
-    setup['node_error_mean'] = 0
-    setup['node_error_std_dev'] = 50.0  # <--
+    setup['node_error_mean'] = 0.0
+    setup['node_error_std_dev'] = 0.0  # <--
 
     r = np.random.uniform(4, 6)
     c = np.random.uniform(1, 3.8) * np.random.choice([-1, 1])
@@ -101,17 +106,17 @@ def main0(n=None, n_samples=None, n_features=None):
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 9
-    setup['max_time'] = None  # seconds
+    setup['max_iter'] = None
+    setup['max_time'] = 60  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 2e-2
+    setup['alpha'] = 1e-2
     setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
-    setup['time_const_weight'] = 0
+    setup['time_const_weight'] = 0 if time_const_weight is None else time_const_weight
 
     setup['obj_function'] = 'mse'  # mse, hinge_loss, edgy_hinge_loss, score
 
@@ -142,8 +147,8 @@ def main0(n=None, n_samples=None, n_features=None):
 
     # OUTPUT SETUP
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_subfolder = "test_012_exp1lambda_reg2_10err50nodeErr_Win0-0_1e-2alpha_{}nodes{}samp{}feat_classic".format(
-        setup['n'], setup['n_samples'], setup['n_features']
+    test_subfolder = "test_015_exp1lambda_reg_err1_Win0-0_1e-2alpha_{}nodes{}samp{}feat_{}c_classic".format(
+        setup['n'], setup['n_samples'], setup['n_features'], setup['time_const_weight']
     )  # test folder inside test_log/
     test_title = test_subfolder
 
@@ -155,8 +160,8 @@ def main0(n=None, n_samples=None, n_features=None):
     delete_folder_on_errors = True
     instant_plot = False  # instantly plot single simulations results
     plots = (
-        "mse_iter",
-        #"real_mse_iter",
+        "hinge_loss_iter",
+        # "real_mse_iter",
     )
     save_plot_to_file = False
     save_descriptor = True  # create _descriptor.txt file
@@ -415,4 +420,48 @@ def main2():
 switch = 0
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description='Plotter'
+    )
+
+    parser.add_argument(
+        '-p',
+        '--plots',
+        nargs='+',
+        help='List of plots to create',
+        required=False,
+        action='store',
+        dest='plots',
+        default=()
+    )
+
+    parser.add_argument(
+        '-f', '--folder-path',
+        action='store',
+        default=None,
+        required=False,
+        help='Test folder from which load logs to',
+        dest='folder_path'
+    )
+
+    parser.add_argument(
+        '-t', '--temp-index',
+        action='store',
+        default=0,
+        required=False,
+        help='Test folder from which load logs to',
+        dest='temp_index'
+    )
+
+    parser.add_argument(
+        '-s', '--save',
+        action='store_true',
+        default=False,
+        required=False,
+        help='Specify whether save to file or not',
+        dest='s_flag'
+    )
+
+    args = parser.parse_args()
+
     eval("main{}()".format(switch))

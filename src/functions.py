@@ -38,6 +38,23 @@ def compute_graph_degree_from_adjacency_matrix(adj_mat):
     return int(degree)
 
 
+def compute_spectral_gap_from_adjacency_matrix(adj_mat):
+    return 1 - compute_second_eigenvalue_from_adjacency_matrix(adj_mat)
+
+def compute_second_eigenvalue_from_adjacency_matrix(adj_mat):
+    Ck = adj_mat[0]
+    n = len(adj_mat)
+    d = np.sum(Ck)
+    max_val = 0
+    for m in range(1,n):
+        s = 0.0
+        for k in range(0,n):
+            s += Ck[k] * math.e ** ()
+        s /= 1/(d+1)
+    return
+
+
+
 def progress(current_progress, total_progress, bar_length=50, text_before='', text_after=''):
     filled_len = int(round(bar_length * current_progress / float(total_progress)))
     percents = round(100.0 * current_progress / float(total_progress), 1)

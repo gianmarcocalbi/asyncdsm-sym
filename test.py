@@ -1,27 +1,36 @@
 from src import statistics, mltoolbox
 import numpy as np
 from src.plotter import plot_from_files
-import main
-from scripts import plot_topologies_mse_over_nodes_amount_comparison as ptmonac
+import main, time
+from scripts import plot_topologies_obj_func_over_nodes_amount_comparison as ptofonac
+from scripts import plot_topologies_obj_func_at_time_over_c_comparison as ptofatocc
 
 
-#"""
-for n in [800, 500, 300, 200, 100, 80, 60, 50, 20, 10]:
-    n_samples_list = [500, 1000, 5000, 12000]
-    if n == 200:
-        n_samples_list = [1000, 5000, 12000]
-    elif n >= 300:
-        n_samples_list = [5000, 12000]
+"""
+for _ in range(4):
+    seed = int(time.time())
+    for c in [1, 0.99, 0.97, 0.95, 0.90, 0.85, 0.7, 0.5, 0.25, 0]:
+        try:
+            main.main0(seed=seed, time_const_weight=c)
+        except:
+            continue
+"""
+
+#ptofatocc.main()
+
+"""
+for n in [10, 20, 50, 60, 80, 100, 250]:
+    n_samples_list = [500, 1000]
     for n_samples in n_samples_list:
-        for n_features in [2, 10, 50, 100]:
+        for n_features in [50, 100]:
             for _ in range(8):
                 try:
                     main.main0(n, n_samples, n_features)
                 except:
                     continue
-#"""
+"""
 
-#ptmonac.main()
+ptofonac.main()
 
 # plot_from_files(plots=['real_mse_iter', 'mse_iter'])
 
