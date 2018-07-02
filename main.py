@@ -4,38 +4,10 @@ from sklearn.datasets.samples_generator import make_blobs, make_regression
 from sklearn.preprocessing import normalize
 from sklearn import linear_model, svm
 from src.cluster import Cluster
-from src import mltoolbox, graph_generator, statistics
+from src import mltoolbox, graphs, statistics
 from src.plotter import Plotter, plot_from_files
 from src.mltoolbox import functions
 from termcolor import colored as col
-
-# degree = 0
-DIAGONAL = lambda n: np.diag(np.ones(n))
-
-# degree = 1
-CYCLE = lambda n: graph_generator.generate_graph_by_edges(n, ["i->i+1"])
-
-# degree = 2
-CYCLE_B = lambda n: graph_generator.generate_graph_by_edges(n, ["i->i+1", "i->i-1"])
-DIAM_EXP = lambda n: graph_generator.generate_graph_by_edges(
-    n,
-    ["i->i+1", "i->i+{}".format(int(n / 2))])
-ROOT_EXP = lambda n: graph_generator.generate_graph_by_edges(
-    n,
-    ["i->i+1", "i->i+{}".format(int(math.sqrt(n)))])
-
-# degree = 3
-DIAM_EXP_B = lambda n: graph_generator.generate_graph_by_edges(
-    n,
-    ["i->i+1", "i->i-1", "i->i+{}".format(int(n / 2))])
-
-# degree = n
-STAR = lambda n: graph_generator.generate_graph_by_edges(n, ["i->0", "0->i"])
-CLIQUE = lambda n: graph_generator.generate_complete_graph(n)
-
-# regular
-UNIFORM_EDGES_REGULAR = lambda n, k: graph_generator.generate_uniform_edges_d_regular_graph_by_degree(n, k)
-N_CYCLE_REGULAR = lambda n, k: graph_generator.generate_n_cycle_d_regular_graph_by_degree(n, k)
 
 
 def main0(
@@ -62,25 +34,23 @@ def main0(
     setup['seed'] = int(time.time()) if seed is None else seed
     setup['n'] = 100 if n is None else n
 
-    setup['graphs'] = {
-        # "0_diagonal": DIAGONAL(setup['n']),
-        "1_cycle": CYCLE(setup['n']),  # degree = 1
-        # "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
-        "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-        # "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-        # "3_regular": UNIFORM_EDGES_REGULAR(setup['n'], 3),  # degree = 3
-        "4_regular": UNIFORM_EDGES_REGULAR(setup['n'], 4),  # degree = 4
-        # "5_regular": UNIFORM_EDGES_REGULAR(setup['n'], 5),  # degree = 5
-        # "6_regular": UNIFORM_EDGES_REGULAR(setup['n'], 6),  # degree = 6
-        # "7_regular": UNIFORM_EDGES_REGULAR(setup['n'], 7),  # degree = 7
-        "8_regular": UNIFORM_EDGES_REGULAR(setup['n'], 8),  # degree = 8
-        # "9_regular": UNIFORM_EDGES_REGULAR(setup['n'], 9),  # degree = 9
-        # "10_regular": UNIFORM_EDGES_REGULAR(setup['n'], 10),  # degree = 10
-        "20_regular": UNIFORM_EDGES_REGULAR(setup['n'], 20),  # degree = 20
-        "50_regular": UNIFORM_EDGES_REGULAR(setup['n'], 50),  # degree = 50
-        "n-1_clique": CLIQUE(setup['n']),  # degree = n
-        # "n-1_star": STAR(setup['n']),
-    }
+    setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
+        # "0_diagonal",
+        "1_cycle",
+        "2_root_expander",
+        # "2_uniform_edges",
+        # "2_cycle",
+        # "3_cycle",
+        "4_uniform_edges",
+        # "4_cycle",
+        "8_uniform_edges",
+        # "8_cycle",
+        "20_uniform_edges",
+        # "20_cycle",
+        "50_uniform_edges",
+        # "50_cycle",
+        "n-1_clique",
+    ])
 
     # TRAINING SET SETUP
 
@@ -97,22 +67,22 @@ def main0(
     setup['node_error_mean'] = 0.0
     setup['node_error_std_dev'] = 0.0  # <--
 
-    r = np.random.uniform(4, 6)
-    c = np.random.uniform(1, 3.8) * np.random.choice([-1, 1])
+    r = np.random.uniform(4, 10)
+    c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
     setup['starting_weights_domain'] = [c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
-    setup['domain_radius'] = 6
+    setup['domain_radius'] = 8
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = None
-    setup['max_time'] = 60  # seconds
+    setup['max_iter'] = 10
+    setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-2
+    setup['alpha'] = 1e-4
     setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
@@ -148,8 +118,16 @@ def main0(
 
     # OUTPUT SETUP
     save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_subfolder = "test_015_exp1lambda_reg_err1_Win0-0_1e-2alpha_{}nodes{}samp{}feat_{}c_classic".format(
-        setup['n'], setup['n_samples'], setup['n_features'], setup['time_const_weight']
+    test_subfolder = "test_{}_exp1lambda_{}_err1_{}alpha_{}nodes{}samp{}feat_c{}_{}".format(
+        "x01",
+        setup['generator_function'],
+        "err" + str(setup['error_std_dev']) if setup['error_std_dev'] != 0 else '',
+        setup['learning_rate'][0] + str(setup['alpha']),
+        setup['n'],
+        setup['n_samples'],
+        setup['n_features'],
+        setup['time_const_weight'],
+        setup['method']
     )  # test folder inside test_log/
     test_title = test_subfolder
 
@@ -159,9 +137,9 @@ def main0(
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
-    instant_plot = False  # instantly plot single simulations results
+    instant_plot = True  # instantly plot single simulations results
     plots = (
-        "hinge_loss_iter",
+        "mse_iter",
         # "real_mse_iter",
     )
     save_plot_to_file = False
@@ -403,7 +381,7 @@ Summary:
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
     X, y = functions.generate_regression_training_set_from_function(100000, 10, functions.linear_function, 1,
-                                                                    error_std_dev=1)
+        error_std_dev=1)
     cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
     cls.fit(X, y)
     print(cls.score(X, y))

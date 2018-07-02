@@ -1,3 +1,4 @@
+
 import numpy as np
 import warnings, math
 
@@ -167,63 +168,38 @@ def generate_expander_graph(N, degree):
         pass
 
 class Graph:
-    def __init__(self, N, name):
+    def __init__(self, N, A, name):
         self.N = N
         self.name = name
+        self.A = A
 
-def G(N, type, d=0):
+
+def G(N, gtype, d=0):
     A = None
-    if type == 'diagonal':
+    if gtype == 'diagonal':
         A = np.diag(np.ones(N))
-    elif type == 'cycle':
+    elif gtype == 'cycle':
         A = generate_n_cycle_d_regular_graph_by_degree(N, d)
-    elif type == 'uniform_edges':
+    elif gtype == 'uniform_edges':
         A = generate_uniform_edges_d_regular_graph_by_degree(N, d)
+    elif gtype == 'root_expander':
+        A = generate_graph_by_edges(N, ["i->i+1", "i->i+{}".format(int(math.sqrt(N)))])
+    elif 'clique' in gtype:
+        A = generate_complete_graph(N)
     else:
-        raise Exception("Graph type {} doesn't exist".format(type))
+        raise Exception("Graph gtype {} doesn't exist".format(gtype))
 
-    return Graph(N, "{}-{}".format())
-
-# degree = 2
-CYCLE_B = lambda n: generate_graph_by_edges(n, ["i->i+1", "i->i-1"])
-DIAM_EXP = lambda n: generate_graph_by_edges(
-    n,
-    ["i->i+1", "i->i+{}".format(int(n / 2))])
-ROOT_EXP = lambda n: generate_graph_by_edges(
-    n,
-    ["i->i+1", "i->i+{}".format(int(math.sqrt(n)))])
-
-# degree = 3
-DIAM_EXP_B = lambda n: generate_graph_by_edges(
-    n,
-    ["i->i+1", "i->i-1", "i->i+{}".format(int(n / 2))])
-
-# degree = n
-STAR = lambda n: generate_graph_by_edges(n, ["i->0", "0->i"])
-CLIQUE = lambda n: generate_complete_graph(n)
-
-# regular
-UNIFORM_EDGES_REGULAR = lambda n, k: generate_uniform_edges_d_regular_graph_by_degree(n, k)
-N_CYCLE_REGULAR = lambda n, k: generate_n_cycle_d_regular_graph_by_degree(n, k)
+    return Graph(N, A, "{}-{}".format(d, gtype))
 
 
-GRAPHS = {
-    "0_diagonal": DIAGONAL(setup['n']),
-    "1_cycle": CYCLE(setup['n']),  # degree = 1
-    "2_cycle-bi": CYCLE_B(setup['n']), # degree = 2
-    "2_diam-expander": DIAM_EXP(setup['n']),  # degree = 2
-    "2_root-expander": ROOT_EXP(setup['n']),  # degree = 2
-    "3_regular": UNIFORM_EDGES_REGULAR(setup['n'], 3),  # degree = 3
-    "4_regular": UNIFORM_EDGES_REGULAR(setup['n'], 4),  # degree = 4
-    "5_regular": UNIFORM_EDGES_REGULAR(setup['n'], 5),  # degree = 5
-    "6_regular": UNIFORM_EDGES_REGULAR(setup['n'], 6),  # degree = 6
-    "7_regular": UNIFORM_EDGES_REGULAR(setup['n'], 7),  # degree = 7
-    "8_regular": UNIFORM_EDGES_REGULAR(setup['n'], 8),  # degree = 8
-    "9_regular": UNIFORM_EDGES_REGULAR(setup['n'], 9),  # degree = 9
-    "10_regular": UNIFORM_EDGES_REGULAR(setup['n'], 10),  # degree = 10
-    "20_regular": UNIFORM_EDGES_REGULAR(setup['n'], 20),  # degree = 20
-    "50_regular": UNIFORM_EDGES_REGULAR(setup['n'], 50),  # degree = 50
-    "n-1_clique": CLIQUE(setup['n']),  # degree = n
-    "n-1_star": STAR(setup['n']),
+def generate_n_nodes_graphs(n, graphs_list):
+    graphs = {}
 
-}
+    for gstr in graphs_list:
+        deg, gtype = gstr.split("_", 1)
+        if 'n' in deg:
+            deg = eval(deg)
+        g = G(n, gtype, int(deg))
+        graphs[g.name] = g.A
+
+    return graphs

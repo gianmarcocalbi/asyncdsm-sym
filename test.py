@@ -2,9 +2,8 @@ from src import statistics, mltoolbox
 import numpy as np
 from src.plotter import plot_from_files
 import main, time
-from scripts import plot_topologies_obj_func_over_nodes_amount_comparison as plot_ofvsclique_over_n
+from scripts import plot_topologies_obj_func_over_samples_amount_comparison as plot_ofvsclique_over_n
 from scripts import plot_topologies_obj_func_at_time_over_c_comparison as plot_of_over_c
-
 
 """
 for _ in range(4):
@@ -17,20 +16,21 @@ for _ in range(4):
             continue
 """
 
-"""
-for n in [10, 20, 50, 60, 80, 100, 250]:
-    n_samples_list = [500, 1000]
+# """
+n_samples_list = [100, 200, 500, 800, 1000, 2000, 5000, 8000, 11000, 50000, 100000]
+for n_features in [100, 50, 10]:
     for n_samples in n_samples_list:
-        for n_features in [50, 100]:
-            for _ in range(8):
-                try:
-                    main.main0(n, n_samples, n_features)
-                except:
-                    continue
-"""
+        for _ in range(8):
+            try:
+                main.main0(n_samples=n_samples, n_features=n_features)
+            except:
+                continue
 
-plot_of_over_c.main()
-#plot_ofvsclique_over_n.main()
+
+# """
+
+# plot_of_over_c.main()
+# plot_ofvsclique_over_n.main()
 
 # plot_from_files(plots=['real_mse_iter', 'mse_iter'])
 

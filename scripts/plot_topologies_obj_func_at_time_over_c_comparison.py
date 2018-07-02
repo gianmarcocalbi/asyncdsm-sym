@@ -26,7 +26,6 @@ def main():
     """
 
     points = {}
-    curves = {}
     time_distr_name = ''
     test_folder_paths = list(glob.iglob("./test_log/test_015*"))
     obj_func_shortname = ""
