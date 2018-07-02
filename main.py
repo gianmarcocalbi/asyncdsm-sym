@@ -35,7 +35,7 @@ def main0(
     setup['n'] = 100 if n is None else n
 
     setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
-        # "0_diagonal",
+        "0_diagonal",
         "1_cycle",
         "2_root_expander",
         # "2_uniform_edges",
@@ -47,7 +47,7 @@ def main0(
         # "8_cycle",
         "20_uniform_edges",
         # "20_cycle",
-        "50_uniform_edges",
+        #"50_uniform_edges",
         # "50_cycle",
         "n-1_clique",
     ])
@@ -57,19 +57,19 @@ def main0(
     setup['n_samples'] = 500 if n_samples is None else n_samples
     setup['n_features'] = 100 if n_features is None else n_features
 
-    setup['generator_function'] = 'reg'  # svm, reg, reg2, skreg
+    setup['generator_function'] = 'svm'  # svm, reg, reg2, skreg
 
-    setup['smv_label_flip_prob'] = 0.10  # <-- ONLY FOR SVM
+    setup['smv_label_flip_prob'] = 0.05  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0.0
-    setup['error_std_dev'] = 1.0  # <--
+    setup['error_std_dev'] = 0.0  # <--
 
     setup['node_error_mean'] = 0.0
     setup['node_error_std_dev'] = 0.0  # <--
 
     r = np.random.uniform(4, 10)
     c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
-    setup['starting_weights_domain'] = [c - r, c + r]
+    setup['starting_weights_domain'] = [1, 2]# [c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -77,22 +77,22 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 10
-    setup['max_time'] = None  # seconds
+    setup['max_iter'] = None
+    setup['max_time'] = 1000  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-4
+    setup['alpha'] = 1e-0
     setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
     setup['time_const_weight'] = 0 if time_const_weight is None else time_const_weight
 
-    setup['obj_function'] = 'mse'  # mse, hinge_loss, edgy_hinge_loss, score
+    setup['obj_function'] = 'hinge_loss'  # mse, hinge_loss, edgy_hinge_loss, score
 
-    setup['metrics'] = []
-    setup['real_metrics'] = []
+    setup['metrics'] = ['score']
+    setup['real_metrics'] = ['score']
     setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
 
@@ -117,11 +117,10 @@ def main0(
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
-    test_subfolder = "test_{}_exp1lambda_{}_err1_{}alpha_{}nodes{}samp{}feat_c{}_{}".format(
-        "x01",
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    test_subfolder = "test_{}_exp1lambda_{}_0.05flip_{}alpha_{}nodes{}samp{}feat_c{}_{}".format(
+        "n01",
         setup['generator_function'],
-        "err" + str(setup['error_std_dev']) if setup['error_std_dev'] != 0 else '',
         setup['learning_rate'][0] + str(setup['alpha']),
         setup['n'],
         setup['n_samples'],
@@ -290,6 +289,7 @@ Summary:
 
             cluster.setup(
                 X, y, w,
+                real_y_activation_function = np.sign,
                 obj_function=setup['obj_function'],
                 method=setup['method'],
                 max_iter=setup['max_iter'],

@@ -57,29 +57,30 @@ class Cluster:
         self.linear_regression_beta = None
 
     def setup(self, X, y, real_w,
-              obj_function=METRICS["mse"],
-              method="classic",
-              max_iter=None,
-              max_time=None,
-              batch_size=5,
-              dual_averaging_radius=10,
-              epsilon=0.0,
-              alpha=1e-4,
-              learning_rate="constant",
-              metrics="all",
-              real_metrics="all",
-              metrics_type=0,
-              metrics_nodes='all',
-              shuffle=True,
-              time_distr_class=statistics.ExponentialDistribution,
-              time_distr_param=(),
-              time_const_weight=0,
-              node_error_mean=0,
-              node_error_std_dev=1,
-              starting_weights_domain=(0, 5),
-              verbose_node=False,
-              verbose_task=False
-              ):
+            real_y_activation_function,
+            obj_function=METRICS["mse"],
+            method="classic",
+            max_iter=None,
+            max_time=None,
+            batch_size=5,
+            dual_averaging_radius=10,
+            epsilon=0.0,
+            alpha=1e-4,
+            learning_rate="constant",
+            metrics="all",
+            real_metrics="all",
+            metrics_type=0,
+            metrics_nodes='all',
+            shuffle=True,
+            time_distr_class=statistics.ExponentialDistribution,
+            time_distr_param=(),
+            time_const_weight=0,
+            node_error_mean=0,
+            node_error_std_dev=1,
+            starting_weights_domain=(0, 5),
+            verbose_node=False,
+            verbose_task=False
+    ):
         """Cluster setup.
 
         Parameters
@@ -169,8 +170,8 @@ class Cluster:
 
         """
 
-        self.verbose_node=verbose_node
-        self.verbose_task=verbose_task
+        self.verbose_node = verbose_node
+        self.verbose_task = verbose_task
         N = self.adjacency_matrix.shape[0]
 
         # if X and y have different sizes then the training set is bad formatted
@@ -266,7 +267,7 @@ class Cluster:
             self.y = np.take(Xy, -1, 1)
             del Xy
 
-        self.real_y = self.obj_function.y_hat_func.compute_value(self.X, self.real_w)
+        self.real_y = real_y_activation_function(self.obj_function.y_hat_func.compute_value(self.X, self.real_w))
 
         nodes_errors = np.random.normal(node_error_mean, node_error_std_dev, N)
         subX_size = int(math.floor(self.X.shape[0] / N))
@@ -698,7 +699,7 @@ class Cluster:
                     stop_condition = True
                     print(self._step_output())
                     print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
-                          format(self.clock, self.max_time))
+                        format(self.clock, self.max_time))
                 elif self.get_obj_function_value() <= self.epsilon:
                     stop_condition = True
                     print(self._step_output())
@@ -867,7 +868,7 @@ class Cluster:
                     stop_condition = True
                     print(self._step_output())
                     print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
-                          format(self.clock, self.max_time))
+                        format(self.clock, self.max_time))
                 elif self.get_obj_function_value() <= self.epsilon:
                     stop_condition = True
                     print(self._step_output())

@@ -148,7 +148,7 @@ def svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05)
         x /= math.sqrt(np.inner(x, x))
         X.append(x)
         flip = 1
-        if np.random.uniform(0, 1) <= label_flip_prob:
+        if np.random.uniform(0, 1) < label_flip_prob:
             flip = -1
         y[i] = flip * np.sign(x.T.dot(w))
 
