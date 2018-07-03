@@ -47,7 +47,7 @@ def main0(
         # "8_cycle",
         "20_uniform_edges",
         # "20_cycle",
-        #"50_uniform_edges",
+        "50_uniform_edges",
         # "50_cycle",
         "n-1_clique",
     ])

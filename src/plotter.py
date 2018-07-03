@@ -9,8 +9,10 @@ from src.mltoolbox.metrics import METRICS
 def plot_from_files(**kwargs):
     Plotter(**kwargs).plot()
 
+
 def plot_topologies_mse_over_nodes_amount_comparison(test_folders):
     pass
+
 
 class Plotter:
     colors = {
@@ -204,6 +206,8 @@ class Plotter:
                     self.graphs.remove(graph)
                     continue
 
+        self.colors = Plotter.generate_color_dict_from_degrees(self.graphs, self.setup['n'])
+
         # TODO: update moving average with new metrics logs
         """if self.moving_average_window != 0:
             avg_real_mse_log = {}
@@ -243,6 +247,107 @@ class Plotter:
     @staticmethod
     def get_temp_test_folder_path_by_index(index=0):
         return os.path.normpath(os.path.join("./test_log/temp/", Plotter.get_temp_test_folder_name_by_index(index)))
+
+    @staticmethod
+    def generate_color_dict_from_degrees(graphs, N=None):
+        if N is None:
+            N = len(graphs[list(graphs.keys())[0]])
+        degrees = {}
+        for graph in graphs:
+            d = graph.split('-', 1)[0]
+            if 'n' in d:
+                n = N
+                d = eval(d)
+            degrees[graph] = int(d)
+        graphs_degrees_count = {}
+        max_d = 0
+        for graph in graphs:
+            d = degrees[graph]
+            if not d in graphs_degrees_count:
+                graphs_degrees_count[d] = 1
+            else:
+                graphs_degrees_count[d] += 1
+            if d > max_d:
+                max_d = d
+
+        graphs_degrees_max = dict(graphs_degrees_count)
+
+        colors = {}
+        for graph in graphs:
+            d = degrees[graph]
+            index = graphs_degrees_count[d]
+            max_index = graphs_degrees_max[d]
+            colors[graph] = Plotter.generate_color_from_degree(d, N, index=index, max_index=max_index)
+            graphs_degrees_count[d] -= 1
+
+        return colors
+
+    @staticmethod
+    def generate_color_from_degree(d, N, index=1, max_index=1):
+
+        def red(x):
+            if x < 1 / 5:
+                return 1
+            if x < 2 / 5:
+                return 1
+            if x < 3 / 5:
+                return -5 * x + 3
+            if x < 4 / 5:
+                return 0
+            return 0
+
+        def green(x):
+            if x < 1 / 10:
+                return max(- 1.5 * x + 0.6, 0)
+            if x < 1 / 5:
+                return 0
+            if x < 2 / 5:
+                return 5 * x - 1
+            if x < 3 / 5:
+                return 1
+            if x < 4 / 5:
+                return 1
+            return -5 * x + 5
+
+        def blue(x):
+            if x < 1 / 5:
+                return - 5*x + 1
+            if x < 2 / 5:
+                return 0
+            if x < 3 / 5:
+                return 0
+            if x < 4 / 5:
+                return 5 * x - 3
+            return 1
+
+        x = (N - d) / N
+
+        if x > 0.97:
+            x = 1 - pow(x, 10)
+        elif x > 0.94:
+            x = 1 - pow(x, 8)
+        elif x > 0.9:
+            x = 1 - pow(x, 6)
+        elif x > 0.8:
+            x = 1 - pow(x, 5)
+        else:
+            x = 1 - pow(x, 2)
+        r = red(x)
+        g = green(x)
+        b = blue(x)
+        rgb = np.array([r,g,b])
+        rgb /= (max_index - index + 1)
+        rgb = rgb * 8 / 9
+        return tuple(rgb)
+
+    def _get_graph_color(self, graph):
+        if graph in self.colors:
+            return self.colors[graph]
+        else:
+            h = hex(int(np.random.uniform(0, 0xffffff)))[2:] + "000000"
+            h = "#" + h[0:6]
+            warnings.warn("Graph '{}' has no own color specified, used {} instead".format(graph, h))
+            return h
 
     @staticmethod
     def get_graph_color(graph):
@@ -304,14 +409,14 @@ class Plotter:
             self.plot_iter_all_bounds_velocity_over_degrees_with_real_velocity()
 
     def _plot_init(self,
-                   title_center="",
-                   title_left="",
-                   title_right="",
-                   xlabel="",
-                   ylabel="",
-                   ymax=None,
-                   yscale=None
-                   ):
+            title_center="",
+            title_left="",
+            title_right="",
+            xlabel="",
+            ylabel="",
+            ymax=None,
+            yscale=None
+    ):
         plt.title(title_center)
         plt.title(title_left, loc='left')
         plt.title("({})".format(title_right), loc='right')
@@ -358,7 +463,7 @@ class Plotter:
                 self.logs["iter_time"][graph],
                 list(range(len(self.logs["iter_time"][graph]))),
                 label=graph,
-                color=self.get_graph_color(graph),
+                color=self._get_graph_color(graph),
                 **kwargs
             )
 
@@ -371,7 +476,7 @@ class Plotter:
                 lx,
                 ly,
                 label=graph,
-                color=self.get_graph_color(graph),
+                color=self._get_graph_color(graph),
                 **kwargs
             )
 
@@ -384,7 +489,7 @@ class Plotter:
                 lx,
                 ly,
                 label=graph,
-                color=self.get_graph_color(graph),
+                color=self._get_graph_color(graph),
                 **kwargs
             )
 
@@ -404,7 +509,7 @@ class Plotter:
             self._plot_subroutine(
                 lx,
                 ly,
-                color=self.get_graph_color(graph),
+                color=self._get_graph_color(graph),
                 **kwargs
             )
 
@@ -593,7 +698,7 @@ class Plotter:
                 list(range(len(self.logs['metrics'][metrics_id][graph]))),
                 self.logs['metrics'][metrics_id][graph],
                 label=graph,
-                color=self.get_graph_color(graph),
+                color=self._get_graph_color(graph),
                 **kwargs)
 
     def _plot_metrics_over_time_lines(self, metrics_id, **kwargs):
@@ -602,7 +707,7 @@ class Plotter:
                 self.logs['iter_time'][graph],
                 self.logs['metrics'][metrics_id][graph],
                 label=graph,
-                color=self.get_graph_color(graph),
+                color=self._get_graph_color(graph),
                 **kwargs)
 
     # PLOT ERROR over ITER LINES - END

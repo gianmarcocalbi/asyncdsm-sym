@@ -9,11 +9,27 @@ from src.functions import *
 
 
 def main():
-    global points, time_distr_name, obj_func_shortname
+    global points, time_distr_name, obj_func_shortname, graphs_filter
 
     it = 8
-    test_folders = [
+    test_root = './test_log/bulk/x03'
+    test_num = 'x03'  # 012, 013, 014, 015
+    dataset = ''
+    n_samples = ''
+    n_features = '100' # 10, 50, 100
 
+    # test_x01_exp1lambda_reg_1err_r1e-4alpha_100nodes800samp50feat_0c.conflict.0
+
+    test_folder_paths = list(glob.iglob("{}/test_{}*{}*{}samp*{}feat*".format(
+        test_root,
+        test_num,
+        dataset,
+        n_samples,
+        n_features
+    )))
+
+    graphs_filter = [
+        'uniform'
     ]
 
     """
@@ -30,25 +46,13 @@ def main():
     curves = {}
     time_distr_name = ''
 
-    test_num = '012'  # 012, 013, 014, 015
-    dataset = 'svm'
-    n_samples = ''
-    n_features = ''
-
-    """test_folder_paths = list(glob.iglob("./test_log/test_{}*{}*{}samp*{}feat*".format(
-        test_num,
-        dataset,
-        n_samples,
-        n_features
-    )))"""
-    test_folder_paths = list(glob.iglob("./test_log/test_012_*reg2*_100nodes*100feat*"))
     obj_func_shortname = ""
 
     if len(test_folder_paths) == 0:
         raise Exception("Empty test folder paths list")
 
     def extract_points_from_folder(test_folder_path):
-        global points, time_distr_name, obj_func_shortname
+        global points, time_distr_name, obj_func_shortname, graphs_filter
         try:
             with open("{}/.setup.pkl".format(test_folder_path), 'rb') as setup_file:
                 setup = pickle.load(setup_file)
@@ -68,9 +72,16 @@ def main():
         N = setup['n']
         n_samples = setup['n_samples']
         n_features = setup['n_features']
-        x = (n_samples / N) / n_features
+        x = n_samples # / (N * n_features)
 
         for graph in setup['graphs']:
+            try:
+                for g in graphs_filter:
+                    if g in graph:
+                        raise Exception()
+            except:
+                continue
+
             degree = compute_graph_degree_from_adjacency_matrix(setup['graphs'][graph])
             if not graph in points:
                 points[graph] = {}
@@ -98,16 +109,22 @@ def main():
             for x in points[graph][n]:
                 points[graph][n][x] = np.average(points[graph][n][x])
 
+    clique_name = [c for c in points if 'clique' in c][0]
+
+    colors = plotter.Plotter.generate_color_dict_from_degrees(
+        list(points.keys()), n
+    )
+
     for graph in points:
         if graph not in curves:
             curves[graph] = []
         for n in points[graph]:
             for x in points[graph][n]:
-                curves[graph].append((x, points[graph][n][x] / points['n-1_clique'][n][x]))
+                curves[graph].append((x, points[graph][n][x] / points[clique_name][n][x]))
 
     plt.title("{} comparison at iteration {}".format(obj_func_shortname, it), loc='left')
     plt.title("({})".format(time_distr_name), loc='right')
-    plt.xlabel("#nodes")
+    plt.xlabel("#samples")
     plt.ylabel("{0} graph / {0} clique".format(obj_func_shortname))
     plt.yscale('linear')
 
@@ -120,7 +137,7 @@ def main():
             lx,
             ly,
             label=graph,
-            color=plotter.Plotter.get_graph_color(graph),
+            color=colors[graph],
             marker='o',
             markersize=2
             # **kwargs

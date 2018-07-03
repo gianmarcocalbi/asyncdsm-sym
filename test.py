@@ -1,38 +1,56 @@
-from src import statistics, mltoolbox
+from src import statistics, graphs
+from src.functions import *
 import numpy as np
 from src.plotter import plot_from_files
 import main, time
 from scripts import plot_topologies_obj_func_over_samples_amount_comparison as plot_ofvsclique_over_n
 from scripts import plot_topologies_obj_func_at_time_over_c_comparison as plot_of_over_c
+from sklearn.preprocessing import normalize
 
-"""
-for _ in range(4):
-    #seed = int(time.time())
-    seed = [1530197457, 1530198096, 1530198755, 1530199411][_]
-    for c in [0.999, 0.997, 0.995, 0.992, 0.985]:
-        try:
-            main.main0(seed=seed, time_const_weight=c)
-        except:
-            continue
-"""
 
-# """
-n_samples_list = [100, 200, 500, 800, 1000, 2000, 5000, 8000, 11000, 50000, 100000]
-for n_features in [100, 50, 10]:
-    for n_samples in n_samples_list:
-        for _ in range(8):
+if __name__ == "__main__":
+
+    """
+    for _ in range(4):
+        #seed = int(time.time())
+        seed = [1530197457, 1530198096, 1530198755, 1530199411][_]
+        for c in [0.999, 0.997, 0.995, 0.992, 0.985]:
             try:
-                main.main0(n_samples=n_samples, n_features=n_features)
+                main.main0(seed=seed, time_const_weight=c)
             except:
                 continue
+    """
 
+    """
+    n_samples_list = [100, 200, 500, 800, 1000, 2000, 5000, 8000, 11000, 50000, 100000]
+    for n_features in [100, 50, 10]:
+        for n_samples in n_samples_list:
+            for _ in range(8):
+                try:
+                    main.main0(n_samples=n_samples, n_features=n_features)
+                except:
+                    continue
+    
+    
+    """
 
-# """
+    # plot_of_over_c.main()
+    plot_ofvsclique_over_n.main()
 
-# plot_of_over_c.main()
-# plot_ofvsclique_over_n.main()
+    # plot_from_files(plots=['real_mse_iter', 'mse_iter'])
 
-# plot_from_files(plots=['real_mse_iter', 'mse_iter'])
+def test_eigenvalue_computation_suite():
+    for n in [1000, 500, 200, 100, 50, 10]:
+        for d in [1,2,3,4,5,8,10,20,40,50,80,99]:
+            [v1, v2] = test_eigenvalue_computation(n, d)
+            print("n={}, d={}, ({}, {}) diff={}".format(n,d,v1,v2, abs(v1-v2)))
+
+def test_eigenvalue_computation(N, d):
+    A = graphs.generate_n_cycle_d_regular_graph_by_degree(N, d)
+    NA = normalize(A, axis=1, norm='l1')
+    v1 = compute_second_eigenvalue_from_adjacency_matrix(A)
+    v2 = (math.sin(math.pi * (d+1) / N) / math.sin(math.pi / N)) / (d+1)
+    return [v1, v2]
 
 
 def compute_velocities():
