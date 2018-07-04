@@ -20,6 +20,42 @@ def main0(
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
+
+    def generate_test_subfolder_name(setup, test_num, *argslist):
+        def join_name_parts(*args):
+            name = ""
+            for a in args:
+                name += str(a) + "_"
+            return name[:-1]
+
+
+        dataset = setup['dataset']
+        distr = setup['time_distr_class'].shortname + '-'.join([str(e) for e in setup['time_distr_param']])
+        if setup['dataset'] == 'svm':
+            error = str(setup['smv_label_flip_prob']) + 'flip'
+            nodeserror = ''
+        else:
+            error = str(setup['error_std_dev']) + 'err'
+            nodeserror = str(setup['node_error_std_dev']) + 'nodeErr'
+        alpha = setup['learning_rate'][0] + str(setup['alpha']) + 'alpha'
+        nodes = str(setup['n']) + 'n'
+        samp = str(setup['n_samples']) + 'samp'
+        feat = str(setup['n_features']) + 'feat'
+        time = ('INF' if setup['max_time'] is None else str(setup['max_time'])) + 'time'
+        iter = ('INF' if setup['max_iter'] is None else str(setup['max_iter'])) + 'iter'
+        c = str(setup['time_const_weight']) + 'c'
+        method = setup['method']
+
+        name = "test_" + str(test_num)
+
+        for a in argslist:
+            try:
+                name = join_name_parts(name, eval(a))
+            except NameError:
+                pass
+
+        return name
+
     ### BEGIN SETUP ###
 
     begin_time = time.time()
@@ -54,22 +90,22 @@ def main0(
 
     # TRAINING SET SETUP
 
-    setup['n_samples'] = 500 if n_samples is None else n_samples
+    setup['n_samples'] = 100 if n_samples is None else n_samples
     setup['n_features'] = 100 if n_features is None else n_features
 
-    setup['generator_function'] = 'svm'  # svm, reg, reg2, skreg
+    setup['dataset'] = 'reg'  # svm, unireg, reg, reg2, skreg
 
-    setup['smv_label_flip_prob'] = 0.05  # <-- ONLY FOR SVM
+    setup['smv_label_flip_prob'] = 0.0  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0.0
-    setup['error_std_dev'] = 0.0  # <--
+    setup['error_std_dev'] = 1.0  # <--
 
     setup['node_error_mean'] = 0.0
     setup['node_error_std_dev'] = 0.0  # <--
 
     r = np.random.uniform(4, 10)
     c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
-    setup['starting_weights_domain'] = [1, 2]# [c - r, c + r]
+    setup['starting_weights_domain'] = [-100,-100] # [1, 2] #[c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -77,24 +113,24 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = None
-    setup['max_time'] = 1000  # seconds
+    setup['max_iter'] = 100
+    setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-0
+    setup['alpha'] = 1e-5
     setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
     setup['time_const_weight'] = 0 if time_const_weight is None else time_const_weight
 
-    setup['obj_function'] = 'hinge_loss'  # mse, hinge_loss, edgy_hinge_loss, score
+    setup['obj_function'] = 'mse'  # mse, hinge_loss, edgy_hinge_loss, score
 
-    setup['metrics'] = ['score']
-    setup['real_metrics'] = ['score']
-    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
+    setup['metrics'] = []
+    setup['real_metrics'] = []
+    setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = 0  # single node ID, list of IDs, otherwise all will be take into account in metrics
 
     # CLUSTER ALMOST FIXED SETUP
     setup['batch_size'] = 20
@@ -117,10 +153,28 @@ def main0(
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+
+    test_subfolder = generate_test_subfolder_name(setup,
+        '#',
+        'dataset',
+        'distr',
+        'error',
+        #'nodeserror',
+        'alpha',
+        'nodes',
+        'samp',
+        'feat',
+        'time',
+        'iter',
+        'c',
+        'method',
+    )
+
+    """
     test_subfolder = "test_{}_exp1lambda_{}_0.05flip_{}alpha_{}nodes{}samp{}feat_c{}_{}".format(
         "n01",
-        setup['generator_function'],
+        setup['dataset'],
         setup['learning_rate'][0] + str(setup['alpha']),
         setup['n'],
         setup['n_samples'],
@@ -128,6 +182,8 @@ def main0(
         setup['time_const_weight'],
         setup['method']
     )  # test folder inside test_log/
+    """
+
     test_title = test_subfolder
 
     # OUTPUT ALMOST FIXED SETUP
@@ -138,12 +194,13 @@ def main0(
     delete_folder_on_errors = True
     instant_plot = True  # instantly plot single simulations results
     plots = (
-        "mse_iter",
+        #"mse_iter",
         # "real_mse_iter",
     )
-    save_plot_to_file = False
+    save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
     ### END SETUP ###
+
 
     np.random.seed(setup['seed'])
     random.seed(setup['seed'])
@@ -186,7 +243,7 @@ def main0(
     ### BEGIN TRAINING SET GEN ###
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
-    if setup['generator_function'] == 'reg':
+    if setup['dataset'] == 'reg':
         [X, y, w] = functions.generate_regression_training_set_from_function(
             setup['n_samples'], setup['n_features'], functions.LinearYHatFunction.compute_value,
             domain_radius=setup['domain_radius'],
@@ -194,18 +251,24 @@ def main0(
             error_mean=setup['error_mean'],
             error_std_dev=setup['error_std_dev']
         )
-    elif setup['generator_function'] == 'reg2':
+    elif setup['dataset'] == 'reg2':
         X, y, w = functions.generate_regression_training_set(
             setup['n_samples'], setup['n_features'],
             error_mean=setup['error_mean'],
             error_std_dev=setup['error_std_dev']
         )
-    elif setup['generator_function'] == 'svm':
-        X, y, w = functions.svm_dual_averaging_training_set(
+    elif setup['dataset'] == 'unireg':
+        X, y, w = functions.generate_unidimensional_regression_training_set(
+            setup['n_samples'],
+            error_mean=setup['error_mean'],
+            error_std_dev=setup['error_std_dev']
+        )
+    elif setup['dataset'] == 'svm':
+        X, y, w = functions.generate_svm_dual_averaging_training_set(
             setup['n_samples'], setup['n_features'],
             label_flip_prob=setup['smv_label_flip_prob']
         )
-    elif setup['generator_function'] == 'skreg':
+    elif setup['dataset'] == 'skreg':
         X, y, w = make_regression(
             n_samples=setup['n_samples'],
             n_features=setup['n_features'],
@@ -221,7 +284,7 @@ def main0(
         )
     else:
         delete_test_dir()
-        raise Exception("{} is not a good training set generator function".format(setup['generator_function']))
+        raise Exception("{} is not a good training set generator function".format(setup['dataset']))
 
     """
     X, y = mltoolbox.sample_from_function_old(
@@ -388,7 +451,7 @@ def main1():
 
 
 def main2():
-    X, y, w = functions.svm_dual_averaging_training_set(
+    X, y, w = functions.generate_svm_dual_averaging_training_set(
         100000, 100
     )
     cls = svm.LinearSVC(max_iter=1000, verbose=True)

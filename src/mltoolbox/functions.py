@@ -133,8 +133,15 @@ class SampleGenerator:
         # a lot of useful parameters
         pass
 
+def generate_unidimensional_regression_training_set(n_samples, error_mean=0, error_std_dev=1):
+    w = np.ones(1)
+    X = np.random.uniform(-50, 50, (n_samples, 1))
+    y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
 
-def svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05):
+    return X, y, w
+
+
+def generate_svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05):
     X = []
     y = np.zeros(n_samples)
     w = np.random.normal(0, 1, n_features)

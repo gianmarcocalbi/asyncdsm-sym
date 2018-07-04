@@ -11,26 +11,34 @@ from src.functions import *
 def main():
     global points, time_distr_name, obj_func_shortname, graphs_filter
 
+    # SETUP BEGIN
+
+    """
+    x01 : reg only uniform edges avg on 8 tests
+    x02 : reg cycles avg on 8 tests
+    x03 : reg all with avg on 16 tests
+    x04 : svm
+    """
+
     it = 8
-    test_root = './test_log/bulk/x03'
-    test_num = 'x03'  # 012, 013, 014, 015
+    test_root = './test_log'
+    test_num = 'x04'  # 012, 013, 014, 015
+    test_subroot = '/bulk/{}'.format(test_num)
     dataset = ''
     n_samples = ''
-    n_features = '100' # 10, 50, 100
+    n_features = '100'  # 10, 50, 100
+    graphs_filter = ['cycle']
 
-    # test_x01_exp1lambda_reg_1err_r1e-4alpha_100nodes800samp50feat_0c.conflict.0
+    # SETUP END
 
-    test_folder_paths = list(glob.iglob("{}/test_{}*{}*{}samp*{}feat*".format(
+    test_folder_paths = list(glob.iglob(os.path.normpath("{}{}/test_{}*{}*{}samp*{}feat*".format(
         test_root,
+        test_subroot,
         test_num,
         dataset,
         n_samples,
         n_features
-    )))
-
-    graphs_filter = [
-        'uniform'
-    ]
+    ))))
 
     """
     points = {
@@ -72,7 +80,7 @@ def main():
         N = setup['n']
         n_samples = setup['n_samples']
         n_features = setup['n_features']
-        x = n_samples # / (N * n_features)
+        x = n_samples  # / (N * n_features)
 
         for graph in setup['graphs']:
             try:

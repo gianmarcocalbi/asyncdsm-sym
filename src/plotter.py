@@ -167,9 +167,11 @@ class Plotter:
             self.setup['real_metrics'].insert(0, self.setup['obj_function'])
 
         for m in self.setup["metrics"]:
-            self.logs["metrics"][m] = {}
+            if m in METRICS:
+                self.logs["metrics"][m] = {}
         for rm in self.setup["real_metrics"]:
-            self.logs["metrics"]["real_" + rm] = {}
+            if rm in METRICS:
+                self.logs["metrics"]["real_" + rm] = {}
 
         # it's important to loop on a copy of self.graphs and not on the original one
         # since the original in modified inside the loop

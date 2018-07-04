@@ -27,6 +27,9 @@ class Trainer(Task):
         self.N = self.X.shape[0]
         self.iteration = 0
 
+        if not (isinstance(starting_weights_domain, tuple) or isinstance(starting_weights_domain, list)):
+            starting_weights_domain = [starting_weights_domain, starting_weights_domain]
+
         self.w = [
             np.random.uniform(
                 starting_weights_domain[0],

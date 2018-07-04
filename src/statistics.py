@@ -92,6 +92,7 @@ class DistributionAbstract:
 
 class ExponentialDistribution(DistributionAbstract):
     name = "Exponential"
+    shortname = 'exp'
 
     @staticmethod
     def sample(lambd, out_decimal=False):
@@ -114,6 +115,7 @@ class ExponentialDistribution(DistributionAbstract):
 
 class UniformDistribution(DistributionAbstract):
     name = "Uniform"
+    shortname = 'unif'
 
     @staticmethod
     def F_X(x, a=0, b=1):
@@ -147,6 +149,7 @@ class UniformDistribution(DistributionAbstract):
 
 class Type2ParetoDistribution(DistributionAbstract):
     name = "Type II Pareto"
+    shortname = 'lomax'
 
     @staticmethod
     def sample(alpha, sigma=1):
