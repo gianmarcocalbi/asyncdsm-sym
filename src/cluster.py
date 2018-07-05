@@ -38,6 +38,7 @@ class Cluster:
         self.obj_function = None
         self.metrics = {}
         self.real_metrics = {}
+        self.real_metrics_toggle = True
         self.metrics_type = 0
         self.metrics_nodes_id = []
         self.metrics_nodes = []
@@ -69,6 +70,7 @@ class Cluster:
             learning_rate="constant",
             metrics="all",
             real_metrics="all",
+            real_metrics_toggle=True,
             metrics_type=0,
             metrics_nodes='all',
             shuffle=True,
@@ -195,6 +197,7 @@ class Cluster:
         self.max_time = max_time
         self.epsilon = epsilon
         self.metrics_type = metrics_type
+        self.real_metrics_toggle = real_metrics_toggle
 
         if not obj_function in METRICS:
             raise Exception("'{}' is not a viable objective function")
@@ -202,13 +205,20 @@ class Cluster:
         self.obj_function = METRICS[obj_function]
 
         # Setup of nodes to take into account for metrics calculations
-        if not (isinstance(metrics_nodes, list) or isinstance(metrics_nodes, tuple)):
-            if isinstance(metrics_nodes, int):
-                metrics_nodes = [metrics_nodes]
-            else:
-                metrics_nodes = list(range(N))
-        self.metrics_nodes_id = metrics_nodes
+        if metrics_nodes == 'worst' or metrics_nodes == 'best' and self.metrics_type != 2:
+            metrics_nodes = 'all'
 
+        if metrics_nodes != 'worst' and metrics_nodes != 'best':
+            if not (isinstance(metrics_nodes, list) or isinstance(metrics_nodes, tuple)):
+                if isinstance(metrics_nodes, int):
+                    metrics_nodes = [metrics_nodes]
+                else:
+                    metrics_nodes = list(range(N))
+            self.metrics_nodes_id = metrics_nodes
+        else:
+            self.metrics_nodes = metrics_nodes
+
+        # METRICS SETUP BEGIN
         # Fill self.metrics with instances of metrics objects
         if not (isinstance(metrics, list) or isinstance(metrics, tuple)):
             if metrics in METRICS:
@@ -224,35 +234,46 @@ class Cluster:
         if len(self.metrics) == 0:
             warnings.warn("No metrics specified")
 
-        # Fill self.real_metrics with instances of metrics objects
-        if not (isinstance(real_metrics, list) or isinstance(real_metrics, tuple)):
-            if real_metrics in METRICS:
-                self.real_metrics[real_metrics] = METRICS[real_metrics]
-            elif real_metrics.lower() == 'all':
-                self.real_metrics = METRICS
-        else:
-            for m in real_metrics:
-                if m in METRICS:
-                    self.real_metrics[m] = METRICS[m]
-                else:
-                    warnings.warn("Metric {} does not exists".format(m))
-        if len(self.real_metrics) == 0:
-            warnings.warn("No real_metrics specified")
-
-        # add objective function to metrics and real metrics
+        # add objective function to metrics
         if not self.obj_function.id in self.metrics:
             self.metrics[self.obj_function.id] = self.obj_function
-        if not self.obj_function.id in self.real_metrics:
-            self.real_metrics[self.obj_function.id] = self.obj_function
 
-        # instantiate logs list for each metrics and real_metrics
+        # instantiate logs list for each metrics
         for mk in self.metrics.keys():
             self.logs["metrics"][mk] = []
-        for rmk in self.real_metrics.keys():
-            self.logs["real_metrics"][rmk] = []
+
+        # METRICS SETUP END
+
+        # REAL METRICS SETUP BEGIN
+        if self.real_metrics_toggle:
+            # Fill self.real_metrics with instances of metrics objects
+            if not (isinstance(real_metrics, list) or isinstance(real_metrics, tuple)):
+                if real_metrics in METRICS:
+                    self.real_metrics[real_metrics] = METRICS[real_metrics]
+                elif real_metrics.lower() == 'all':
+                    self.real_metrics = METRICS
+            else:
+                for m in real_metrics:
+                    if m in METRICS:
+                        self.real_metrics[m] = METRICS[m]
+                    else:
+                        warnings.warn("Metric {} does not exists".format(m))
+            if len(self.real_metrics) == 0:
+                warnings.warn("No real_metrics specified")
+
+            # add objective function to real metrics
+            if not self.obj_function.id in self.real_metrics:
+                self.real_metrics[self.obj_function.id] = self.obj_function
+
+            # instantiate logs list for each real metrics
+            for rmk in self.real_metrics.keys():
+                self.logs["real_metrics"][rmk] = []
+
+        # REAL METRICS SETUP END
 
         self.logs["obj_function"] = self.logs["metrics"][self.obj_function.id]
-        self.logs["real_obj_function"] = self.logs["real_metrics"][self.obj_function.id]
+        if self.real_metrics_toggle:
+            self.logs["real_obj_function"] = self.logs["real_metrics"][self.obj_function.id]
 
         self.X = X
         self.y = y
@@ -266,7 +287,6 @@ class Cluster:
             self.X = np.delete(Xy, -1, 1)
             self.y = np.take(Xy, -1, 1)
             del Xy
-
 
         self.real_y = self.obj_function.y_hat_func.compute_value(self.X, self.real_w)
 
@@ -313,6 +333,7 @@ class Cluster:
                     learning_rate,
                     self.metrics,
                     self.real_metrics,
+                    self.real_metrics_toggle,
                     shuffle,
                     time_distr_class,
                     time_distr_param,
@@ -382,8 +403,9 @@ class Cluster:
         self._compute_avg_w()
         for m in self.metrics:
             self._compute_metrics(m, real=False)
-        for rm in self.real_metrics:
-            self._compute_metrics(rm, real=True)
+        if self.real_metrics_toggle:
+            for rm in self.real_metrics:
+                self._compute_metrics(rm, real=True)
 
     def _compute_metrics(self, m, real=False):
         if not real:
@@ -404,13 +426,42 @@ class Cluster:
         elif self.metrics_type == 2:
             # average of metrics computed used local w_u of nodes in self.metrics_nodes
             # on the whole training set
-            for node in self.metrics_nodes:
-                val += metrics[m].compute_value(
+            if self.metrics_nodes == 'worst':
+                worst_val = metrics[m].compute_value(
                     self.X,
                     y,
-                    node.training_task.get_w_at_iteration(self.iteration)
+                    self.nodes[0].training_task.get_w_at_iteration(self.iteration)
                 )
-            val /= len(self.metrics_nodes)
+                for i in range(1, len(self.nodes)):
+                    node = self.nodes[i]
+                    worst_val = max(worst_val, metrics[m].compute_value(
+                        self.X,
+                        y,
+                        self.nodes[0].training_task.get_w_at_iteration(self.iteration)
+                    ))
+                val = worst_val
+            elif self.metrics_nodes == 'best':
+                best_val = metrics[m].compute_value(
+                    self.X,
+                    y,
+                    self.nodes[0].training_task.get_w_at_iteration(self.iteration)
+                )
+                for i in range(1, len(self.nodes)):
+                    node = self.nodes[i]
+                    best_val = min(best_val, metrics[m].compute_value(
+                        self.X,
+                        y,
+                        self.nodes[0].training_task.get_w_at_iteration(self.iteration)
+                    ))
+                val = best_val
+            else:
+                for node in self.metrics_nodes:
+                    val += metrics[m].compute_value(
+                        self.X,
+                        y,
+                        node.training_task.get_w_at_iteration(self.iteration)
+                    )
+                val /= len(self.metrics_nodes)
         else:
             val = metrics[m].compute_value(
                 self.X,

@@ -154,24 +154,27 @@ class Plotter:
                 self.setup["metrics"] = [self.setup["metrics"]]
             elif self.setup["metrics"].lower() == 'all':
                 self.setup["metrics"] = list(METRICS.keys())
-        if not (isinstance(self.setup["real_metrics"], list) or isinstance(self.setup["real_metrics"], tuple)):
-            if self.setup["real_metrics"] in METRICS:
-                self.setup["real_metrics"] = [self.setup["real_metrics"]]
-            elif self.setup["real_metrics"].lower() == 'all':
-                self.setup["real_metrics"] = list(METRICS.keys())
+
+        if self.setup['real_metrics_toggle']:
+            if not (isinstance(self.setup["real_metrics"], list) or isinstance(self.setup["real_metrics"], tuple)):
+                if self.setup["real_metrics"] in METRICS:
+                    self.setup["real_metrics"] = [self.setup["real_metrics"]]
+                elif self.setup["real_metrics"].lower() == 'all':
+                    self.setup["real_metrics"] = list(METRICS.keys())
 
         if not self.setup['obj_function'] in self.setup['metrics']:
             self.setup['metrics'].insert(0, self.setup['obj_function'])
 
-        if not self.setup['obj_function'] in self.setup['real_metrics']:
+        if self.setup['real_metrics_toggle'] and not self.setup['obj_function'] in self.setup['real_metrics']:
             self.setup['real_metrics'].insert(0, self.setup['obj_function'])
 
         for m in self.setup["metrics"]:
             if m in METRICS:
                 self.logs["metrics"][m] = {}
-        for rm in self.setup["real_metrics"]:
-            if rm in METRICS:
-                self.logs["metrics"]["real_" + rm] = {}
+        if self.setup['real_metrics_toggle']:
+            for rm in self.setup["real_metrics"]:
+                if rm in METRICS:
+                    self.logs["metrics"]["real_" + rm] = {}
 
         # it's important to loop on a copy of self.graphs and not on the original one
         # since the original in modified inside the loop

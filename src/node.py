@@ -10,8 +10,8 @@ class Node:
     """
 
     def __init__(self, _id, X, y, real_w, obj_function, method, batch_size, dual_averaging_radius,
-                 alpha, learning_rate, metrics, real_metrics, shuffle, time_distr_class, time_distr_param,
-                 time_const_weight, starting_weights_domain, verbose, verbose_task):
+            alpha, learning_rate, metrics, real_metrics, real_metrics_toggle, shuffle, time_distr_class,
+            time_distr_param, time_const_weight, starting_weights_domain, verbose, verbose_task):
         self.verbose = verbose
         self._id = _id  # id number of the node
         self.dependencies = []  # list of node dependencies
@@ -41,6 +41,7 @@ class Node:
                 learning_rate,
                 metrics,
                 real_metrics,
+                real_metrics_toggle,
                 shuffle,
                 verbose_task
             )
@@ -53,6 +54,7 @@ class Node:
                 learning_rate,
                 metrics,
                 real_metrics,
+                real_metrics_toggle,
                 shuffle,
                 verbose_task
             )
@@ -64,6 +66,7 @@ class Node:
                 learning_rate,
                 metrics,
                 real_metrics,
+                real_metrics_toggle,
                 shuffle,
                 verbose_task
             )
@@ -76,6 +79,7 @@ class Node:
                 learning_rate,
                 metrics,
                 real_metrics,
+                real_metrics_toggle,
                 shuffle,
                 verbose_task
             )
@@ -90,6 +94,7 @@ class Node:
                 learning_rate,
                 metrics,
                 real_metrics,
+                real_metrics_toggle,
                 shuffle,
                 verbose_task
             )
@@ -228,11 +233,11 @@ class Node:
             self.training_task.set_w(w / (len(self.dependencies) + 1))
 
         print_verbose(self.verbose,
-                      "Node [{}] averages w({}) with dependencies' w({})".format(
-                          col(self._id,  'cyan'),
-                          self.iteration,
-                          self.iteration
-                      ))
+            "Node [{}] averages w({}) with dependencies' w({})".format(
+                col(self._id, 'cyan'),
+                self.iteration,
+                self.iteration
+            ))
 
     def broadcast_weight_to_recipients(self):
         rec_ids = "["

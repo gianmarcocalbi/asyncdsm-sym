@@ -60,7 +60,7 @@ class GradientDescentTrainerAbstract(Trainer):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, X, y, real_w, obj_function, starting_weights_domain, alpha, learning_rate, metrics, real_metrics,
-                 shuffle, verbose):
+                 real_metrics_toggle, shuffle, verbose):
         super().__init__(X, y, real_w, obj_function, starting_weights_domain, verbose)
 
         self.alpha = alpha
@@ -68,6 +68,7 @@ class GradientDescentTrainerAbstract(Trainer):
         self.shuffle = shuffle
         self.metrics = metrics
         self.real_metrics = real_metrics
+        self.real_metrics_toggle = real_metrics_toggle
 
         self.logs = {
             "obj_function": [],
@@ -79,11 +80,15 @@ class GradientDescentTrainerAbstract(Trainer):
         # instantiate logs' lists for both metrics and real_metrics
         for mk in self.metrics:
             self.logs["metrics"][mk] = []
-        for rmk in self.real_metrics:
-            self.logs["real_metrics"][rmk] = []
+
+        if self.real_metrics_toggle:
+            for rmk in self.real_metrics:
+                self.logs["real_metrics"][rmk] = []
 
         self.logs["obj_function"] = self.logs["metrics"][self.obj_function.id]
-        self.logs["real_obj_function"] = self.logs["real_metrics"][self.obj_function.id]
+
+        if self.real_metrics_toggle:
+            self.logs["real_obj_function"] = self.logs["real_metrics"][self.obj_function.id]
 
         self._compute_all_metrics()
 
