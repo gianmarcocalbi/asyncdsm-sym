@@ -267,7 +267,11 @@ class Cluster:
             self.y = np.take(Xy, -1, 1)
             del Xy
 
-        self.real_y = real_y_activation_function(self.obj_function.y_hat_func.compute_value(self.X, self.real_w))
+
+        self.real_y = self.obj_function.y_hat_func.compute_value(self.X, self.real_w)
+
+        if not real_y_activation_function is None:
+            self.real_y = real_y_activation_function(self.real_y)
 
         nodes_errors = np.random.normal(node_error_mean, node_error_std_dev, N)
         subX_size = int(math.floor(self.X.shape[0] / N))

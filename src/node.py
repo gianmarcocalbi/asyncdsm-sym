@@ -242,7 +242,7 @@ class Node:
 
         rec_ids = rec_ids[:-2]
         rec_ids += "]"
-        print_verbose(self.verbose, "Node [{}] broadcasts w({}) to recipients = []".format(
+        print_verbose(self.verbose, "Node [{}] broadcasts w({}) to recipients = [{}]".format(
             col(self._id, 'cyan'), len(self.training_task.w), rec_ids
         ))
 

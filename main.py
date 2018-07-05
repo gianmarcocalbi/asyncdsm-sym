@@ -71,7 +71,7 @@ def main0(
     setup['n'] = 100 if n is None else n
 
     setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
-        "0_diagonal",
+        #"0_diagonal",
         "1_cycle",
         "2_root_expander",
         # "2_uniform_edges",
@@ -93,12 +93,12 @@ def main0(
     setup['n_samples'] = 100 if n_samples is None else n_samples
     setup['n_features'] = 100 if n_features is None else n_features
 
-    setup['dataset'] = 'reg'  # svm, unireg, reg, reg2, skreg
+    setup['dataset'] = 'unireg'  # svm, unireg, reg, reg2, skreg
 
     setup['smv_label_flip_prob'] = 0.0  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0.0
-    setup['error_std_dev'] = 1.0  # <--
+    setup['error_std_dev'] = 0.0  # <--
 
     setup['node_error_mean'] = 0.0
     setup['node_error_std_dev'] = 0.0  # <--
@@ -113,24 +113,25 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 100
+    setup['max_iter'] = 40
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-5
-    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
+    setup['alpha'] = 1e-1
+    setup['learning_rate'] = "constant"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution
     setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
     setup['time_const_weight'] = 0 if time_const_weight is None else time_const_weight
 
+    setup['real_y_activation_func'] = None
     setup['obj_function'] = 'mse'  # mse, hinge_loss, edgy_hinge_loss, score
 
     setup['metrics'] = []
     setup['real_metrics'] = []
-    setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = 0  # single node ID, list of IDs, otherwise all will be take into account in metrics
+    setup['metrics_type'] = 0 # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, otherwise all will be take into account in metrics
 
     # CLUSTER ALMOST FIXED SETUP
     setup['batch_size'] = 20
@@ -194,10 +195,10 @@ def main0(
     delete_folder_on_errors = True
     instant_plot = True  # instantly plot single simulations results
     plots = (
-        #"mse_iter",
+        "mse_iter",
         # "real_mse_iter",
     )
-    save_plot_to_file = True
+    save_plot_to_file = False
     save_descriptor = True  # create _descriptor.txt file
     ### END SETUP ###
 
@@ -258,11 +259,7 @@ def main0(
             error_std_dev=setup['error_std_dev']
         )
     elif setup['dataset'] == 'unireg':
-        X, y, w = functions.generate_unidimensional_regression_training_set(
-            setup['n_samples'],
-            error_mean=setup['error_mean'],
-            error_std_dev=setup['error_std_dev']
-        )
+        X, y, w = functions.generate_unidimensional_regression_training_set(setup['n_samples'])
     elif setup['dataset'] == 'svm':
         X, y, w = functions.generate_svm_dual_averaging_training_set(
             setup['n_samples'], setup['n_features'],
@@ -352,7 +349,7 @@ Summary:
 
             cluster.setup(
                 X, y, w,
-                real_y_activation_function = np.sign,
+                real_y_activation_function = setup['real_y_activation_func'],
                 obj_function=setup['obj_function'],
                 method=setup['method'],
                 max_iter=setup['max_iter'],

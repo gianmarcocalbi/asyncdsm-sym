@@ -81,7 +81,7 @@ class EdgyHingeLossFunction(LossFunctionAbstract):
 class SquaredLossFunction(LossFunctionAbstract):
     @staticmethod
     def compute_value(y, y_hat_f):
-        return np.power(y - y_hat_f, 2) / 2
+        return np.power(y - y_hat_f, 2)
 
     @staticmethod
     def compute_gradient(y, y_hat_f, y_hat_f_gradient):
@@ -133,11 +133,10 @@ class SampleGenerator:
         # a lot of useful parameters
         pass
 
-def generate_unidimensional_regression_training_set(n_samples, error_mean=0, error_std_dev=1):
-    w = np.ones(1)
-    X = np.random.uniform(-50, 50, (n_samples, 1))
-    y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
-
+def generate_unidimensional_regression_training_set(n_samples):
+    X = np.ones((n_samples, 1))
+    y = (np.arange(n_samples)/n_samples * 100) - 50
+    w = np.zeros(1)
     return X, y, w
 
 
