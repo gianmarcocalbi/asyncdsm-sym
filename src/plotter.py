@@ -287,6 +287,13 @@ class Plotter:
     @staticmethod
     def generate_color_from_degree(d, N, index=1, max_index=1):
 
+        if d == 0:
+            return tuple([200/255, 0, 1])
+        elif d == 1:
+            return tuple([1,0,1])
+        """elif d == 3:
+            return tuple([1,0,0])"""
+
         def red(x):
             if x < 1 / 5:
                 return 1

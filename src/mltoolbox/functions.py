@@ -135,7 +135,12 @@ class SampleGenerator:
 
 def generate_unidimensional_regression_training_set(n_samples):
     X = np.ones((n_samples, 1))
-    y = (np.arange(n_samples)/n_samples * 100) - 50
+    if n_samples % 2 == 0:
+        half = np.arange(1, 1 + n_samples/2)
+        y = np.concatenate([half, -half])
+        y.sort()
+    else:
+        y = (np.arange(n_samples)/n_samples * 100) - 50
     w = np.zeros(1)
     return X, y, w
 

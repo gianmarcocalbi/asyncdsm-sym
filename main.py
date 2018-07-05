@@ -7,6 +7,7 @@ from src.cluster import Cluster
 from src import mltoolbox, graphs, statistics
 from src.plotter import Plotter, plot_from_files
 from src.mltoolbox import functions
+import matplotlib.pyplot as plt
 from termcolor import colored as col
 
 
@@ -105,7 +106,7 @@ def main0(
 
     r = np.random.uniform(4, 10)
     c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
-    setup['starting_weights_domain'] = [-100,-100] # [1, 2] #[c - r, c + r]
+    setup['starting_weights_domain'] = [-300,300] # [1, 2] #[c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -113,7 +114,7 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 40
+    setup['max_iter'] = 100
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
@@ -336,6 +337,9 @@ Summary:
         with open(os.path.join(test_path, '.descriptor.txt'), "w") as f:
             f.write(descriptor)
 
+    w_logs = {}
+    node_w_logs = {}
+
     # simulation for each adjacency matrix in setup['graphs'] dict
     for graph, adjmat in setup['graphs'].items():
         # set the seed again (each simulation must perform on the same cluster setup)
@@ -422,11 +426,56 @@ Summary:
                 delimiter=','
             )
 
+        w_logs[graph] = cluster.w
+        node_w_logs[graph] = cluster.nodes[0].training_task.w
+
         print("Logs of {} simulation created at {}".format(graph, test_path))
 
     if save_descriptor:
         with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
+
+
+    """
+    colors = Plotter.generate_color_dict_from_degrees(
+        list(w_logs.keys()), setup['n']
+    )
+
+    plt.title("W(it)")
+    plt.xlabel("iter")
+    plt.ylabel("W(iter)")
+    plt.yscale('linear')
+    for graph in w_logs:
+        plt.plot(
+            list(range(len(w_logs[graph]))),
+            w_logs[graph],
+            label=graph,
+            color=colors[graph],
+            marker='o',
+            markersize=2
+            # **kwargs
+        )
+    plt.legend()
+    plt.show()
+    plt.close()
+
+    plt.title("W_0(it) (W of Node 0)")
+    plt.xlabel("iter")
+    plt.ylabel("W_0(iter)")
+    plt.yscale('linear')
+    for graph in node_w_logs:
+        plt.plot(
+            list(range(len(node_w_logs[graph]))),
+            node_w_logs[graph],
+            label=graph,
+            color=colors[graph],
+            marker='o',
+            markersize=2
+            # **kwargs
+        )
+    plt.legend()
+    plt.show()
+    plt.close()
 
     if save_plot_to_file or instant_plot:
         plot_from_files(
@@ -436,7 +485,7 @@ Summary:
             plots=plots,
             verbose=verbose_plotter
         )
-
+    """
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)

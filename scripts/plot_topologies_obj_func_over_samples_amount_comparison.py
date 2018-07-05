@@ -80,7 +80,11 @@ def main():
         N = setup['n']
         n_samples = setup['n_samples']
         n_features = setup['n_features']
-        x = n_samples  # / (N * n_features)
+
+        if setup['dataset'] != 'svm':
+            x = n_samples / (N * (n_features + 1))
+        else:
+            x = n_samples / (N * n_features)
 
         for graph in setup['graphs']:
             try:
