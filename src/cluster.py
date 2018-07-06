@@ -293,6 +293,15 @@ class Cluster:
         if not real_y_activation_function is None:
             self.real_y = real_y_activation_function(self.real_y)
 
+        time_distr_params_list = []
+        if isinstance(time_distr_param[0], tuple) or isinstance(time_distr_param[0], list):
+            for i in range(N):
+                time_distr_params_list = time_distr_param
+        else:
+            for i in range(N):
+                time_distr_params_list.append(time_distr_param)
+
+
         nodes_errors = np.random.normal(node_error_mean, node_error_std_dev, N)
         subX_size = int(math.floor(self.X.shape[0] / N))
         subX_size_res = self.X.shape[0] % N
@@ -336,7 +345,7 @@ class Cluster:
                     self.real_metrics_toggle,
                     shuffle,
                     time_distr_class,
-                    time_distr_param,
+                    time_distr_params_list[i],
                     time_const_weight,
                     starting_weights_domain,
                     verbose_node,

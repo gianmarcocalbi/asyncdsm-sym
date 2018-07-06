@@ -11,6 +11,47 @@ import matplotlib.pyplot as plt
 from termcolor import colored as col
 
 
+def generate_test_subfolder_name(setup, test_num, *argslist):
+    def join_name_parts(*args):
+        name = ""
+        for a in args:
+            name += str(a) + "_"
+        return name[:-1]
+
+    dataset = setup['dataset']
+    distr = setup['time_distr_class'].shortname + '-'.join([str(e) for e in setup['time_distr_param'][0]])
+    if setup['dataset'] == 'svm':
+        error = str(setup['smv_label_flip_prob']) + 'flip'
+        nodeserror = ''
+    else:
+        error = str(setup['error_std_dev']) + 'err'
+        nodeserror = str(setup['node_error_std_dev']) + 'nodeErr'
+    alpha = setup['learning_rate'][0] + str(setup['alpha']) + 'alpha'
+    nodes = str(setup['n']) + 'n'
+    samp = str(setup['n_samples']) + 'samp'
+    feat = str(setup['n_features']) + 'feat'
+    time = ('INF' if setup['max_time'] is None else str(setup['max_time'])) + 'time'
+    iter = ('INF' if setup['max_iter'] is None else str(setup['max_iter'])) + 'iter'
+    c = str(setup['time_const_weight']) + 'c'
+    method = setup['method']
+
+    name = "test_" + str(test_num)
+
+    for a in argslist:
+        try:
+            name = join_name_parts(name, eval(a))
+        except NameError:
+            pass
+
+    return name
+
+def generate_time_distr_param_list(N, params):
+    k = len(params)
+    time_distr_param_list = [params[0] for _ in range(int(math.ceil(N/k)))]
+    for i in range(1,len(params)):
+        time_distr_param_list += [params[i] for _ in range(int(math.floor(N/k)))]
+    return time_distr_param_list
+
 def main0(
         seed=None,
         n=None,
@@ -23,42 +64,6 @@ def main0(
     # console.stdout.screen = stdscr
     # console.stdout.open()
 
-
-    def generate_test_subfolder_name(setup, test_num, *argslist):
-        def join_name_parts(*args):
-            name = ""
-            for a in args:
-                name += str(a) + "_"
-            return name[:-1]
-
-
-        dataset = setup['dataset']
-        distr = setup['time_distr_class'].shortname + '-'.join([str(e) for e in setup['time_distr_param']])
-        if setup['dataset'] == 'svm':
-            error = str(setup['smv_label_flip_prob']) + 'flip'
-            nodeserror = ''
-        else:
-            error = str(setup['error_std_dev']) + 'err'
-            nodeserror = str(setup['node_error_std_dev']) + 'nodeErr'
-        alpha = setup['learning_rate'][0] + str(setup['alpha']) + 'alpha'
-        nodes = str(setup['n']) + 'n'
-        samp = str(setup['n_samples']) + 'samp'
-        feat = str(setup['n_features']) + 'feat'
-        time = ('INF' if setup['max_time'] is None else str(setup['max_time'])) + 'time'
-        iter = ('INF' if setup['max_iter'] is None else str(setup['max_iter'])) + 'iter'
-        c = str(setup['time_const_weight']) + 'c'
-        method = setup['method']
-
-        name = "test_" + str(test_num)
-
-        for a in argslist:
-            try:
-                name = join_name_parts(name, eval(a))
-            except NameError:
-                pass
-
-        return name
-
     ### BEGIN SETUP ###
 
     begin_time = time.time()
@@ -70,29 +75,29 @@ def main0(
 
     setup = dict()
 
-    setup['seed'] = int(time.time()) if seed is None else seed
+    setup['seed'] = 17062018 # int(time.time()) if seed is None else seed
     setup['n'] = 100 if n is None else n
 
     setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
-        "0_diagonal",
+        #"0_diagonal",
         "1_cycle",
-        "2_uniform_edges",
+        #"2_uniform_edges",
         "2_cycle",
-        "3_uniform_edges",
+        #"3_uniform_edges",
         "3_cycle",
-        "4_uniform_edges",
+        #"4_uniform_edges",
         "4_cycle",
-        "5_uniform_edges",
-        "5_cycle",
-        "8_uniform_edges",
+        #"5_uniform_edges",
+        #"5_cycle",
+        #"8_uniform_edges",
         "8_cycle",
-        "10_uniform_edges",
-        "10_cycle",
-        "20_uniform_edges",
+        #"10_uniform_edges",
+        #"10_cycle",
+        #"20_uniform_edges",
         "20_cycle",
-        "50_uniform_edges",
+        #"50_uniform_edges",
         "50_cycle",
-        "80_uniform_edges",
+        #"80_uniform_edges",
         "80_cycle",
         "n-1_clique",
     ])
@@ -114,7 +119,7 @@ def main0(
 
     r = np.random.uniform(4, 10)
     c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
-    setup['starting_weights_domain'] = [-100, 100]  # [1, 2] #[c - r, c + r]
+    setup['starting_weights_domain'] = [-20, -20]  # [1, 2] #[c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -122,16 +127,19 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = None
-    setup['max_time'] = 10000  # seconds
+    setup['max_iter'] = 100
+    setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-2
+    setup['alpha'] = 1e-1
     setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution if time_distr_class is None else time_distr_class
-    setup['time_distr_param'] = [1]  if time_distr_param is None else time_distr_param # exp[rate], par[a,s], U[a,b]
+    setup['time_distr_param'] = generate_time_distr_param_list(
+        setup['n'],
+        [[1]]
+    ) if time_distr_param is None else time_distr_param # exp[rate], par[a,s], U[a,b]
     setup['time_const_weight'] = 0 if time_const_weight is None else time_const_weight
 
     setup['real_y_activation_func'] = None
@@ -140,8 +148,8 @@ def main0(
     setup['metrics'] = []
     setup['real_metrics'] = []
     setup['real_metrics_toggle'] = False # False to disable real_metrics computation (to speed up computation)
-    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, 'all', 'worst', 'best'
+    setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = 'best'  # single node ID, list of IDs, 'all', 'worst', 'best'
     setup['shuffle'] = False # <--
 
     # CLUSTER ALMOST FIXED SETUP
@@ -167,19 +175,19 @@ def main0(
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
 
     test_subfolder = generate_test_subfolder_name(setup,
-        's01',
+        '031_WinConf_best_err',
         'dataset',
         'distr',
-        #'error',
+        'error',
         #'nodeserror',
-        #'alpha',
+        'alpha',
         'nodes',
-        #'samp',
-        #'feat',
+        'samp',
+        'feat',
         'time',
         'iter',
         'c',
-        #'method',
+        'method',
     )
 
     test_title = test_subfolder
@@ -423,8 +431,8 @@ Summary:
                 delimiter=','
             )
 
-        #w_logs[graph] = cluster.w
-        #node_w_logs[graph] = cluster.nodes[0].training_task.w
+        w_logs[graph] = cluster.w
+        node_w_logs[graph] = cluster.nodes[0].training_task.w
 
         print("Logs of {} simulation created at {}".format(graph, test_path))
 
@@ -433,7 +441,7 @@ Summary:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
 
-    """
+    #"""
     colors = Plotter.generate_color_dict_from_degrees(
         list(w_logs.keys()), setup['n']
     )
@@ -482,7 +490,8 @@ Summary:
             plots=plots,
             verbose=verbose_plotter
         )
-    """
+
+    #"""
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
