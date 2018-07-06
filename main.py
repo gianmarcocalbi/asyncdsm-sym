@@ -16,10 +16,13 @@ def main0(
         n=None,
         n_samples=None,
         n_features=None,
-        time_const_weight=None
+        time_const_weight=None,
+        time_distr_class=None,
+        time_distr_param=None
 ):
     # console.stdout.screen = stdscr
     # console.stdout.open()
+
 
     def generate_test_subfolder_name(setup, test_num, *argslist):
         def join_name_parts(*args):
@@ -27,6 +30,7 @@ def main0(
             for a in args:
                 name += str(a) + "_"
             return name[:-1]
+
 
         dataset = setup['dataset']
         distr = setup['time_distr_class'].shortname + '-'.join([str(e) for e in setup['time_distr_param']])
@@ -66,25 +70,30 @@ def main0(
 
     setup = dict()
 
-    setup['seed'] = 17062018 # int(time.time()) if seed is None else seed
+    setup['seed'] = int(time.time()) if seed is None else seed
     setup['n'] = 100 if n is None else n
 
     setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
-        # "0_diagonal",
+        "0_diagonal",
         "1_cycle",
-        # "2_root_expander",
-        # "2_uniform_edges",
+        "2_uniform_edges",
         "2_cycle",
+        "3_uniform_edges",
         "3_cycle",
-        # "4_uniform_edges",
+        "4_uniform_edges",
         "4_cycle",
-        # "8_uniform_edges",
+        "5_uniform_edges",
+        "5_cycle",
+        "8_uniform_edges",
         "8_cycle",
-        # "20_uniform_edges",
+        "10_uniform_edges",
+        "10_cycle",
+        "20_uniform_edges",
         "20_cycle",
-        # "50_uniform_edges",
+        "50_uniform_edges",
         "50_cycle",
-        "75_cycle",
+        "80_uniform_edges",
+        "80_cycle",
         "n-1_clique",
     ])
 
@@ -98,10 +107,10 @@ def main0(
     setup['smv_label_flip_prob'] = 0.0  # <-- ONLY FOR SVM
 
     setup['error_mean'] = 0.0
-    setup['error_std_dev'] = 0.0  # <---
+    setup['error_std_dev'] = 0.0  # <--
 
     setup['node_error_mean'] = 0.0
-    setup['node_error_std_dev'] = 0.0  # <---
+    setup['node_error_std_dev'] = 0.0  # <--
 
     r = np.random.uniform(4, 10)
     c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
@@ -113,16 +122,16 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 100
-    setup['max_time'] = None  # seconds
+    setup['max_iter'] = None
+    setup['max_time'] = 10000  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
     setup['alpha'] = 1e-2
     setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
-    setup['time_distr_class'] = statistics.ExponentialDistribution
-    setup['time_distr_param'] = [1]  # [rate] for exponential, [alpha,sigma] for pareto, [a,b] for uniform
+    setup['time_distr_class'] = statistics.ExponentialDistribution if time_distr_class is None else time_distr_class
+    setup['time_distr_param'] = [1]  if time_distr_param is None else time_distr_param # exp[rate], par[a,s], U[a,b]
     setup['time_const_weight'] = 0 if time_const_weight is None else time_const_weight
 
     setup['real_y_activation_func'] = None
@@ -155,22 +164,22 @@ def main0(
             setup = pickle.load(setup_file)
 
     # OUTPUT SETUP
-    save_test_to_file = False  # write output files to "test_log/{test_log_sub_folder}/" folder
+    save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
 
     test_subfolder = generate_test_subfolder_name(setup,
-        '030',
+        's01',
         'dataset',
         'distr',
-        'error',
-        # 'nodeserror',
-        'alpha',
+        #'error',
+        #'nodeserror',
+        #'alpha',
         'nodes',
-        'samp',
-        'feat',
+        #'samp',
+        #'feat',
         'time',
         'iter',
         'c',
-        'method',
+        #'method',
     )
 
     test_title = test_subfolder
@@ -181,14 +190,15 @@ def main0(
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
-    instant_plot = True  # instantly plot single simulations results
+    instant_plot = False  # instantly plot single simulations results
     plots = (
         #"mse_iter",
         # "real_mse_iter",
     )
-    save_plot_to_file = True
+    save_plot_to_file = False
     save_descriptor = True  # create _descriptor.txt file
     ### END SETUP ###
+
 
     np.random.seed(setup['seed'])
     random.seed(setup['seed'])
@@ -422,6 +432,7 @@ Summary:
         with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
+
     """
     colors = Plotter.generate_color_dict_from_degrees(
         list(w_logs.keys()), setup['n']
@@ -472,7 +483,6 @@ Summary:
             verbose=verbose_plotter
         )
     """
-
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)

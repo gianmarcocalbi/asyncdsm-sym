@@ -1,43 +1,65 @@
 from src import statistics, graphs
+from src.mltoolbox import *
 from src.functions import *
 import numpy as np
 from src.plotter import plot_from_files
-import main, time
+import main, time, math
 from scripts import plot_topologies_obj_func_over_samples_amount_comparison as plot_ofvsclique_over_n
 from scripts import plot_topologies_obj_func_at_time_over_c_comparison as plot_of_over_c
 from sklearn.preprocessing import normalize
 
 
 if __name__ == "__main__":
-
     """
-    for _ in range(4):
-        #seed = int(time.time())
-        seed = [1530197457, 1530198096, 1530198755, 1530199411][_]
-        for c in [0.999, 0.997, 0.995, 0.992, 0.985]:
+    for s in range(16):
+        for c in [1, 0.999, 0.997, 0.995, 0.992, 0.985, 0.950, 0.9, 0.75, 0.5, 0.3, 0.1, 0]:
             try:
-                main.main0(seed=seed, time_const_weight=c)
+                main.main0(seed=s, time_const_weight=c)
             except:
                 continue
     """
 
     """
-    n_samples_list = [100, 200, 500, 800, 1000, 2000, 5000, 8000, 11000, 50000, 100000]
-    for n_features in [100, 50, 10]:
+    n_samples_list = [100, 200, 300, 400, 500, 600, 800, 1000, 2000, 5000, 8000, 10100, 20200]
+    for n_features in [100]:
         for n_samples in n_samples_list:
-            for _ in range(8):
+            for _ in range(20):
                 try:
                     main.main0(n_samples=n_samples, n_features=n_features)
                 except:
                     continue
-    
-    
     """
 
+    #""" TEST VELOCITY OVER DEGREES
+    nodes_list = [20, 50, 100, 200, 300, 400, 500, 600, 800, 1000]
+    for N in nodes_list:
+        for _ in range(2):
+            try:
+                main.main0(
+                    n=N,
+                    time_distr_class=statistics.ExponentialDistribution,
+                    time_distr_param=[1],
+                    seed=N*_
+                )
+                main.main0(
+                    n=N,
+                    time_distr_class=statistics.UniformDistribution,
+                    time_distr_param=[0,2],
+                    seed=N*_
+                )
+                main.main0(
+                    n=N,
+                    time_distr_class=statistics.ExponentialDistribution,
+                    time_distr_param=[3,2],
+                    seed=N*_
+                )
+            except:
+                continue
+    #"""
+
+
     # plot_of_over_c.main()
-
-    plot_ofvsclique_over_n.main()
-
+    # plot_ofvsclique_over_n.main()
     # plot_from_files(plots=['real_mse_iter', 'mse_iter'])
 
 def test_eigenvalue_computation_suite():
