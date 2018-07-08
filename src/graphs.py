@@ -196,7 +196,16 @@ def generate_n_nodes_graphs(n, graphs_list):
     graphs = {}
 
     for gstr in graphs_list:
-        deg, gtype = gstr.split("_", 1)
+        if gstr[0:3] == 'n-1':
+            deg = 'n-1'
+            gtype = gstr.split("-", 2)[2]
+        else:
+            if len(gstr.split("_")[0]) < len(gstr.split("-")[0]):
+                sep = '_'
+            else:
+                sep = '-'
+            deg, gtype = gstr.split(sep, 1)
+
         if 'n' in deg:
             deg = eval(deg)
         g = G(n, gtype, int(deg))

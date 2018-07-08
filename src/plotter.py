@@ -41,7 +41,7 @@ class Plotter:
             plots=(),
             moving_average_window=0,
             ymax=None,
-            yscale='log',  # linear or log
+            yscale='linear',  # linear or log
             scatter=False,
             points_size=0.5,
             verbose=False

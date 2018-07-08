@@ -4,8 +4,7 @@ from src.functions import *
 import numpy as np
 from src.plotter import plot_from_files
 import main, time, math
-from scripts import plot_topologies_obj_func_over_samples_amount_comparison as plot_ofvsclique_over_n
-from scripts import plot_topologies_obj_func_at_time_over_c_comparison as plot_of_over_c
+from scripts import *
 from sklearn.preprocessing import normalize
 
 
@@ -57,8 +56,7 @@ if __name__ == "__main__":
                 continue
     """
 
-    for _ in range(20):
-        main.main0()
+    merge_tests.main()
 
 
     # plot_of_over_c.main()

@@ -79,27 +79,27 @@ def main0(
     setup['n'] = 100 if n is None else n
 
     setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
-        #"0_diagonal",
-        "1_cycle",
-        #"2_uniform_edges",
-        "2_cycle",
-        #"3_uniform_edges",
-        "3_cycle",
-        #"4_uniform_edges",
-        "4_cycle",
-        #"5_uniform_edges",
-        #"5_cycle",
-        #"8_uniform_edges",
-        "8_cycle",
-        #"10_uniform_edges",
-        #"10_cycle",
-        #"20_uniform_edges",
-        "20_cycle",
-        #"50_uniform_edges",
-        "50_cycle",
-        #"80_uniform_edges",
-        "80_cycle",
-        "n-1_clique",
+        #"0-diagonal",
+        "1-cycle",
+        #"2-uniform_edges",
+        "2-cycle",
+        #"3-uniform_edges",
+        "3-cycle",
+        #"4-uniform_edges",
+        "4-cycle",
+        #"5-uniform_edges",
+        #"5-cycle",
+        #"8-uniform_edges",
+        "8-cycle",
+        #"10-uniform_edges",
+        #"10-cycle",
+        #"20-uniform_edges",
+        "20-cycle",
+        #"50-uniform_edges",
+        "50-cycle",
+        #"80-uniform_edges",
+        "80-cycle",
+        "99-clique",
     ])
 
     # TRAINING SET SETUP
@@ -148,8 +148,8 @@ def main0(
     setup['metrics'] = []
     setup['real_metrics'] = []
     setup['real_metrics_toggle'] = False # False to disable real_metrics computation (to speed up computation)
-    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, 'all', 'worst', 'best'
+    setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = 'best'  # single node ID, list of IDs, 'all', 'worst', 'best'
     setup['shuffle'] = True # <--
 
     # CLUSTER ALMOST FIXED SETUP
@@ -175,7 +175,7 @@ def main0(
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
 
     test_subfolder = generate_test_subfolder_name(setup,
-        'u031_WinConf_shuffled',
+        'u031_WinConf_shuffled_best_err',
         'dataset',
         'distr',
         'error',
@@ -442,7 +442,7 @@ Summary:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
 
-    #"""
+    """
     colors = Plotter.generate_color_dict_from_degrees(
         list(w_logs.keys()), setup['n']
     )
@@ -482,6 +482,7 @@ Summary:
     plt.legend()
     plt.show()
     plt.close()
+    """
 
     if save_plot_to_file or instant_plot:
         plot_from_files(
@@ -492,7 +493,6 @@ Summary:
             verbose=verbose_plotter
         )
 
-    #"""
 
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
