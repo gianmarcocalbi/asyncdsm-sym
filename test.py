@@ -30,7 +30,7 @@ if __name__ == "__main__":
                     continue
     """
 
-    #""" TEST VELOCITY OVER DEGREES
+    """ TEST VELOCITY OVER DEGREES
     nodes_list = [20, 50, 100, 200, 300, 400, 500, 600, 800, 1000]
     for N in nodes_list:
         for _ in range(2):
@@ -55,7 +55,10 @@ if __name__ == "__main__":
                 )
             except:
                 continue
-    #"""
+    """
+
+    for _ in range(20):
+        main.main0()
 
 
     # plot_of_over_c.main()

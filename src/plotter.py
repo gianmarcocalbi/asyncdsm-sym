@@ -853,7 +853,7 @@ class Plotter:
     # PLOTS WITH BOUNDS BEGIN
 
     def plot_metrics(self, x_label, metrics_id):
-        filename = "2_" + metrics_id
+        filename = "2_" + metrics_id + "_" + x_label
         METRICS_metrics_id = metrics_id
         prefix = ""
         if 'real' in metrics_id:

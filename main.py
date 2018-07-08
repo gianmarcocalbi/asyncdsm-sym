@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from termcolor import colored as col
 
 
-def generate_test_subfolder_name(setup, test_num, *argslist):
+def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
     def join_name_parts(*args):
         name = ""
         for a in args:
@@ -43,7 +43,7 @@ def generate_test_subfolder_name(setup, test_num, *argslist):
         except NameError:
             pass
 
-    return name
+    return os.path.normpath(os.path.join(parent_folder, name))
 
 def generate_time_distr_param_list(N, params):
     k = len(params)
@@ -75,7 +75,7 @@ def main0(
 
     setup = dict()
 
-    setup['seed'] = 17062018 # int(time.time()) if seed is None else seed
+    setup['seed'] = int(time.time()) if seed is None else seed
     setup['n'] = 100 if n is None else n
 
     setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
@@ -148,9 +148,9 @@ def main0(
     setup['metrics'] = []
     setup['real_metrics'] = []
     setup['real_metrics_toggle'] = False # False to disable real_metrics computation (to speed up computation)
-    setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = 'best'  # single node ID, list of IDs, 'all', 'worst', 'best'
-    setup['shuffle'] = False # <--
+    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, 'all', 'worst', 'best'
+    setup['shuffle'] = True # <--
 
     # CLUSTER ALMOST FIXED SETUP
     setup['batch_size'] = 20
@@ -175,7 +175,7 @@ def main0(
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
 
     test_subfolder = generate_test_subfolder_name(setup,
-        '031_WinConf_best_err',
+        'u031_WinConf_shuffled',
         'dataset',
         'distr',
         'error',
@@ -188,6 +188,7 @@ def main0(
         'iter',
         'c',
         'method',
+        parent_folder="bulk/u031"
     )
 
     test_title = test_subfolder
