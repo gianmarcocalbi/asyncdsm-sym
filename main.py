@@ -75,7 +75,7 @@ def main0(
 
     setup = dict()
 
-    setup['seed'] = int(time.time()) if seed is None else seed
+    setup['seed'] = 17062018 # int(time.time()) if seed is None else seed
     setup['n'] = 100 if n is None else n
 
     setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
@@ -127,13 +127,13 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 100
+    setup['max_iter'] = 500
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-1
-    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
+    setup['alpha'] = 1e-2
+    setup['learning_rate'] = "constant"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution if time_distr_class is None else time_distr_class
     setup['time_distr_param'] = generate_time_distr_param_list(
@@ -149,8 +149,8 @@ def main0(
     setup['real_metrics'] = []
     setup['real_metrics_toggle'] = False # False to disable real_metrics computation (to speed up computation)
     setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = 'best'  # single node ID, list of IDs, 'all', 'worst', 'best'
-    setup['shuffle'] = True # <--
+    setup['metrics_nodes'] = 'worst'  # single node ID, list of IDs, 'all', 'worst', 'best'
+    setup['shuffle'] = False # <--
 
     # CLUSTER ALMOST FIXED SETUP
     setup['batch_size'] = 20
@@ -175,7 +175,7 @@ def main0(
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
 
     test_subfolder = generate_test_subfolder_name(setup,
-        'u031_WinConf_shuffled_best_err',
+        'u032_WinConf_!shuf_worst_err',
         'dataset',
         'distr',
         'error',
@@ -188,7 +188,7 @@ def main0(
         'iter',
         'c',
         'method',
-        parent_folder="bulk/u031"
+        parent_folder=""
     )
 
     test_title = test_subfolder
