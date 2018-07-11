@@ -205,7 +205,7 @@ class Cluster:
         self.obj_function = METRICS[obj_function]
 
         # Setup of nodes to take into account for metrics calculations
-        if metrics_nodes == 'worst' or metrics_nodes == 'best' and self.metrics_type != 2:
+        if (metrics_nodes == 'worst' or metrics_nodes == 'best') and self.metrics_type != 2:
             metrics_nodes = 'all'
 
         if metrics_nodes != 'worst' and metrics_nodes != 'best':
@@ -442,11 +442,10 @@ class Cluster:
                     self.nodes[0].training_task.get_w_at_iteration(self.iteration)
                 )
                 for i in range(1, len(self.nodes)):
-                    node = self.nodes[i]
                     worst_val = max(worst_val, metrics[m].compute_value(
                         self.X,
                         y,
-                        self.nodes[0].training_task.get_w_at_iteration(self.iteration)
+                        self.nodes[i].training_task.get_w_at_iteration(self.iteration)
                     ))
                 val = worst_val
             elif self.metrics_nodes == 'best':
@@ -456,11 +455,10 @@ class Cluster:
                     self.nodes[0].training_task.get_w_at_iteration(self.iteration)
                 )
                 for i in range(1, len(self.nodes)):
-                    node = self.nodes[i]
                     best_val = min(best_val, metrics[m].compute_value(
                         self.X,
                         y,
-                        self.nodes[0].training_task.get_w_at_iteration(self.iteration)
+                        self.nodes[i].training_task.get_w_at_iteration(self.iteration)
                     ))
                 val = best_val
             else:

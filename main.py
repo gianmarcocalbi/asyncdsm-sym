@@ -34,6 +34,9 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
     iter = ('INF' if setup['max_iter'] is None else str(setup['max_iter'])) + 'iter'
     c = str(setup['time_const_weight']) + 'c'
     method = setup['method']
+    shuffle = 'shuf' if setup['shuffle'] else '!shuf'
+    w_domain = 'Win[{},{}]'.format(setup['starting_weights_domain'][0], setup['starting_weights_domain'][1])
+    metrics = 'mtrT{}{}'.format(setup['metrics_type'], setup['metrics_nodes'])
 
     name = "test_" + str(test_num)
 
@@ -45,12 +48,14 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
 
     return os.path.normpath(os.path.join(parent_folder, name))
 
+
 def generate_time_distr_param_list(N, params):
     k = len(params)
-    time_distr_param_list = [params[0] for _ in range(int(math.ceil(N/k)))]
-    for i in range(1,len(params)):
-        time_distr_param_list += [params[i] for _ in range(int(math.floor(N/k)))]
+    time_distr_param_list = [params[0] for _ in range(int(math.ceil(N / k)))]
+    for i in range(1, len(params)):
+        time_distr_param_list += [params[i] for _ in range(int(math.floor(N / k)))]
     return time_distr_param_list
+
 
 def main0(
         seed=None,
@@ -75,29 +80,29 @@ def main0(
 
     setup = dict()
 
-    setup['seed'] = 17062018 # int(time.time()) if seed is None else seed
+    setup['seed'] = int(time.time()) if seed is None else seed
     setup['n'] = 100 if n is None else n
 
     setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], [
-        #"0-diagonal",
+        # "0-diagonal",
         "1-cycle",
-        #"2-uniform_edges",
+        # "2-uniform_edges",
         "2-cycle",
-        #"3-uniform_edges",
+        # "3-uniform_edges",
         "3-cycle",
-        #"4-uniform_edges",
+        # "4-uniform_edges",
         "4-cycle",
-        #"5-uniform_edges",
-        #"5-cycle",
-        #"8-uniform_edges",
+        # "5-uniform_edges",
+        # "5-cycle",
+        # "8-uniform_edges",
         "8-cycle",
-        #"10-uniform_edges",
-        #"10-cycle",
-        #"20-uniform_edges",
+        # "10-uniform_edges",
+        # "10-cycle",
+        # "20-uniform_edges",
         "20-cycle",
-        #"50-uniform_edges",
+        # "50-uniform_edges",
         "50-cycle",
-        #"80-uniform_edges",
+        # "80-uniform_edges",
         "80-cycle",
         "99-clique",
     ])
@@ -119,7 +124,7 @@ def main0(
 
     r = np.random.uniform(4, 10)
     c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
-    setup['starting_weights_domain'] = [-20, -20]  # [1, 2] #[c - r, c + r]
+    setup['starting_weights_domain'] = [-100, -100]  # [1, 2] #[c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -127,19 +132,19 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 500
+    setup['max_iter'] = 40
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-2
-    setup['learning_rate'] = "constant"  # constant, root_decreasing
+    setup['alpha'] = 1e-3
+    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution if time_distr_class is None else time_distr_class
     setup['time_distr_param'] = generate_time_distr_param_list(
         setup['n'],
         [[1]]
-    ) if time_distr_param is None else time_distr_param # exp[rate], par[a,s], U[a,b]
+    ) if time_distr_param is None else time_distr_param  # exp[rate], par[a,s], U[a,b]
     setup['time_const_weight'] = 0 if time_const_weight is None else time_const_weight
 
     setup['real_y_activation_func'] = None
@@ -147,10 +152,10 @@ def main0(
 
     setup['metrics'] = []
     setup['real_metrics'] = []
-    setup['real_metrics_toggle'] = False # False to disable real_metrics computation (to speed up computation)
+    setup['real_metrics_toggle'] = False  # False to disable real_metrics computation (to speed up computation)
     setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['metrics_nodes'] = 'worst'  # single node ID, list of IDs, 'all', 'worst', 'best'
-    setup['shuffle'] = False # <--
+    setup['shuffle'] = True  # <--
 
     # CLUSTER ALMOST FIXED SETUP
     setup['batch_size'] = 20
@@ -175,19 +180,22 @@ def main0(
     save_test_to_file = True  # write output files to "test_log/{test_log_sub_folder}/" folder
 
     test_subfolder = generate_test_subfolder_name(setup,
-        'u032_WinConf_!shuf_worst_err',
+        'u040',
+        'shuffle',
+        'w_domain',
+        'metrics',
         'dataset',
         'distr',
         'error',
-        #'nodeserror',
+        # 'nodeserror',
         'alpha',
         'nodes',
-        'samp',
-        'feat',
+        #'samp',
+        #'feat',
         'time',
         'iter',
         'c',
-        'method',
+        #'method',
         parent_folder=""
     )
 
@@ -199,15 +207,14 @@ def main0(
     compress = True
     overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
     delete_folder_on_errors = True
-    instant_plot = False  # instantly plot single simulations results
+    instant_plot = True  # instantly plot single simulations results
     plots = (
-        #"mse_iter",
+        "mse_iter",
         # "real_mse_iter",
     )
-    save_plot_to_file = False
+    save_plot_to_file = True
     save_descriptor = True  # create _descriptor.txt file
     ### END SETUP ###
-
 
     np.random.seed(setup['seed'])
     random.seed(setup['seed'])
@@ -395,7 +402,7 @@ Summary:
             )
             raise
 
-        extension = ''
+        extension = '.txt'
         if compress:
             extension = '.gz'
 
@@ -432,15 +439,14 @@ Summary:
                 delimiter=','
             )
 
-        w_logs[graph] = cluster.w
-        node_w_logs[graph] = cluster.nodes[0].training_task.w
+        # w_logs[graph] = cluster.w
+        # node_w_logs[graph] = cluster.nodes[0].training_task.w
 
         print("Logs of {} simulation created at {}".format(graph, test_path))
 
     if save_descriptor:
         with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
-
 
     """
     colors = Plotter.generate_color_dict_from_degrees(

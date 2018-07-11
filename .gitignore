@@ -109,4 +109,5 @@ ENV/
 dataset/largescale_challenge/
 test_log/temp/
 test_log/bulk/
+test_log/trash/
 /test_log/.directory

@@ -213,10 +213,12 @@ class Node:
         """
         # avg internal self.w vector with w incoming from dependencies
         if self.iteration > 0:
-            self.avg_weight_with_dependencies()
+            avg_w = self.avg_weight_with_dependencies()
+        else:
+            avg_w = self.training_task.get_w()
 
         # compute the gradient descent step
-        self.training_task.step()
+        self.training_task.step(avg_w)
 
         # broadcast the obtained value to all node's recipients
         self.broadcast_weight_to_recipients()
@@ -226,11 +228,11 @@ class Node:
         Average self.w vector with weights w from dependencies.
         :return: None
         """
+        avg_w = self.training_task.get_w()
         if len(self.dependencies) > 0:
-            w = self.training_task.get_w()
             for dep in self.dependencies:
-                w += self.dequeue_incoming_data(dep.get_id())
-            self.training_task.set_w(w / (len(self.dependencies) + 1))
+                avg_w += self.dequeue_incoming_data(dep.get_id())
+            avg_w /= (len(self.dependencies) + 1)
 
         print_verbose(self.verbose,
             "Node [{}] averages w({}) with dependencies' w({})".format(
@@ -238,6 +240,8 @@ class Node:
                 self.iteration,
                 self.iteration
             ))
+
+        return avg_w
 
     def broadcast_weight_to_recipients(self):
         rec_ids = "["
