@@ -161,7 +161,7 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
 
     def step(self, avg_w):
         # update W following the steepest gradient descent
-        gradient = self.obj_function.compute_gradient(self.X, self.y, avg_w)
+        gradient = self.obj_function.compute_gradient(self.X, self.y, self.get_w())
         self.w.append(avg_w - self.get_alpha() * gradient)
         self.iteration += 1
         self._compute_all_metrics()
@@ -175,7 +175,7 @@ class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
         pick = np.random.randint(0, self.X.shape[0])
         X_pick = self.X[pick]
         y_pick = self.y[pick]
-        gradient = self.obj_function.compute_gradient(X_pick, y_pick, avg_w)
+        gradient = self.obj_function.compute_gradient(X_pick, y_pick, self.get_w())
         self.w.append(avg_w - self.get_alpha() * gradient)
         self.iteration += 1
         self._compute_all_metrics()
@@ -190,7 +190,7 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
                 "BatchGradientDescentTrainer started with batch_size = 1, it is preferable to use "
                 "StochasticGradientDescentTrainer instead")
 
-    def step(self):
+    def step(self, avg_w):
         # determine the mini batch upon which computing the SGD
         batch_indices = np.random.choice(self.X.shape[0], min(self.batch_size, self.X.shape[0]), replace=False)
 
@@ -198,7 +198,7 @@ class BatchGradientDescentTrainer(GradientDescentTrainerAbstract):
         X_batch = np.take(self.X, batch_indices, axis=0)
         y_batch = np.take(self.y, batch_indices, axis=0)
         gradient = self.obj_function.compute_gradient(X_batch, y_batch, self.get_w())
-        self.w.append(self.get_w() - self.get_alpha() * gradient)
+        self.w.append(avg_w - self.get_alpha() * gradient)
         self.iteration += 1
         self._compute_all_metrics()
 

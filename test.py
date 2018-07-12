@@ -56,12 +56,11 @@ if __name__ == "__main__":
                 continue
     """
 
-    merge_tests.main()
-
-
+    # merge_tests.main()
     # plot_of_over_c.main()
-    # plot_ofvsclique_over_n.main()
-    # plot_from_files(plots=['real_mse_iter', 'mse_iter'])
+    #plot_topologies_obj_func_at_time_over_c_comparison.main()
+    envelop.main()
+
 
 def test_eigenvalue_computation_suite():
     for n in [1000, 500, 200, 100, 50, 10]:

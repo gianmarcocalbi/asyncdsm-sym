@@ -89,7 +89,7 @@ def main0(
         # "2-uniform_edges",
         "2-cycle",
         # "3-uniform_edges",
-        "3-cycle",
+        #"3-cycle",
         # "4-uniform_edges",
         "4-cycle",
         # "5-uniform_edges",
@@ -103,7 +103,7 @@ def main0(
         # "50-uniform_edges",
         "50-cycle",
         # "80-uniform_edges",
-        "80-cycle",
+        #"80-cycle",
         "99-clique",
     ])
 
@@ -124,7 +124,7 @@ def main0(
 
     r = np.random.uniform(4, 10)
     c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
-    setup['starting_weights_domain'] = [-100, -100]  # [1, 2] #[c - r, c + r]
+    setup['starting_weights_domain'] = [-20, -20]  # [1, 2] #[c - r, c + r]
 
     # TRAINING SET ALMOST FIXED SETUP
     # SETUP USED ONLY BY REGRESSION 'reg':
@@ -132,13 +132,13 @@ def main0(
     setup['domain_center'] = 0
 
     # CLUSTER SETUP 1
-    setup['max_iter'] = 40
+    setup['max_iter'] = 100
     setup['max_time'] = None  # seconds
     setup['method'] = "classic"
     setup['dual_averaging_radius'] = 10
 
-    setup['alpha'] = 1e-3
-    setup['learning_rate'] = "root_decreasing"  # constant, root_decreasing
+    setup['alpha'] = 1e-2
+    setup['learning_rate'] = "constant"  # constant, root_decreasing
 
     setup['time_distr_class'] = statistics.ExponentialDistribution if time_distr_class is None else time_distr_class
     setup['time_distr_param'] = generate_time_distr_param_list(
@@ -153,9 +153,9 @@ def main0(
     setup['metrics'] = []
     setup['real_metrics'] = []
     setup['real_metrics_toggle'] = False  # False to disable real_metrics computation (to speed up computation)
-    setup['metrics_type'] = 2  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = 'worst'  # single node ID, list of IDs, 'all', 'worst', 'best'
-    setup['shuffle'] = True  # <--
+    setup['metrics_type'] = 0  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
+    setup['metrics_nodes'] = 'all'  # single node ID, list of IDs, 'all', 'worst', 'best'
+    setup['shuffle'] = False  # <--
 
     # CLUSTER ALMOST FIXED SETUP
     setup['batch_size'] = 20
@@ -404,7 +404,7 @@ Summary:
 
         extension = '.txt'
         if compress:
-            extension = '.gz'
+            extension += '.gz'
 
         np.savetxt(
             os.path.join(test_path, "{}_iter_time_log{}".format(graph, extension)),
@@ -439,8 +439,8 @@ Summary:
                 delimiter=','
             )
 
-        # w_logs[graph] = cluster.w
-        # node_w_logs[graph] = cluster.nodes[0].training_task.w
+        w_logs[graph] = cluster.w
+        node_w_logs[graph] = cluster.nodes[0].training_task.w
 
         print("Logs of {} simulation created at {}".format(graph, test_path))
 
@@ -448,7 +448,7 @@ Summary:
         with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
-    """
+    #"""
     colors = Plotter.generate_color_dict_from_degrees(
         list(w_logs.keys()), setup['n']
     )
@@ -488,7 +488,7 @@ Summary:
     plt.legend()
     plt.show()
     plt.close()
-    """
+    #"""
 
     if save_plot_to_file or instant_plot:
         plot_from_files(

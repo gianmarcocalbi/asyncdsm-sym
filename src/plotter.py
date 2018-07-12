@@ -183,12 +183,20 @@ class Plotter:
             avg_iter_log_path = "{}/{}_avg_iter_time_log".format(self.test_folder_path, graph)
             max_iter_log_path = "{}/{}_max_iter_time_log".format(self.test_folder_path, graph)
 
-            if os.path.isfile(iter_log_path + ".gz"):
-                iter_log_path += '.gz'
-            if os.path.isfile(avg_iter_log_path + ".gz"):
-                avg_iter_log_path += '.gz'
-            if os.path.isfile(max_iter_log_path + ".gz"):
-                max_iter_log_path += '.gz'
+            ext = ''
+            if not os.path.isfile(iter_log_path):
+                if os.path.isfile(iter_log_path + '.txt'):
+                    ext = '.txt'
+                elif os.path.isfile(iter_log_path + '.gz'):
+                    ext = '.gz'
+                elif os.path.isfile(iter_log_path + '.txt.gz'):
+                    ext = '.txt.gz'
+                else:
+                    raise Exception('File not found in {}'.format(self.test_folder_path))
+
+            iter_log_path += ext
+            avg_iter_log_path += ext
+            max_iter_log_path += ext
 
             try:
                 self.logs["iter_time"][graph] = np.loadtxt(iter_log_path)
@@ -201,8 +209,7 @@ class Plotter:
 
             for metrics_log in self.logs["metrics"]:
                 metrics_log_path = "{}/{}_{}_log".format(self.test_folder_path, graph, metrics_log)
-                if os.path.isfile(metrics_log_path + ".gz"):
-                    metrics_log_path += '.gz'
+                metrics_log_path += ext
 
                 try:
                     self.logs["metrics"][metrics_log][graph] = np.loadtxt(metrics_log_path)

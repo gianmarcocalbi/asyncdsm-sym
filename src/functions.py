@@ -1,6 +1,102 @@
-import math, sys, random, cmath
+import math, sys, random, cmath, pickle, os, warnings
 import numpy as np
 from termcolor import colored as col
+from src.mltoolbox.metrics import METRICS
+
+def load_test_logs(test_folder_path, return_setup=True):
+    try:
+        with open("{}/.setup.pkl".format(test_folder_path), 'rb') as setup_file:
+            setup = pickle.load(setup_file)
+    except:
+        print("No setup file to open")
+        raise
+
+    graphs = list(setup['graphs'].keys())
+    degrees = {}
+
+    for graph in graphs:
+        degrees[graph] = compute_graph_degree_from_adjacency_matrix(setup['graphs'][graph])
+
+    logs = {
+        "iter_time": {},
+        "avg_iter_time": {},
+        "max_iter_time": {},
+        "metrics": {}
+    }
+
+    # Fill metrics with instances of metrics objects
+    if not (isinstance(setup["metrics"], list) or isinstance(setup["metrics"], tuple)):
+        if setup["metrics"] in METRICS:
+            setup["metrics"] = [setup["metrics"]]
+        elif setup["metrics"].lower() == 'all':
+            setup["metrics"] = list(METRICS.keys())
+
+    if setup['real_metrics_toggle']:
+        if not (isinstance(setup["real_metrics"], list) or isinstance(setup["real_metrics"], tuple)):
+            if setup["real_metrics"] in METRICS:
+                setup["real_metrics"] = [setup["real_metrics"]]
+            elif setup["real_metrics"].lower() == 'all':
+                setup["real_metrics"] = list(METRICS.keys())
+
+    if not setup['obj_function'] in setup['metrics']:
+        setup['metrics'].insert(0, setup['obj_function'])
+
+    if setup['real_metrics_toggle'] and not setup['obj_function'] in setup['real_metrics']:
+        setup['real_metrics'].insert(0, setup['obj_function'])
+
+    for m in setup["metrics"]:
+        if m in METRICS:
+            logs["metrics"][m] = {}
+    if setup['real_metrics_toggle']:
+        for rm in setup["real_metrics"]:
+            if rm in METRICS:
+                logs["metrics"]["real_" + rm] = {}
+
+    # it's important to loop on a copy of graphs and not on the original one
+    # since the original in modified inside the loop
+    for graph in graphs[:]:
+        iter_log_path = "{}/{}_iter_time_log".format(test_folder_path, graph)
+        avg_iter_log_path = "{}/{}_avg_iter_time_log".format(test_folder_path, graph)
+        max_iter_log_path = "{}/{}_max_iter_time_log".format(test_folder_path, graph)
+
+        ext = ''
+        if not os.path.isfile(iter_log_path):
+            if os.path.isfile(iter_log_path + '.txt'):
+                ext = '.txt'
+            elif os.path.isfile(iter_log_path + '.gz'):
+                ext = '.gz'
+            elif os.path.isfile(iter_log_path + '.txt.gz'):
+                ext = '.txt.gz'
+            else:
+                raise Exception('File not found in {}'.format(test_folder_path))
+
+        iter_log_path += ext
+        avg_iter_log_path += ext
+        max_iter_log_path += ext
+
+        try:
+            logs["iter_time"][graph] = np.loadtxt(iter_log_path)
+            logs["avg_iter_time"][graph] = [tuple(s.split(",")) for s in np.loadtxt(avg_iter_log_path, str)]
+            logs["max_iter_time"][graph] = [tuple(s.split(",")) for s in np.loadtxt(max_iter_log_path, str)]
+        except OSError:
+            warnings.warn('Graph "{}" not found in folder {}'.format(graph, test_folder_path))
+            graphs.remove(graph)
+            continue
+
+        for metrics_log in logs["metrics"]:
+            metrics_log_path = "{}/{}_{}_log".format(test_folder_path, graph, metrics_log)
+            metrics_log_path += ext
+
+            try:
+                logs["metrics"][metrics_log][graph] = np.loadtxt(metrics_log_path)
+            except OSError:
+                warnings.warn('Graph "{}" not found in folder {}'.format(graph, test_folder_path))
+                graphs.remove(graph)
+                continue
+
+    if return_setup:
+        return logs, setup
+    return logs
 
 
 def iteration_speed_lower_bound_new(distr_name, param):
