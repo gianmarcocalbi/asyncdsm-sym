@@ -162,6 +162,9 @@ class Plotter:
                 elif self.setup["real_metrics"].lower() == 'all':
                     self.setup["real_metrics"] = list(METRICS.keys())
 
+        self.setup['metrics'] = list(self.setup['metrics'])
+        self.setup['real_metrics'] = list(self.setup['real_metrics'])
+
         if not self.setup['obj_function'] in self.setup['metrics']:
             self.setup['metrics'].insert(0, self.setup['obj_function'])
 

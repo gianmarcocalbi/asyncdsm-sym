@@ -51,17 +51,21 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
 
 
 def generate_time_distr_param_list(N, params):
+    if not isinstance(params[0], list) and not isinstance(params[0], tuple):
+        params = [params]
+
     k = len(params)
     time_distr_param_list = [params[0] for _ in range(int(math.ceil(N / k)))]
     for i in range(1, len(params)):
         time_distr_param_list += [params[i] for _ in range(int(math.floor(N / k)))]
+
     return time_distr_param_list
 
 
 def main(
         seed=None,
         n=100,
-        graphs=(),
+        graphs=[],
         n_samples=None,
         n_features=100,
         dataset=None,
@@ -78,12 +82,12 @@ def main(
         learning_rate='constant',
         time_distr_class=statistics.ExponentialDistribution,
         time_distr_param=(1,),
-        time_distr_param_list=None,
+        time_distr_param_shuffle=False,
         time_const_weight=0,
         real_y_activation_func=None,
         obj_function='mse',
-        metrics=(),
-        real_metrics=(),
+        metrics=[],
+        real_metrics=[],
         real_metrics_toggle=False,
         metrics_type=0,
         metrics_nodes='all',
@@ -172,16 +176,15 @@ def main(
     setup['time_distr_class'] = time_distr_class
     setup['time_distr_param'] = generate_time_distr_param_list(
         setup['n'],
-        [time_distr_param]
-    ) if time_distr_param_list is None else time_distr_param_list  # exp[rate], par[a,s], U[a,b]
+        time_distr_param
+    ) # exp[rate], par[a,s], U[a,b]
     setup['time_const_weight'] = time_const_weight
     setup['real_y_activation_func'] = real_y_activation_func
     setup['obj_function'] = obj_function  # mse, hinge_loss, edgy_hinge_loss, score
 
     setup['metrics'] = metrics
     setup['real_metrics'] = real_metrics
-    setup[
-        'real_metrics_toggle'] = real_metrics_toggle  # False to disable real_metrics computation (to speed up computation)
+    setup['real_metrics_toggle'] = real_metrics_toggle  # False to disable real_metrics computation (for better perf.)
     setup['metrics_type'] = metrics_type  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
     setup['metrics_nodes'] = metrics_nodes  # single node ID, list of IDs, 'all', 'worst', 'best'
     setup['shuffle'] = shuffle  # <--
@@ -220,6 +223,9 @@ def main(
 
     np.random.seed(setup['seed'])
     random.seed(setup['seed'])
+
+    if time_distr_param_shuffle:
+        setup['time_distr_param'].sort()
 
     if setup['n'] % 2 != 0 and setup['n'] > 1:
         warnings.warn("Amount of nodes is odd (N={}), keep in mind graph generator "
