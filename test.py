@@ -10,15 +10,6 @@ from sklearn.preprocessing import normalize
 
 def run():
     """
-    for s in range(16):
-        for c in [1, 0.999, 0.997, 0.995, 0.992, 0.985, 0.950, 0.9, 0.75, 0.5, 0.3, 0.1, 0]:
-            try:
-                main.main0(seed=s, time_const_weight=c)
-            except:
-                continue
-    """
-
-    """
     n_samples_list = [100, 200, 300, 400, 500, 600, 800, 1000, 2000, 5000, 8000, 10100, 20200]
     for n_features in [100]:
         for n_samples in n_samples_list:
@@ -58,11 +49,80 @@ def run():
 
     # merge_tests.main()
     # plot_of_over_c.main()
-    plot_topologies_obj_func_at_time_over_c_comparison.main()
+    # plot_topologies_obj_func_at_time_over_c_comparison.main()
     # envelop.main()
-    #sim_different_nodes_timing()
+    # sim_different_nodes_timing()
     # sim_spectral_ratios()
-    #plot_spectral_gap_ratio_real_vs_prediction.main()
+    # plot_spectral_gap_ratio_real_vs_prediction.main()
+
+
+def sim_over_c():
+    for s in range(16):
+        for c in [1, 0.999, 0.997, 0.995, 0.992, 0.985, 0.950, 0.9, 0.75, 0.5, 0.3, 0.1, 0]:
+            try:
+                main.main(
+                    seed=s * 77,
+                    n=100,
+                    graphs=[
+                        # "0-diagonal",
+                        "1-cycle",
+                        "2-uniform_edges",
+                        "2-cycle",
+                        "3-uniform_edges",
+                        "3-cycle",
+                        "4-uniform_edges",
+                        "4-cycle",
+                        # "5-uniform_edges",
+                        # "5-cycle",
+                        "8-uniform_edges",
+                        "8-cycle",
+                        # "10-uniform_edges",
+                        # "10-cycle",
+                        "20-uniform_edges",
+                        "20-cycle",
+                        "50-uniform_edges",
+                        "50-cycle",
+                        "80-uniform_edges",
+                        "80-cycle",
+                        "99-clique"
+                    ],
+                    n_samples=1000,
+                    n_features=100,
+                    dataset='reg',
+                    error_std_dev=1.0,
+                    starting_weights_domain=[-2.5, 10.60],
+                    max_iter=None,
+                    max_time=100,
+                    method='classic',
+                    alpha=1e-4,
+                    learning_rate='root-decreasing',
+                    time_distr_class=statistics.ExponentialDistribution,
+                    time_distr_param=(1,),
+                    time_const_weight=c,
+                    save_test_to_file=True,
+                    test_folder_name_struct=(
+                        'y03',
+                        'w_domain',
+                        'dataset',
+                        'distr',
+                        'error',
+                        'nodeserror',
+                        'alpha',
+                        'nodes',
+                        'samp',
+                        'feat',
+                        'time',
+                        'iter',
+                        'c'
+                    ),
+                    test_parent_folder="y03",
+                    instant_plot=False,
+                    save_plot_to_file=False,
+                    plot_global_w=False,
+                    plot_node_w=False
+                )
+            except:
+                continue
 
 
 def sim_spectral_ratios():
@@ -95,7 +155,7 @@ def sim_spectral_ratios():
         ],
         n_samples=100,
         dataset='unireg',
-        starting_weights_domain=[-100,-60],
+        starting_weights_domain=[-100, -60],
         max_iter=400,
         alpha=1e-2,
         learning_rate='root-decreasing',
@@ -109,17 +169,17 @@ def sim_spectral_ratios():
             'w_domain',
             'metrics',
             'dataset',
-            #'distr',
-            #'error',
-            #'nodeserror',
+                # 'distr',
+                # 'error',
+                # 'nodeserror',
             'alpha',
             'nodes',
             'samp',
-            #'feat',
-            #'time',
+                # 'feat',
+                # 'time',
             'iter',
-            #'c',
-            #'method',
+            # 'c',
+            # 'method',
         ),
         test_parent_folder="",
         instant_plot=True,
@@ -135,29 +195,29 @@ def sim_different_nodes_timing():
     main.main(
         seed=None,
         n=100,
-        graphs=(
+        graphs=[
             # "0-diagonal",
             "1-cycle",
-                # "2-uniform_edges",
+            # "2-uniform_edges",
             "2-cycle",
-                # "3-uniform_edges",
-                # "3-cycle",
-                # "4-uniform_edges",
+            # "3-uniform_edges",
+            # "3-cycle",
+            # "4-uniform_edges",
             "4-cycle",
-                # "5-uniform_edges",
-                # "5-cycle",
-                # "8-uniform_edges",
+            # "5-uniform_edges",
+            # "5-cycle",
+            # "8-uniform_edges",
             "8-cycle",
-                # "10-uniform_edges",
-                # "10-cycle",
-                # "20-uniform_edges",
+            # "10-uniform_edges",
+            # "10-cycle",
+            # "20-uniform_edges",
             "20-cycle",
-                # "50-uniform_edges",
+            # "50-uniform_edges",
             "50-cycle",
-                # "80-uniform_edges",
-                # "80-cycle",
+            # "80-uniform_edges",
+            # "80-cycle",
             "99-clique",
-        ),
+        ],
         n_samples=100,
         dataset='unireg',
         starting_weights_domain=[-70, -60],
