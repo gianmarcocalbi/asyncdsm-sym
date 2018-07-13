@@ -232,7 +232,9 @@ class Cluster:
                 else:
                     warnings.warn("Metric {} does not exists".format(m))
         if len(self.metrics) == 0:
-            warnings.warn("No metrics specified")
+            pass
+            # todo: temp
+            # warnings.warn("No metrics specified")
 
         # add objective function to metrics
         if not self.obj_function.id in self.metrics:

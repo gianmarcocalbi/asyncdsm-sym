@@ -467,6 +467,7 @@ Summary:
     )
 
     if plot_global_w:
+        plt.suptitle(test_subfolder)
         plt.title("W(it)")
         plt.xlabel("iter")
         plt.ylabel("Global W at iteration")
@@ -486,6 +487,7 @@ Summary:
         plt.close()
 
     if not plot_node_w is False:
+        plt.suptitle(test_subfolder)
         plt.title("W_{0}(it) (W of Node {0} at iteration)".format(plot_node_w))
         plt.xlabel("iter")
         plt.ylabel("W_{}(iter)".format(plot_node_w))
@@ -509,7 +511,8 @@ Summary:
             save_plots_to_test_folder=save_plot_to_file,
             instant_plot=instant_plot,
             plots=plots,
-            verbose=verbose_plotter
+            verbose=verbose_plotter,
+            test_tag=test_subfolder
         )
 
 
@@ -532,6 +535,7 @@ def main2():
 
 
 if __name__ == "__main__":
+    raise Exception("Main shouldn't be called directly")
     main(
         seed=None,
         n=100,

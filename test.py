@@ -58,9 +58,76 @@ def run():
 
     # merge_tests.main()
     # plot_of_over_c.main()
-    #plot_topologies_obj_func_at_time_over_c_comparison.main()
-    #envelop.main()
-    sim_different_nodes_timing()
+    plot_topologies_obj_func_at_time_over_c_comparison.main()
+    # envelop.main()
+    #sim_different_nodes_timing()
+    # sim_spectral_ratios()
+    #plot_spectral_gap_ratio_real_vs_prediction.main()
+
+
+def sim_spectral_ratios():
+    input("sim_spectral_ratios()... click [ENTER] to continue or [CTRL]+[C] to abort")
+    main.main(
+        seed=None,
+        n=100,
+        graphs=[
+            # "0-diagonal",
+            "1-cycle",
+            # "2-uniform_edges",
+            "2-cycle",
+            # "3-uniform_edges",
+            # "3-cycle",
+            # "4-uniform_edges",
+            "4-cycle",
+            # "5-uniform_edges",
+            # "5-cycle",
+            # "8-uniform_edges",
+            "8-cycle",
+            # "10-uniform_edges",
+            # "10-cycle",
+            # "20-uniform_edges",
+            "20-cycle",
+            # "50-uniform_edges",
+            "50-cycle",
+            # "80-uniform_edges",
+            # "80-cycle",
+            "99-clique",
+        ],
+        n_samples=100,
+        dataset='unireg',
+        starting_weights_domain=[-100,-60],
+        max_iter=400,
+        alpha=1e-2,
+        learning_rate='root-decreasing',
+        metrics_type=2,
+        metrics_nodes='worst',
+        shuffle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=(
+            'u041',
+            'shuffle',
+            'w_domain',
+            'metrics',
+            'dataset',
+            #'distr',
+            #'error',
+            #'nodeserror',
+            'alpha',
+            'nodes',
+            'samp',
+            #'feat',
+            #'time',
+            'iter',
+            #'c',
+            #'method',
+        ),
+        test_parent_folder="",
+        instant_plot=True,
+        plots=('mse_iter',),
+        save_plot_to_file=True,
+        plot_global_w=True,
+        plot_node_w=False
+    )
 
 
 def sim_different_nodes_timing():
@@ -93,14 +160,14 @@ def sim_different_nodes_timing():
         ),
         n_samples=100,
         dataset='unireg',
-        starting_weights_domain=[-70,-60],
+        starting_weights_domain=[-70, -60],
         max_iter=None,
         max_time=1000,
         method='classic',
         alpha=1e-3,
         learning_rate='constant',
         time_distr_class=statistics.UniformDistribution,
-        time_distr_param=[[0,2],[1,3]],
+        time_distr_param=[[0, 2], [1, 3]],
         time_distr_param_shuffle=False,
         time_const_weight=0,
         obj_function='mse',
@@ -108,21 +175,21 @@ def sim_different_nodes_timing():
         save_test_to_file=True,
         test_folder_name_struct=(
             'h001_hetertime',
-            #'shuffle',
-            #'w_domain',
-            #'metrics',
-            #'dataset',
+                # 'shuffle',
+                # 'w_domain',
+                # 'metrics',
+                # 'dataset',
             'distr',
-            #'error',
-            #'nodeserror',
-            #'alpha',
+                # 'error',
+                # 'nodeserror',
+                # 'alpha',
             'nodes',
-            #'samp',
-            #'feat',
+                # 'samp',
+                # 'feat',
             'time',
             'iter',
             'c',
-            #'method',
+            # 'method',
         ),
         test_parent_folder="",
         instant_plot=True,
@@ -137,17 +204,19 @@ def sim_different_nodes_timing():
         verbose_plotter=0
     )
 
+
 def test_eigenvalue_computation_suite():
     for n in [1000, 500, 200, 100, 50, 10]:
-        for d in [1,2,3,4,5,8,10,20,40,50,80,99]:
+        for d in [1, 2, 3, 4, 5, 8, 10, 20, 40, 50, 80, 99]:
             [v1, v2] = test_eigenvalue_computation(n, d)
-            print("n={}, d={}, ({}, {}) diff={}".format(n,d,v1,v2, abs(v1-v2)))
+            print("n={}, d={}, ({}, {}) diff={}".format(n, d, v1, v2, abs(v1 - v2)))
+
 
 def test_eigenvalue_computation(N, d):
     A = graphs.generate_n_cycle_d_regular_graph_by_degree(N, d)
     NA = normalize(A, axis=1, norm='l1')
     v1 = compute_second_eigenvalue_from_adjacency_matrix(A)
-    v2 = (math.sin(math.pi * (d+1) / N) / math.sin(math.pi / N)) / (d+1)
+    v2 = (math.sin(math.pi * (d + 1) / N) / math.sin(math.pi / N)) / (d + 1)
     return [v1, v2]
 
 

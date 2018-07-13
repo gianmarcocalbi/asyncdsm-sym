@@ -27,7 +27,7 @@ def main():
 
     points = {}
     time_distr_name = ''
-    test_folder_paths = list(glob.iglob("./test_log/bulk/x01/test_*"))
+    test_folder_paths = list(glob.iglob("./test_log/bulk/y02/test_*"))
     obj_func_shortname = ""
 
     if len(test_folder_paths) == 0:

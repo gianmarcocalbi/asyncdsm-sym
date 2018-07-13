@@ -44,9 +44,10 @@ class Plotter:
             yscale='linear',  # linear or log
             scatter=False,
             points_size=0.5,
-            verbose=False
+            verbose=False,
+            test_tag=''
     ):
-
+        self.test_tag=test_tag
         self.verbose = verbose
         self.test_folder_root = test_folder_root
         self.test_folder_name = test_folder_name
@@ -439,6 +440,7 @@ class Plotter:
             ymax=None,
             yscale=None
     ):
+        plt.suptitle(self.test_tag, fontsize=12)
         plt.title(title_center)
         plt.title(title_left, loc='left')
         plt.title("({})".format(title_right), loc='right')
