@@ -10,7 +10,7 @@ from src.plotter import Plotter
 
 def main():
     # SETUP BEGIN
-    test_folder_path = './test_log/test_u042_Win[-70,-60]_sgR0.5alpha_!shuf_unireg_mtrT2worst_500iter'
+    test_folder_path = './test_log/test_u043_Win[-70,-60]_sgC1alpha_!shuf_unireg_mtrT0all_500iter'
     logs, setup = load_test_logs(test_folder_path, return_setup=True)
     degrees = {}
     for graph in setup['graphs']:
@@ -52,7 +52,7 @@ def main():
 
         ratio = []
         for x in range(len(graph_mse_log)):
-            ry = (graph_mse_log[x] - opt) / (clique_mse_log[x] - opt)
+            ry = (graph_mse_log[x] - opt) / (clique_mse_log[x] - opt + 1)
             ratio.append(ry)
         ratio = max(ratio)
 

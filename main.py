@@ -22,6 +22,7 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
 
     dataset = setup['dataset']
     distr = setup['time_distr_class'].shortname + '[' + '-'.join([str(e) for e in setup['time_distr_param'][0]]) + ']'
+    distr_rule = setup['time_distr_param_rule'] + 'Rule'
     if setup['dataset'] == 'svm':
         error = str(setup['smv_label_flip_prob']) + 'flip'
         nodeserror = ''
@@ -54,14 +55,28 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
     return os.path.normpath(os.path.join(parent_folder, name))
 
 
-def generate_time_distr_param_list(N, params):
+def generate_time_distr_param_list(N, params, rule):
     if not isinstance(params[0], list) and not isinstance(params[0], tuple):
         params = [params]
 
     k = len(params)
-    time_distr_param_list = [params[0] for _ in range(int(math.ceil(N / k)))]
-    for i in range(1, len(params)):
-        time_distr_param_list += [params[i] for _ in range(int(math.floor(N / k)))]
+    time_distr_param_list = []
+
+    if rule == 'split':
+        time_distr_param_list = [params[0] for _ in range(int(math.ceil(N / k)))]
+        for i in range(1, len(params)):
+            time_distr_param_list += [params[i] for _ in range(int(math.floor(N / k)))]
+    elif rule == 'random':
+        for i in range(N):
+            time_distr_param_list.append(np.random.choice(params))
+    elif rule == 'alternate':
+        for i in range(N):
+            time_distr_param_list.append(params[i % k])
+    else:
+        if len(params) > 1:
+            raise Exception("No time distr rule specified for multiple parameters")
+        for i in range(N):
+            time_distr_param_list.append(params[0])
 
     return time_distr_param_list
 
@@ -87,7 +102,7 @@ def main(
         spectrum_dependent_learning_rate=False,
         time_distr_class=statistics.ExponentialDistribution,
         time_distr_param=(1,),
-        time_distr_param_shuffle=False,
+        time_distr_param_rule=None,
         time_const_weight=0,
         real_y_activation_func=None,
         obj_function='mse',
@@ -182,8 +197,11 @@ def main(
     setup['time_distr_class'] = time_distr_class
     setup['time_distr_param'] = generate_time_distr_param_list(
         setup['n'],
-        time_distr_param
+        time_distr_param,
+        time_distr_param_rule
+
     ) # exp[rate], par[a,s], U[a,b]
+    setup['time_distr_param_rule'] = time_distr_param_rule
     setup['time_const_weight'] = time_const_weight
     setup['real_y_activation_func'] = real_y_activation_func
     setup['obj_function'] = obj_function  # mse, hinge_loss, edgy_hinge_loss, score
@@ -229,9 +247,6 @@ def main(
 
     np.random.seed(setup['seed'])
     random.seed(setup['seed'])
-
-    if time_distr_param_shuffle:
-        setup['time_distr_param'].sort()
 
     if setup['n'] % 2 != 0 and setup['n'] > 1:
         warnings.warn("Amount of nodes is odd (N={}), keep in mind graph generator "
