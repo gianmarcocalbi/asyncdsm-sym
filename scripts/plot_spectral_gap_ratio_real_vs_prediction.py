@@ -10,7 +10,7 @@ from src.plotter import Plotter
 
 def main():
     # SETUP BEGIN
-    test_folder_path = './test_log/test_u042_Win[-70,-60]_sgC0.1alpha_!shuf_unireg_mtrT2worst_1000iter'
+    test_folder_path = './test_log/test_u042_Win[-70,-60]_sgR0.5alpha_!shuf_unireg_mtrT2worst_500iter'
     logs, setup = load_test_logs(test_folder_path, return_setup=True)
     degrees = {}
     for graph in setup['graphs']:

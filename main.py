@@ -21,7 +21,7 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
         return name[:-1]
 
     dataset = setup['dataset']
-    distr = setup['time_distr_class'].shortname + '-'.join([str(e) for e in setup['time_distr_param'][0]])
+    distr = setup['time_distr_class'].shortname + '[' + '-'.join([str(e) for e in setup['time_distr_param'][0]]) + ']'
     if setup['dataset'] == 'svm':
         error = str(setup['smv_label_flip_prob']) + 'flip'
         nodeserror = ''

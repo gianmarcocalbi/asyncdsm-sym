@@ -9,5 +9,6 @@ __all__ = [
     "plot_topologies_obj_func_at_time_over_c_comparison",
     "plot_topologies_obj_func_over_samples_amount_comparison",
     'envelop',
-    'plot_spectral_gap_ratio_real_vs_prediction'
+    'plot_spectral_gap_ratio_real_vs_prediction',
+    'print_topologies_velocity'
 ]

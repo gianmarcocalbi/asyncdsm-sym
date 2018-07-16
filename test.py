@@ -53,8 +53,9 @@ def run():
     # envelop.main()
     # test_different_nodes_timing()
     # test_classic_gd()
-    test_spectral_ratios()
-    # plot_spectral_gap_ratio_real_vs_prediction.main()
+    # test_spectral_ratios()
+    plot_spectral_gap_ratio_real_vs_prediction.main()
+    # print_topologies_velocity.main()
 
 
 def test_classic_gd():
@@ -207,7 +208,7 @@ def test_spectral_ratios():
             # "2-uniform_edges",
             "2-cycle",
             # "3-uniform_edges",
-            #"3-cycle",
+            # "3-cycle",
             # "4-uniform_edges",
             "4-cycle",
             # "5-uniform_edges",
@@ -215,24 +216,24 @@ def test_spectral_ratios():
             # "8-uniform_edges",
             "8-cycle",
             # "10-uniform_edges",
-            #"10-cycle",
+            # "10-cycle",
             # "20-uniform_edges",
             "20-cycle",
             # "50-uniform_edges",
             "50-cycle",
             # "80-uniform_edges",
-            #"80-cycle",
+            # "80-cycle",
             "99-clique",
         ],
         n_samples=100,
         dataset='unireg',
         starting_weights_domain=[-70, -60],
         max_iter=500,
-        alpha=5e-2,
-        learning_rate='root-decreasing',
+        alpha=0.5,
+        learning_rate='root_decreasing',
         spectrum_dependent_learning_rate=True,
-        metrics_type=0,
-        metrics_nodes='all',
+        metrics_type=2,
+        metrics_nodes='worst',
         method='classic',
         shuffle=False,
         save_test_to_file=True,
@@ -266,10 +267,10 @@ def test_spectral_ratios():
 def test_different_nodes_timing():
     input("test_different_nodes_timing()... click [ENTER] to continue or [CTRL]+[C] to abort")
     main.main(
-        seed=1531427825,
+        seed=18122018,
         n=100,
         graphs=[
-            # "0-diagonal",
+            "0-diagonal",
             "1-cycle",
             # "2-uniform_edges",
             "2-cycle",
@@ -299,15 +300,15 @@ def test_different_nodes_timing():
         method='classic',
         alpha=1e-3,
         learning_rate='constant',
-        time_distr_class=statistics.ExponentialDistribution,
-        time_distr_param=[[0.5], [1]],
+        time_distr_class=statistics.Type2ParetoDistribution,
+        time_distr_param=[[3, 2]],
         time_distr_param_shuffle=False,
         time_const_weight=0,
         obj_function='mse',
         real_metrics_toggle=False,
         save_test_to_file=True,
         test_folder_name_struct=(
-            'h001_hetertime',
+            'h002_hetertime',
                 # 'shuffle',
                 # 'w_domain',
                 # 'metrics',
@@ -325,7 +326,7 @@ def test_different_nodes_timing():
             # 'method',
         ),
         test_parent_folder="",
-        instant_plot=True,
+        instant_plot=False,
         plots=tuple(),
         save_plot_to_file=True
     )
@@ -347,35 +348,17 @@ def test_eigenvalue_computation(N, d):
 
 
 def compute_velocities():
-    graphs = (
-        ("0_diagonal", 0),
-        ("1_cycle", 1),
-        ("2_diam-expander", 2),
-        ("2_root-expander", 2),
-        ("3_regular", 3),
-        ("4_regular", 4),
-        ("5_regular", 5),
-        ("6_regular", 6),
-        ("7_regular", 7),
-        ("8_regular", 8),
-        ("9_regular", 9),
-        ("20_regular", 20),
-        ("50_regular", 50),
-        ("n-1_clique", 99),
-        ("n-1_star", 99),
-    )
+    test_folder_path = "./test_log/test_h002_hetertime_exp0.5_100n_1000time_INFiter_0c"
+    logs, setup = load_test_logs(test_folder_path, return_setup=True)
 
-    for graph, degree in graphs:
-        try:
-            print(
-                "{} speed = {}".format(graph, statistics.single_iter_velocity_from_path(
-                    "./test_log/test_010_pareto3-2_0.5c_10ktime1e-4alpha_lowDegreeComparison_classic.conflict.0", graph,
-                    100,
-                    10000)))
-        except IOError:
-            pass
-        except:
-            raise
+    for graph in setup['graphs']:
+        speed = statistics.single_iter_velocity_from_logs(
+            logs['avg_iter_time'][graph],
+            logs['avg_iter_time']['0-diagonal'],
+            setup['max_time'],
+            setup['n']
+        )
+        print("{} speed = {}".format(graph, speed))
 
 
 """
