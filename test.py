@@ -51,12 +51,84 @@ def run():
     # plot_of_over_c.main()
     # plot_topologies_obj_func_at_time_over_c_comparison.main()
     # envelop.main()
-    # sim_different_nodes_timing()
-    # sim_spectral_ratios()
+    # test_different_nodes_timing()
+    # test_classic_gd()
+    test_spectral_ratios()
     # plot_spectral_gap_ratio_real_vs_prediction.main()
 
 
-def sim_over_c():
+def test_classic_gd():
+    input("sim_spectral_ratios()... click [ENTER] to continue or [CTRL]+[C] to abort")
+    main.main(
+        n=100,
+        graphs=[
+            # "0-diagonal",
+            "1-cycle",
+            # "2-uniform_edges",
+            "2-cycle",
+            # "3-uniform_edges",
+            "3-cycle",
+            # "4-uniform_edges",
+            "4-cycle",
+            # "5-uniform_edges",
+            # "5-cycle",
+            # "8-uniform_edges",
+            "8-cycle",
+            # "10-uniform_edges",
+            # "10-cycle",
+            # "20-uniform_edges",
+            "20-cycle",
+            # "50-uniform_edges",
+            "50-cycle",
+            # "80-uniform_edges",
+            "80-cycle",
+            "99-clique"
+        ],
+        n_samples=1000,
+        n_features=100,
+        dataset='reg2',
+        error_std_dev=1.0,
+        node_error_std_dev=0.0,
+        starting_weights_domain=[20, 30],
+        max_iter=500,
+        max_time=None,
+        method='classic',
+        alpha=1e-2,
+        learning_rate='constant',
+        time_distr_class=statistics.ExponentialDistribution,
+        time_distr_param=(1,),
+        obj_function='mse',
+        real_metrics_toggle=False,
+        metrics_type=2,
+        metrics_nodes='worst',
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=(
+            'n001',
+            'dataset',
+                # 'shuffle',
+                # 'metrics',
+            'w_domain',
+            'distr',
+            'error',
+            'nodeserror',
+            'alpha',
+            'nodes',
+            'samp',
+            'feat',
+            'time',
+            'iter',
+            'c',
+            'method',
+        ),
+        test_parent_folder="",
+        instant_plot=True,
+        plots=('mse_iter',),
+        save_plot_to_file=False
+    )
+
+
+def test_over_c():
     for s in range(16):
         for c in [1, 0.999, 0.997, 0.995, 0.992, 0.985, 0.950, 0.9, 0.75, 0.5, 0.3, 0.1, 0]:
             try:
@@ -125,10 +197,9 @@ def sim_over_c():
                 continue
 
 
-def sim_spectral_ratios():
+def test_spectral_ratios():
     input("sim_spectral_ratios()... click [ENTER] to continue or [CTRL]+[C] to abort")
     main.main(
-        seed=None,
         n=100,
         graphs=[
             # "0-diagonal",
@@ -136,7 +207,7 @@ def sim_spectral_ratios():
             # "2-uniform_edges",
             "2-cycle",
             # "3-uniform_edges",
-            # "3-cycle",
+            #"3-cycle",
             # "4-uniform_edges",
             "4-cycle",
             # "5-uniform_edges",
@@ -144,43 +215,45 @@ def sim_spectral_ratios():
             # "8-uniform_edges",
             "8-cycle",
             # "10-uniform_edges",
-            # "10-cycle",
+            #"10-cycle",
             # "20-uniform_edges",
             "20-cycle",
             # "50-uniform_edges",
             "50-cycle",
             # "80-uniform_edges",
-            # "80-cycle",
+            #"80-cycle",
             "99-clique",
         ],
         n_samples=100,
         dataset='unireg',
-        starting_weights_domain=[-100, -60],
-        max_iter=400,
-        alpha=1e-2,
+        starting_weights_domain=[-70, -60],
+        max_iter=500,
+        alpha=5e-2,
         learning_rate='root-decreasing',
-        metrics_type=2,
-        metrics_nodes='worst',
+        spectrum_dependent_learning_rate=True,
+        metrics_type=0,
+        metrics_nodes='all',
+        method='classic',
         shuffle=False,
         save_test_to_file=True,
-        test_folder_name_struct=(
-            'u041',
-            'shuffle',
+        test_folder_name_struct=[
+            'u042',
             'w_domain',
-            'metrics',
-            'dataset',
-                # 'distr',
-                # 'error',
-                # 'nodeserror',
             'alpha',
-            'nodes',
-            'samp',
-                # 'feat',
-                # 'time',
+            'shuffle',
+            'dataset',
+            'metrics',
+            # 'distr',
+            # 'error',
+            # 'nodeserror',
+            # 'nodes',
+            # 'samp',
+            # 'feat',
+            # 'time',
             'iter',
             # 'c',
             # 'method',
-        ),
+        ],
         test_parent_folder="",
         instant_plot=True,
         plots=('mse_iter',),
@@ -190,10 +263,10 @@ def sim_spectral_ratios():
     )
 
 
-def sim_different_nodes_timing():
-    input("sim_different_nodes_timing()... click [ENTER] to continue or [CTRL]+[C] to abort")
+def test_different_nodes_timing():
+    input("test_different_nodes_timing()... click [ENTER] to continue or [CTRL]+[C] to abort")
     main.main(
-        seed=None,
+        seed=1531427825,
         n=100,
         graphs=[
             # "0-diagonal",
@@ -226,8 +299,8 @@ def sim_different_nodes_timing():
         method='classic',
         alpha=1e-3,
         learning_rate='constant',
-        time_distr_class=statistics.UniformDistribution,
-        time_distr_param=[[0, 2], [1, 3]],
+        time_distr_class=statistics.ExponentialDistribution,
+        time_distr_param=[[0.5], [1]],
         time_distr_param_shuffle=False,
         time_const_weight=0,
         obj_function='mse',
@@ -253,15 +326,8 @@ def sim_different_nodes_timing():
         ),
         test_parent_folder="",
         instant_plot=True,
-        plots=('iter_time',),
-        save_plot_to_file=True,
-        plot_global_w=False,
-        plot_node_w=False,
-        verbose_main=0,
-        verbose_cluster=0,
-        verbose_node=0,
-        verbose_task=0,
-        verbose_plotter=0
+        plots=tuple(),
+        save_plot_to_file=True
     )
 
 
@@ -302,7 +368,7 @@ def compute_velocities():
     for graph, degree in graphs:
         try:
             print(
-                "{} speed = {}".format(graph, statistics.single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(
+                "{} speed = {}".format(graph, statistics.single_iter_velocity_from_path(
                     "./test_log/test_010_pareto3-2_0.5c_10ktime1e-4alpha_lowDegreeComparison_classic.conflict.0", graph,
                     100,
                     10000)))

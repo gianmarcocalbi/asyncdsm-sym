@@ -173,8 +173,8 @@ class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
 
     def step(self, avg_w):
         pick = np.random.randint(0, self.X.shape[0])
-        X_pick = self.X[pick]
-        y_pick = self.y[pick]
+        X_pick = np.array([self.X[pick]])
+        y_pick = np.array([self.y[pick]])
         gradient = self.obj_function.compute_gradient(X_pick, y_pick, self.get_w())
         self.w.append(avg_w - self.get_alpha() * gradient)
         self.iteration += 1

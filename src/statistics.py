@@ -5,19 +5,7 @@ import numpy as np
 D = decimal.Decimal
 decimal.getcontext().prec = 256
 
-def single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(test_folder_path, graph, nodes_amount, max_time):
-    graph_avg_iter_log_path = "{}/{}_avg_iter_time_log".format(test_folder_path, graph)
-    diag_avg_iter_log_path = "{}/0_diagonal_avg_iter_time_log".format(test_folder_path)
-
-    if os.path.isfile(graph_avg_iter_log_path + ".gz"):
-        graph_avg_iter_log_path += '.gz'
-
-    if os.path.isfile(diag_avg_iter_log_path + ".gz"):
-        diag_avg_iter_log_path += '.gz'
-
-    graph_avg_iter_log = [tuple(s.split(",")) for s in np.loadtxt(graph_avg_iter_log_path, str)]
-    diag_avg_iter_log = [tuple(s.split(",")) for s in np.loadtxt(diag_avg_iter_log_path, str)]
-
+def single_iter_velocity_from_logs(graph_avg_iter_log, diag_avg_iter_log, max_time, nodes_amount=-math.inf):
     diag_avg_iter_time = float(diag_avg_iter_log[-1][0])
     diag_avg_iter_iter = float(diag_avg_iter_log[-1][1])
     graph_avg_iter_time = float(graph_avg_iter_log[-1][0])
@@ -28,6 +16,35 @@ def single_iteration_velocity_as_tot_iters_over_avg_diagonal_iter(test_folder_pa
                         "doesn't allow to compute values for this function")
 
     return graph_avg_iter_iter / max_time
+
+def single_iter_velocity_from_path(test_folder_path, graph, nodes_amount, max_time):
+    graph_avg_iter_log_path = "{}/{}_avg_iter_time_log".format(test_folder_path, graph)
+    diag_avg_iter_log_path = "{}/0_diagonal_avg_iter_time_log".format(test_folder_path)
+
+    ext = ''
+    if not os.path.isfile(graph_avg_iter_log_path):
+        if os.path.isfile(graph_avg_iter_log_path + '.txt'):
+            ext = '.txt'
+        elif os.path.isfile(graph_avg_iter_log_path + '.gz'):
+            ext = '.gz'
+        elif os.path.isfile(graph_avg_iter_log_path + '.txt.gz'):
+            ext = '.txt.gz'
+        else:
+            raise Exception('File not found in {}'.format(test_folder_path))
+
+    graph_avg_iter_log_path += ext
+    diag_avg_iter_log_path += ext
+
+    if os.path.isfile(graph_avg_iter_log_path + ".gz"):
+        graph_avg_iter_log_path += '.gz'
+
+    if os.path.isfile(diag_avg_iter_log_path + ".gz"):
+        diag_avg_iter_log_path += '.gz'
+
+    graph_avg_iter_log = [tuple(s.split(",")) for s in np.loadtxt(graph_avg_iter_log_path, str)]
+    diag_avg_iter_log = [tuple(s.split(",")) for s in np.loadtxt(diag_avg_iter_log_path, str)]
+
+    return single_iter_velocity_from_logs(graph_avg_iter_log, diag_avg_iter_log)
 
 
 def single_iteration_velocity_residual_lifetime_lower_bound(degree, distr_class, distr_params):

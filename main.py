@@ -9,6 +9,7 @@ from src.plotter import Plotter, plot_from_files
 from src.mltoolbox import functions
 from src.graphs import generate_n_nodes_graphs
 import matplotlib.pyplot as plt
+from src.functions import *
 from termcolor import colored as col
 
 
@@ -27,7 +28,10 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
     else:
         error = str(setup['error_std_dev']) + 'err'
         nodeserror = str(setup['node_error_std_dev']) + 'nodeErr'
-    alpha = setup['learning_rate'][0] + str(setup['alpha']) + 'alpha'
+
+    alpha = setup['learning_rate'][0].upper() + str(setup['alpha']) + 'alpha'
+    if setup['spectrum_dependent_learning_rate']:
+        alpha = "sg" + alpha
     nodes = str(setup['n']) + 'n'
     samp = str(setup['n_samples']) + 'samp'
     feat = str(setup['n_features']) + 'feat'
@@ -80,6 +84,7 @@ def main(
         method='classic',
         alpha=None,
         learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
         time_distr_class=statistics.ExponentialDistribution,
         time_distr_param=(1,),
         time_distr_param_shuffle=False,
@@ -172,6 +177,7 @@ def main(
 
     setup['alpha'] = alpha
     setup['learning_rate'] = learning_rate  # constant, root_decreasing
+    setup['spectrum_dependent_learning_rate'] = spectrum_dependent_learning_rate
 
     setup['time_distr_class'] = time_distr_class
     setup['time_distr_param'] = generate_time_distr_param_list(
@@ -371,6 +377,10 @@ Summary:
         try:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
+            alpha = setup['alpha']
+            if spectrum_dependent_learning_rate:
+                alpha *= math.sqrt(compute_spectral_gap_from_adjacency_matrix(adjmat))
+
             cluster.setup(
                 X, y, w,
                 real_y_activation_function=setup['real_y_activation_func'],
@@ -381,7 +391,7 @@ Summary:
                 batch_size=setup['batch_size'],
                 dual_averaging_radius=setup['dual_averaging_radius'],
                 epsilon=setup['epsilon'],
-                alpha=setup['alpha'],
+                alpha=alpha,
                 learning_rate=setup['learning_rate'],
                 metrics=setup['metrics'],
                 real_metrics=setup["real_metrics"],
@@ -462,7 +472,7 @@ Summary:
         with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
-    colors = Plotter.generate_color_dict_from_degrees(
+    colors = Plotter.generate_color_dict_from_graph_keys(
         list(w_logs.keys()), setup['n']
     )
 

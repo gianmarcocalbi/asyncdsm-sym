@@ -64,10 +64,10 @@ class Plotter:
         self.available_plots = [
             "iter_time",
             "avg_iter_time",
-            # "avg_iter_time_memoryless_lb",
-            # "avg_iter_time_residual_lifetime_lb",
-            # "avg_iter_time_ub",
-            # "avg_iter_time_don_bound",
+            "avg_iter_time_memoryless_lb",
+            "avg_iter_time_residual_lifetime_lb",
+            "avg_iter_time_ub",
+            "avg_iter_time_don_bound",
 
             # "iter_memoryless_lb_error_degree",
             # "iter_residual_lifetime_lb_error_degree",
@@ -222,7 +222,7 @@ class Plotter:
                     self.graphs.remove(graph)
                     continue
 
-        self.colors = Plotter.generate_color_dict_from_degrees(self.graphs, self.setup['n'])
+        self.colors = Plotter.generate_color_dict_from_graph_keys(self.graphs, self.setup['n'])
 
         # TODO: update moving average with new metrics logs
         """if self.moving_average_window != 0:
@@ -265,7 +265,7 @@ class Plotter:
         return os.path.normpath(os.path.join("./test_log/temp/", Plotter.get_temp_test_folder_name_by_index(index)))
 
     @staticmethod
-    def generate_color_dict_from_degrees(graphs, N=None):
+    def generate_color_dict_from_graph_keys(graphs, N=None):
         if N is None:
             N = len(graphs[list(graphs.keys())[0]])
         degrees = {}
@@ -522,7 +522,7 @@ class Plotter:
             slope = statistics_lb_function(
                 self.degrees[graph],
                 self.setup['time_distr_class'],
-                self.setup['time_distr_param']
+                self.setup['time_distr_param'][-1]
             )
 
             # iter_log[graph] is an array indexed as "iter#" -> time of such iter completion
@@ -574,7 +574,7 @@ class Plotter:
             v_lb = bound_func(
                 self.degrees[graph],
                 self.setup['time_distr_class'],
-                self.setup['time_distr_param']
+                self.setup['time_distr_param'][-1]
             )
             v_real = ly[-1] / lx[-1]
 
@@ -646,7 +646,7 @@ class Plotter:
             v_lb = bound_func(
                 self.degrees[graph],
                 self.setup['time_distr_class'],
-                self.setup['time_distr_param']
+                self.setup['time_distr_param'][-1]
             )
             v_real = ly[-1] / lx[-1]
 

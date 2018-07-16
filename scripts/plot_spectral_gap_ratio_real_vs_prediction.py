@@ -5,15 +5,16 @@ from src import plotter, graphs
 from src.mltoolbox.metrics import METRICS
 from src.functions import *
 from shutil import copyfile, rmtree
+from src.plotter import Plotter
 
 
 def main():
     # SETUP BEGIN
-    test_folder_path = './test_log/temp/test_u041_!shuf_Win[-50,-40]_mtrT2worst_unireg_r0.01alpha_100n_100samp_200iter'
+    test_folder_path = './test_log/test_u042_Win[-70,-60]_sgC0.1alpha_!shuf_unireg_mtrT2worst_1000iter'
     logs, setup = load_test_logs(test_folder_path, return_setup=True)
     degrees = {}
     for graph in setup['graphs']:
-       degrees[graph] = compute_graph_degree_from_adjacency_matrix(setup['graphs'][graph])
+        degrees[graph] = compute_graph_degree_from_adjacency_matrix(setup['graphs'][graph])
     graph_filter = [
         # "0-diagonal",
         "1-cycle",
@@ -29,7 +30,7 @@ def main():
         "8-cycle",
         # "10-uniform_edges",
         # "10-cycle",
-        #"20-uniform_edges",
+        # "20-uniform_edges",
         "20-cycle",
         # "50-uniform_edges",
         "50-cycle",
@@ -60,19 +61,20 @@ def main():
             setup['graphs'][graph]
         )))
 
-        #y = np.max(mse_log)
-        #x = np.argmax(mse_log)
-        #a[graph] = y * math.sqrt(x)
-
+        # y = np.max(mse_log)
+        # x = np.argmax(mse_log)
+        # a[graph] = y * math.sqrt(x)
 
     print(real_ratios)
 
+    plt.figure(1, figsize=(12, 6))
+    plt.suptitle(test_folder_path)
+    plt.subplot(1, 2, 1)
     plt.title("Ratio comparison", loc='left')
     plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel("prediction")
     plt.ylabel("simulation")
     plt.yscale('linear')
-
     plt.plot(
         pred_ratios,
         real_ratios,
@@ -89,8 +91,32 @@ def main():
             size='xx-small'
         )
 
+    colors = Plotter.generate_color_dict_from_graph_keys(
+        list(setup['graphs'].keys()), setup['n']
+    )
 
-
+    # MSE - AVG ITER SUBPLOT
+    plt.subplot(1, 2, 2)
+    plt.title("MSE over AVG iteration", loc='left')
+    plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+    plt.xlabel('AVG iter')
+    plt.ylabel('MSE')
+    plt.yscale('linear')
+    for graph, graph_mse_log in dict(logs['metrics']['mse']).items():
+        plt.plot(
+            list(range(len(graph_mse_log))),
+            graph_mse_log,
+            label=graph,
+            color=colors[graph]
+        )
     plt.legend()
+    plt.subplots_adjust(
+        top=0.88,
+        bottom=0.08,
+        left=0.06,
+        right=0.96,
+        hspace=0.2,
+        wspace=0.17
+    )
     plt.show()
     plt.close()
