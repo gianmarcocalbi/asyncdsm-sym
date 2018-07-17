@@ -171,7 +171,7 @@ class Node:
             self.dual_averaging_step()
         elif self.method == "linear_regression":
             self.linear_regression_step()
-        else:
+        elif self.method == 'classic':
             self.gradient_step()
 
         # get the counter after the computation has ended

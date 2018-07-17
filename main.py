@@ -22,7 +22,7 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
 
     dataset = setup['dataset']
     distr = setup['time_distr_class'].shortname + '[' + '-'.join([str(e) for e in setup['time_distr_param'][0]]) + ']'
-    distr_rule = setup['time_distr_param_rule'] + 'Rule'
+    distr_rule = str(setup['time_distr_param_rule']) + 'Rule'
     if setup['dataset'] == 'svm':
         error = str(setup['smv_label_flip_prob']) + 'flip'
         nodeserror = ''
@@ -30,7 +30,7 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
         error = str(setup['error_std_dev']) + 'err'
         nodeserror = str(setup['node_error_std_dev']) + 'nodeErr'
 
-    alpha = setup['learning_rate'][0].upper() + str(setup['alpha']) + 'alpha'
+    alpha = str(setup['learning_rate'][0].upper()) + str(setup['alpha']) + 'alpha'
     if setup['spectrum_dependent_learning_rate']:
         alpha = "sg" + alpha
     nodes = str(setup['n']) + 'n'
@@ -457,20 +457,21 @@ Summary:
         )
 
         # Save metrics logs
-        for metrics_id, metrics_log in cluster.logs["metrics"].items():
-            np.savetxt(
-                os.path.join(test_path, "{}_{}_log{}".format(graph, metrics_id, extension)),
-                metrics_log,
-                delimiter=','
-            )
+        if not setup['method'] is None:
+            for metrics_id, metrics_log in cluster.logs["metrics"].items():
+                np.savetxt(
+                    os.path.join(test_path, "{}_{}_log{}".format(graph, metrics_id, extension)),
+                    metrics_log,
+                    delimiter=','
+                )
 
-        # Save real metrics logs
-        for real_metrics_id, real_metrics_log in cluster.logs["real_metrics"].items():
-            np.savetxt(
-                os.path.join(test_path, "{}_real_{}_log{}".format(graph, real_metrics_id, extension)),
-                real_metrics_log,
-                delimiter=','
-            )
+            # Save real metrics logs
+            for real_metrics_id, real_metrics_log in cluster.logs["real_metrics"].items():
+                np.savetxt(
+                    os.path.join(test_path, "{}_real_{}_log{}".format(graph, real_metrics_id, extension)),
+                    real_metrics_log,
+                    delimiter=','
+                )
 
         if plot_global_w:
             w_logs[graph] = cluster.w

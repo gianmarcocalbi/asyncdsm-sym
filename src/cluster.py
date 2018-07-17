@@ -35,6 +35,7 @@ class Cluster:
         self.real_y = None
         self.real_w = None
         self.w = []  # log 'iteration i-th' => value of weight vector at iteration i-th
+        self.method = None
         self.obj_function = None
         self.metrics = {}
         self.real_metrics = {}
@@ -196,6 +197,7 @@ class Cluster:
         self.max_iter = max_iter
         self.max_time = max_time
         self.epsilon = epsilon
+        self.method = method
         self.metrics_type = metrics_type
         self.real_metrics_toggle = real_metrics_toggle
 
@@ -411,6 +413,8 @@ class Cluster:
             raise Exception('Unexpected w(t) size')
 
     def _compute_all_metrics(self):
+        if self.method is None:
+            return
         self._compute_avg_w()
         for m in self.metrics:
             self._compute_metrics(m, real=False)

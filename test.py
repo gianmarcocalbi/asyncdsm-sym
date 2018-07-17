@@ -53,8 +53,8 @@ def run():
     # envelop.main()
     # test_different_nodes_timing()
     # test_classic_gd()
-    # test_spectral_ratios()
-    plot_spectral_gap_ratio_real_vs_prediction.main()
+    test_spectral_ratios()
+    # plot_spectral_gap_ratio_real_vs_prediction.main()
     # print_topologies_velocity.main()
 
 
@@ -228,17 +228,17 @@ def test_spectral_ratios():
         n_samples=100,
         dataset='unireg',
         starting_weights_domain=[-70, -60],
-        max_iter=500,
-        alpha=1,
+        max_iter=5,
+        alpha=0.5,
         learning_rate='constant',
-        spectrum_dependent_learning_rate=True,
+        spectrum_dependent_learning_rate=False,
         metrics_type=0,
         metrics_nodes='all',
         method='classic',
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'u043',
+            'uz043',
             'w_domain',
             'alpha',
             'shuffle',
