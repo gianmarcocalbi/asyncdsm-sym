@@ -84,8 +84,7 @@ class Node:
                 verbose_task
             )
         else:
-            if method != "classic":
-                warnings.warn('Method "{}" does not exist, using classic gradient descent instead'.format(method))
+            warnings.warn('Method "{}" does not exist, nodes will compute nothing!'.format(method))
 
             self.training_task = tasks.GradientDescentTrainer(
                 X, y, real_w, obj_function,

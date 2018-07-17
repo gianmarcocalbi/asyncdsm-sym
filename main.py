@@ -73,8 +73,6 @@ def generate_time_distr_param_list(N, params, rule):
         for i in range(N):
             time_distr_param_list.append(params[i % k])
     else:
-        if len(params) > 1:
-            raise Exception("No time distr rule specified for multiple parameters")
         for i in range(N):
             time_distr_param_list.append(params[0])
 

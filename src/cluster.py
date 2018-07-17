@@ -768,7 +768,7 @@ class Cluster:
                     print(self._step_output())
                     print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
                         format(self.clock, self.max_time))
-                elif self.get_obj_function_value() <= self.epsilon:
+                elif (not self.method is None) and self.get_obj_function_value() <= self.epsilon:
                     stop_condition = True
                     print(self._step_output())
                     print("Cluster stopped due to error (={}) being less than or equal to epsilon (={})".format(
@@ -1003,24 +1003,25 @@ class Cluster:
                 col(self.max_iter, 'blue')
             )
 
-        for m in self.metrics:
-            try:
-                mval = np.around(self.get_metrics_value(m), 2)
-            except OverflowError:
-                mval = self.get_metrics_value(m)
-            output += "{}={} ".format(
-                m,
-                col(mval, 'red')
-            )
+        if not self.method is None:
+            for m in self.metrics:
+                try:
+                    mval = np.around(self.get_metrics_value(m), 2)
+                except OverflowError:
+                    mval = self.get_metrics_value(m)
+                output += "{}={} ".format(
+                    m,
+                    col(mval, 'red')
+                )
 
-        for rm in self.real_metrics:
-            try:
-                rmval = np.around(self.get_metrics_value(rm, real=True), 2)
-            except OverflowError:
-                rmval = self.get_metrics_value(rm, real=True)
-            output += "real-{}={} ".format(
-                rm,
-                col(rmval, 'red')
-            )
+            for rm in self.real_metrics:
+                try:
+                    rmval = np.around(self.get_metrics_value(rm, real=True), 2)
+                except OverflowError:
+                    rmval = self.get_metrics_value(rm, real=True)
+                output += "real-{}={} ".format(
+                    rm,
+                    col(rmval, 'red')
+                )
 
         return output
