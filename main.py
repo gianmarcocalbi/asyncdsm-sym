@@ -392,7 +392,7 @@ Summary:
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:
-                alpha *= math.sqrt(compute_spectral_gap_from_adjacency_matrix(adjmat))
+                alpha *= math.sqrt(mtm_spectral_gap_from_adjacency_matrix(adjmat))
 
             cluster.setup(
                 X, y, w,
@@ -422,7 +422,10 @@ Summary:
                 verbose_task=verbose_task
             )
 
-            cluster.run()
+            if setup['method'] is None:
+                cluster.run_void()
+            else:
+                cluster.run()
         except:
             # if the cluster throws an exception then delete the folder created to host its output files
             # the most common exception in cluster.run() is thrown when the SGD computation diverges

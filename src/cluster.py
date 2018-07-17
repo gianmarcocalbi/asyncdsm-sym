@@ -787,7 +787,7 @@ class Cluster:
             self.iteration, self.clock
         ))
 
-    def run_old(self):
+    def run_void(self):
         """
         Run the cluster (distributed computation simulation).
         :return: None
@@ -804,11 +804,15 @@ class Cluster:
             })
 
         stop_condition = False  # todo: stop condition (tolerance)
+
+        # dequeue the first event
         event = self.dequeue_event()
+
+        # loop until future event list gets empty or upon reaching a stop condition
         while not stop_condition and not event is None:
-            prev_clock = self.clock
+            # the starting time of the event dequeued from the FEL is always the least starting
+            # time among all events still in the queue so the cluster clock can align to such time
             self.clock = event["time"]
-            next_event_starting_clock = self.get_next_event_time()
 
             print_verbose(self.verbose, "Event type='{}' for node=[{}] starting at CLOCK={}".format(
                 event["type"], col(event["node"].get_id(), 'cyan'), col(np.around(self.clock, 4), 'green')
@@ -817,141 +821,56 @@ class Cluster:
             if event["type"] in ("node_step", "node_endstep"):
                 node = event["node"]
 
-                if node.can_run() and event["type"] == "node_step":
-                    t0, tf = node.step()
-                    self.logs["dynamics"][node.get_id()].append((t0, tf))
-                    if node.is_running:
-                        pass
-                    self.clock = min(node.local_clock, next_event_starting_clock)
+                if event['type'] == 'node_step':
+                    if node.can_run():
+                        # node can run, then do it
+                        t0, tf = node.step()
 
-                    print_verbose(self.verbose, "Node [{}] run from {} to {}".format(
-                        col(node.get_id(), 'cyan'),
-                        col(np.around(t0, 4), 'green'),
-                        col(np.around(tf, 4), 'green')
-                    ))
+                        # append (t0,tf) pair in dynamics log at index=node._id
+                        self.logs["dynamics"][node.get_id()].append((t0, tf))
 
-                    # when this node finishes iteration "i", it checks if all the others
-                    # have already performed the iteration i-th, if so then the global
-                    # iteration i-th has been completed and the completion time for such
-                    # iteration is the actual local_clock of this node
+                        print_verbose(self.verbose, "Node [{}] run from {} to {}".format(
+                            col(node.get_id(), 'cyan'),
+                            col(np.around(t0, 4), 'green'),
+                            col(np.around(tf, 4), 'green')
+                        ))
+                    else:
+                        # node cannot run computation because it lacks some
+                        # dependencies' informations or it is in the endstep event
+                        # so it is not supposed to do anything else
+                        max_local_clock = node.local_clock
 
-                    min_iter = math.inf
-                    max_iter = -1
-                    avg_iter = 0
+                        # todo perf-boost:
+                        # - get the row of local_clocks matrix (iter x nodes) as an array
+                        # - set to zero indices not in node.dependencies
+                        # - get the max in the array
 
-                    for _node in self.nodes:
-                        if not _node.is_running and _node.local_clock < self.clock:
-                            _node.local_clock = self.clock
+                        for dep in node.dependencies:
+                            if dep.get_local_clock_by_iteration(node.iteration) > max_local_clock:
+                                max_local_clock = max(max_local_clock, dep.local_clock)
 
-                        _node_iter = _node.get_iteration_at_local_clock(self.clock)
-                        if _node_iter < min_iter:
-                            min_iter = _node_iter
-                        if _node_iter > max_iter:
-                            max_iter = _node_iter
-                        avg_iter += _node_iter
-                    avg_iter /= len(self.nodes)
+                        # set the local_clock of the node equal to the value of the
+                        # local_clock of the last dependency that ended the computation
+                        # this node needs
+                        node.set_local_clock(max_local_clock)
 
-                    if max_iter > self.logs["max_iter_time"][-1][1]:
-                        self.logs["max_iter_time"].append((self.clock, max_iter))
+                        print_verbose(self.verbose, "Node [{}] cannot run, so node.clock is set from {} to {}".format(
+                            col(node.get_id(), 'cyan'),
+                            col(np.around(event['time'], 4), 'green'),
+                            col(np.around(max_local_clock, 4), 'green')
+                        ))
 
-                    if min_iter == self.iteration + 1:
-                        self.iteration += 1
-
-                        last_to_complete_iteration_clock = -1
-                        for __node in self.nodes:
-                            node_clock_at_iter = __node.get_local_clock_by_iteration(self.iteration)
-                            if node_clock_at_iter > last_to_complete_iteration_clock:
-                                last_to_complete_iteration_clock = node_clock_at_iter
-
-                        self.logs["iter_time"].append(last_to_complete_iteration_clock)
-
-                        print_verbose(
-                            self.verbose,
-                            "Cluster ITER++. min_iter={}, avg_iter={}, max_iter={}, clock={}".format(
-                                min_iter, avg_iter, max_iter, np.around(self.clock, 2)
-                            )
-                        )
-
-                        self.logs["avg_iter_time"].append((self.clock, avg_iter))
-
-                        self._compute_all_metrics()
-
-                        if self.verbose <= 0:
-                            sys.stdout.write('\x1b[2K')
-                            sys.stdout.write(self._step_output() + "\r")
-                            sys.stdout.flush()
-                        else:
-                            print_verbose(self.verbose, self._step_output())
-
-                        """max_error = -math.inf
-                        for _node in self.nodes:
-                            node_error = _node.training_task.mean_squared_error_log[self.iteration]
-                            if node_error > max_error:
-                                max_error = node_error
-                        print("MAX ERROR: {}".format(max_error))"""
-
-                    elif min_iter > self.iteration + 1:
-                        raise Exception("Unexpected behaviour of cluster distributed dynamics")
-                else:
-                    # node cannot run computation because it lacks some
-                    # dependencies' informations or it is in the endstep event
-                    # so it is not supposed to do anything else
-                    max_local_clock = node.local_clock
-                    for dep in node.dependencies:
-                        if dep.get_local_clock_by_iteration(node.iteration) > max_local_clock:
-                            max_local_clock = max(max_local_clock, dep.local_clock)
-
-                    # set the local_clock of the node equal to the value of the
-                    # local_clock of the last dependency that ended the computation
-                    # this node needs
-                    node.set_local_clock(max_local_clock)
-
-                    print_verbose(self.verbose, "Node [{}] cannot run, so node.clock is set from {} to {}".format(
-                        col(node.get_id(), 'cyan'),
-                        col(np.around(event['time'], 4), 'green'),
-                        col(np.around(max_local_clock, 4), 'green')
-                    ))
-
-                    self.clock = min(node.local_clock, next_event_starting_clock)
-                    for _node in self.nodes:
-                        if not _node.is_running and _node.local_clock < self.clock:
-                            _node.local_clock = self.clock
-
-                min_clock = math.inf
-                for _node in self.nodes:
-                    if _node.is_running and _node.local_clock < min_clock:
-                        min_clock = _node.local_clock
-                if min_clock < self.clock:
-                    raise Exception("Cluster clock is higher than clock of some node and this is a "
-                                    "completely unexpected behaviour")
-
-                # check for the stop condition
-                stop_condition = False
-                if self.iteration >= self.max_iter:
-                    stop_condition = True
-                    print(self._step_output())
-                    print("Cluster stopped due to global iteration (={}) being equal to max_iter (={})".format(
-                        self.iteration, self.max_iter))
-                elif self.clock >= self.max_time:
-                    stop_condition = True
-                    print(self._step_output())
-                    print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
-                        format(self.clock, self.max_time))
-                elif self.get_obj_function_value() <= self.epsilon:
-                    stop_condition = True
-                    print(self._step_output())
-                    print("Cluster stopped due to error (={}) being less than or equal to epsilon (={})".format(
-                        self.get_obj_function_value(),
-                        self.epsilon
-                    ))
-
-                # enqueue the next event for current node
-                if not stop_condition and event['type'] != 'node_endstep':
+                    # Evaluate stop conditions of node
                     new_event_type = 'node_endstep'
                     if node.iteration < self.max_iter and node.local_clock < self.max_time:
+                        # if none of the stop conditions is met then reset the event type to 'node_step'
                         new_event_type = 'node_step'
                     else:
+                        # if at least one of the stop conditions is verified then the node
+                        # have to stop running
                         node.is_running = False
+
+                        # generate and print verbose output
                         stop_reason = ""
                         if node.iteration >= self.max_iter:
                             stop_reason += "node.iteration = {} >= {} = self.max_iter".format(
@@ -970,12 +889,123 @@ class Cluster:
                             col(node.get_id(), 'cyan'),
                             stop_reason))
 
+                    # create next event for this node
+                    # this happens only if not in endstep event type
                     new_event = {
                         'time': node.local_clock,
                         'type': new_event_type,
                         'node': node
                     }
+
+                    # enqueue the new event in the future event list
                     self.enqueue_event(new_event)
+
+                # local clock of node has been updated, so now update the cluster clock
+                # set it equal to the next event starting time
+                next_event_time = self.get_next_event_time()
+
+                if not math.isinf(next_event_time):
+                    self.clock = next_event_time
+                else:
+                    # if next event time is math.inf then it means that the future event list is empty
+                    # e.g. the simulation will end right after this loop
+
+                    # todo performance boost:
+                    # run max on last row of local clocks matrix
+                    max_clock = -1
+                    for _node in self.nodes:
+                        if _node.local_clock > max_clock:
+                            max_clock = _node.local_clock
+
+                    # set cluster clock equal to the biggest local_clock among nodes
+                    self.clock = max_clock
+
+                # set local_clocks of all not-running nodes such that they follow
+                # the cluster clock (to avoid strange behaviours)
+                for _node in self.nodes:
+                    if not _node.is_running and _node.local_clock < self.clock:
+                        _node.local_clock = self.clock
+
+                # todo: remove following snippet because it just slows down the computation
+                # check whether one node's local_clock has been left behind the cluster clock
+                # that is completely unexpected, so in such case raise an exception
+                """min_clock = math.inf
+                for _node in self.nodes:
+                    if _node.local_clock < min_clock:
+                        min_clock = _node.local_clock
+                if min_clock < self.clock:
+                    raise Exception("Cluster clock is higher than clock of some node and this is a "
+                                    "completely unexpected behaviour")
+                """
+
+                # the node step has been almost completed, now check if all the others
+                # have already performed the iteration i-th, if so then the global
+                # iteration i-th has been completed and the completion time for such
+                # iteration is the actual local_clock of this node
+
+                min_iter = math.inf
+
+                for _node in self.nodes:
+                    _node_iter = _node.iteration
+                    if _node_iter < min_iter:
+                        min_iter = _node_iter
+
+                if min_iter == self.iteration + 1:
+                    self.iteration += 1
+
+                    last_to_complete_iteration_clock = -1
+                    for __node in self.nodes:
+                        node_clock_at_iter = __node.get_local_clock_by_iteration(self.iteration)
+                        if node_clock_at_iter > last_to_complete_iteration_clock:
+                            last_to_complete_iteration_clock = node_clock_at_iter
+
+                    self.logs["iter_time"].append(last_to_complete_iteration_clock)
+                    self.logs["max_iter_time"].append((self.clock, min_iter))
+                    self.logs["avg_iter_time"].append((self.clock, min_iter))
+
+                    print_verbose(
+                        self.verbose,
+                        "Cluster ITER++. min_iter={}, clock={}".format(
+                            min_iter, np.around(self.clock, 2)
+                        )
+                    )
+
+                    if self.verbose <= 0:
+                        sys.stdout.write('\x1b[2K')
+                        sys.stdout.write(self._step_output() + "\r")
+                        sys.stdout.flush()
+                    else:
+                        print_verbose(self.verbose, self._step_output())
+
+                    """max_error = -math.inf
+                    for _node in self.nodes:
+                        node_error = _node.training_task.mean_squared_error_log[self.iteration]
+                        if node_error > max_error:
+                            max_error = node_error
+                    print("MAX ERROR: {}".format(max_error))"""
+
+                elif min_iter > self.iteration + 1:
+                    raise Exception("Unexpected behaviour of cluster distributed dynamics")
+
+                # check for the stop condition
+                stop_condition = False
+                if self.iteration >= self.max_iter:
+                    stop_condition = True
+                    print(self._step_output())
+                    print("Cluster stopped due to global iteration (={}) being equal to max_iter (={})".format(
+                        self.iteration, self.max_iter))
+                elif self.clock >= self.max_time:
+                    stop_condition = True
+                    print(self._step_output())
+                    print("Cluster stopped due to global clock (={}) being grater than or equal to max_time (={})".
+                        format(self.clock, self.max_time))
+                elif (not self.method is None) and self.get_obj_function_value() <= self.epsilon:
+                    stop_condition = True
+                    print(self._step_output())
+                    print("Cluster stopped due to error (={}) being less than or equal to epsilon (={})".format(
+                        self.get_obj_function_value(),
+                        self.epsilon
+                    ))
 
             elif event["type"] == "":
                 pass
@@ -983,6 +1013,22 @@ class Cluster:
                 pass
 
             event = self.dequeue_event()
+
+        min_iter = math.inf
+        max_iter = -1
+        avg_iter = 0
+
+        for _node in self.nodes:
+            _node_iter = _node.get_iteration_at_local_clock(self.clock)
+            if _node_iter < min_iter:
+                min_iter = _node_iter
+            if _node_iter > max_iter:
+                max_iter = _node_iter
+            avg_iter += _node_iter
+        avg_iter /= len(self.nodes)
+
+        self.logs["max_iter_time"][-1] = (self.max_time, max_iter)
+        self.logs["avg_iter_time"][-1] = (self.max_time, avg_iter)
 
         print_verbose(self.verbose, "Cluster simulation run ended at iter={} and clock={}".format(
             self.iteration, self.clock

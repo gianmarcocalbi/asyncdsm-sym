@@ -130,7 +130,7 @@ class Plotter:
         self.degrees = {}
 
         for graph in self.graphs:
-            self.degrees[graph] = compute_graph_degree_from_adjacency_matrix(self.setup['graphs'][graph])
+            self.degrees[graph] = degree_from_adjacency_matrix(self.setup['graphs'][graph])
 
         self.logs = {
             "iter_time": {},

@@ -2,6 +2,8 @@ import math, sys, random, cmath, pickle, os, warnings
 import numpy as np
 from termcolor import colored as col
 from src.mltoolbox.metrics import METRICS
+import networkx as nx
+
 
 def load_test_logs(test_folder_path, return_setup=True):
     try:
@@ -15,7 +17,7 @@ def load_test_logs(test_folder_path, return_setup=True):
     degrees = {}
 
     for graph in graphs:
-        degrees[graph] = compute_graph_degree_from_adjacency_matrix(setup['graphs'][graph])
+        degrees[graph] = degree_from_adjacency_matrix(setup['graphs'][graph])
 
     logs = {
         "iter_time": {},
@@ -38,11 +40,12 @@ def load_test_logs(test_folder_path, return_setup=True):
             elif setup["real_metrics"].lower() == 'all':
                 setup["real_metrics"] = list(METRICS.keys())
 
-    if not setup['obj_function'] in setup['metrics']:
+    if not setup['obj_function'] in setup['metrics'] and not setup['method'] is None:
         setup['metrics'].insert(0, setup['obj_function'])
 
     if setup['real_metrics_toggle'] and not setup['obj_function'] in setup['real_metrics']:
-        setup['real_metrics'].insert(0, setup['obj_function'])
+        if not setup['method'] is None:
+            setup['real_metrics'].insert(0, setup['obj_function'])
 
     for m in setup["metrics"]:
         if m in METRICS:
@@ -55,9 +58,9 @@ def load_test_logs(test_folder_path, return_setup=True):
     # it's important to loop on a copy of graphs and not on the original one
     # since the original in modified inside the loop
     for graph in graphs[:]:
-        iter_log_path = "{}/{}_iter_time_log".format(test_folder_path, graph)
-        avg_iter_log_path = "{}/{}_avg_iter_time_log".format(test_folder_path, graph)
-        max_iter_log_path = "{}/{}_max_iter_time_log".format(test_folder_path, graph)
+        iter_log_path = os.path.normpath("{}/{}_iter_time_log".format(test_folder_path, graph))
+        avg_iter_log_path = os.path.normpath("{}/{}_avg_iter_time_log".format(test_folder_path, graph))
+        max_iter_log_path = os.path.normpath("{}/{}_max_iter_time_log".format(test_folder_path, graph))
 
         ext = ''
         if not os.path.isfile(iter_log_path):
@@ -127,7 +130,7 @@ def iteration_speed_lower_bound(l, k, time_arr):
     return lb
 
 
-def compute_graph_degree_from_adjacency_matrix(adj_mat):
+def degree_from_adjacency_matrix(adj_mat):
     degree = 0
 
     for i in range(len(adj_mat)):
@@ -136,14 +139,14 @@ def compute_graph_degree_from_adjacency_matrix(adj_mat):
     return int(degree)
 
 
-def compute_spectral_gap_from_adjacency_matrix(adj_mat):
-    return 1 - compute_second_eigenvalue_from_adjacency_matrix(adj_mat)
+def n_cycle_spectral_gap_approx_from_adjacency_matrix(adj_mat):
+    return 1 - n_cycle_second_eigenvalue_approx_from_adjacency_matrix(adj_mat)
 
 
-def compute_second_eigenvalue_from_adjacency_matrix(adj_mat):
+def n_cycle_second_eigenvalue_approx_from_adjacency_matrix(adj_mat):
     Ck = np.sign(adj_mat[0]).clip(min=0)
     n = len(adj_mat)
-    d = np.sum(Ck)-1
+    d = np.sum(Ck) - 1
     max_val = 0
     for m in range(1, n):
         s = 0.0
@@ -152,6 +155,37 @@ def compute_second_eigenvalue_from_adjacency_matrix(adj_mat):
         s /= d + 1
         max_val = max(abs(s), max_val)
     return abs(max_val)
+
+
+def mtm_spectral_gap_from_adjacency_matrix(adj_mat):
+    return 1 - mtm_second_eigenvalue_from_adjacency_matrix(adj_mat)
+
+
+def mtm_second_eigenvalue_from_adjacency_matrix(adj_mat):
+    norm_adj_mat = adj_mat / sum(adj_mat[0])
+    return real_eigenvalues(norm_adj_mat)[1]
+
+
+def Pn_from_adjacency_matrix(adj_mat):
+    d = sum(adj_mat[0]) - 1
+    A = adj_mat / (2 * d)
+    np.fill_diagonal(A, 0.5)
+    return A
+
+
+def Pn_second_eigenvalue_from_adjacency_matrix(adj_mat):
+    return real_eigenvalues(Pn_from_adjacency_matrix(adj_mat))[1]
+
+
+def Pn_spectral_gap_from_adjacency_matrix(adj_mat):
+    return 1 - Pn_second_eigenvalue_from_adjacency_matrix(adj_mat)
+
+
+def real_eigenvalues(matrix):
+    eigenvals = np.linalg.eigvals(matrix)
+    real_eigenvals = [abs(e) for e in eigenvals]
+    real_eigenvals.sort(reverse=True)
+    return real_eigenvals
 
 
 def progress(current_progress, total_progress, bar_length=50, text_before='', text_after=''):

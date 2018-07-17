@@ -94,7 +94,7 @@ def main():
             except:
                 continue
 
-            degree = compute_graph_degree_from_adjacency_matrix(setup['graphs'][graph])
+            degree = degree_from_adjacency_matrix(setup['graphs'][graph])
             if not graph in points:
                 points[graph] = {}
             if not N in points[graph]:

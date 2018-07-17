@@ -7,7 +7,7 @@ from src.functions import *
 def main():
     # SETUP BEGIN
 
-    test_folder_paths_pattern = os.path.normpath("./test_log/test_h004*")
+    test_folder_paths_pattern = os.path.normpath("./test_log/test_h006*")
     test_folder_paths = list(glob.iglob(test_folder_paths_pattern))
     for test_folder_path in test_folder_paths:
         logs, setup = load_test_logs(test_folder_path, return_setup=True)

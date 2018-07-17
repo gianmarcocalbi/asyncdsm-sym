@@ -1,6 +1,7 @@
-
 import numpy as np
-import warnings, math
+import networkx as nx
+import warnings, math, glob
+from src.functions import Pn_spectral_gap_from_adjacency_matrix
 
 
 def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
@@ -163,9 +164,18 @@ def generate_n_cycle_d_regular_graph_by_degree(N, K):
 
 
 def generate_expander_graph(N, degree):
-    # todo
-    for i in range(N):
-        pass
+    max_spectrum = 0
+    max_exp = None
+
+    exp_path_list = list(glob.iglob('./graphs/exp_{}n_{}d*'.format(N, degree)))
+    for exp_path in exp_path_list:
+        adj = np.loadtxt(exp_path)
+        spectrum = Pn_spectral_gap_from_adjacency_matrix(adj)
+        if spectrum > max_spectrum:
+            max_spectrum = spectrum
+            max_exp = adj
+
+    return max_exp
 
 class Graph:
     def __init__(self, N, A, name):
@@ -178,6 +188,8 @@ def G(N, gtype, d=0):
     A = None
     if gtype == 'diagonal':
         A = np.diag(np.ones(N))
+    elif gtype == 'expander':
+        A = generate_expander_graph(N, d)
     elif gtype == 'cycle':
         A = generate_n_cycle_d_regular_graph_by_degree(N, d)
     elif gtype == 'uniform_edges':

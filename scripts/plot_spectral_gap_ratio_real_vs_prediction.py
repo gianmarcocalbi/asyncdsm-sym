@@ -14,7 +14,7 @@ def main():
     logs, setup = load_test_logs(test_folder_path, return_setup=True)
     degrees = {}
     for graph in setup['graphs']:
-        degrees[graph] = compute_graph_degree_from_adjacency_matrix(setup['graphs'][graph])
+        degrees[graph] = degree_from_adjacency_matrix(setup['graphs'][graph])
     graph_filter = [
         # "0-diagonal",
         "1-cycle",
@@ -57,9 +57,7 @@ def main():
         ratio = max(ratio)
 
         real_ratios.append(ratio)
-        pred_ratios.append(1 / math.sqrt(1 - compute_second_eigenvalue_from_adjacency_matrix(
-            setup['graphs'][graph]
-        )))
+        pred_ratios.append(1 / math.sqrt(mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
 
         # y = np.max(mse_log)
         # x = np.argmax(mse_log)
