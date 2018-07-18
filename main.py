@@ -299,7 +299,7 @@ def main(
             error_std_dev=setup['error_std_dev']
         )
     elif setup['dataset'] == 'unireg':
-        X, y, w = functions.generate_unidimensional_regression_training_set(setup['n_samples'])
+        X, y, w = functions.generate_unidimensional_regression_training_set(setup['n'])
     elif setup['dataset'] == 'svm':
         X, y, w = functions.generate_svm_dual_averaging_training_set(
             setup['n_samples'], setup['n_features'],
@@ -386,13 +386,21 @@ Summary:
         random.seed(setup['seed'])
 
         cluster = None
-
+        sg = None
         try:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:
-                alpha *= math.sqrt(mtm_spectral_gap_from_adjacency_matrix(adjmat))
+                if 'expander' in graph:
+                    sg = Pn_spectral_gap_from_adjacency_matrix(adjmat)
+                elif 'cycle' in graph:
+                    sg = n_cycle_spectral_gap_approx_from_adjacency_matrix(adjmat)
+                else:
+                    sg = mtm_spectral_gap_from_adjacency_matrix(adjmat)
+
+                alpha *= math.sqrt(sg)
+
 
             cluster.setup(
                 X, y, w,
@@ -426,6 +434,13 @@ Summary:
                 cluster.run_void()
             else:
                 cluster.run()
+        except ValueError:
+            print('Graph {} spectral gap sqrt raised ValueError exception (sg = {})'.format(
+                graph,
+                sg
+            ))
+            continue
+
         except:
             # if the cluster throws an exception then delete the folder created to host its output files
             # the most common exception in cluster.run() is thrown when the SGD computation diverges

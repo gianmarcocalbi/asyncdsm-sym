@@ -218,9 +218,8 @@ class Plotter:
                 try:
                     self.logs["metrics"][metrics_log][graph] = np.loadtxt(metrics_log_path)
                 except OSError:
-                    warnings.warn('Graph "{}" not found in folder {}'.format(graph, self.test_folder_path))
-                    self.graphs.remove(graph)
-                    continue
+                    warnings.warn('Log "{}" not found'.format(metrics_log_path))
+                    # self.graphs.remove(graph)
 
         self.colors = Plotter.generate_color_dict_from_graph_keys(self.graphs, self.setup['n'])
 

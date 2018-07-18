@@ -5,7 +5,12 @@ import os, argparse, glob, datetime, time
 
 
 def main(n=None, d=None):
-    print('Seek random expander for N={} and d={}'.format(n, d))
+    title = 'Seek random expander for N={} and d={}'.format(n, d)
+    print(''.join(['#' for _ in range(len(title))]))
+    print(title)
+    print(''.join(['#' for _ in range(len(title))]))
+    print('[00:00:00] - Start at ' + str(datetime.datetime.now().strftime('%H:%M:%S.%f')))
+
     exp = None
     max_spectrum = 0
     exp_path_list = list(glob.iglob('./graphs/exp_{}n_{}d*'.format(n, d)))

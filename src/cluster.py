@@ -305,7 +305,6 @@ class Cluster:
             for i in range(N):
                 time_distr_params_list.append(time_distr_param)
 
-
         nodes_errors = np.random.normal(node_error_mean, node_error_std_dev, N)
         subX_size = int(math.floor(self.X.shape[0] / N))
         subX_size_res = self.X.shape[0] % N
@@ -331,10 +330,15 @@ class Cluster:
             """if np.sum(self.adjacency_matrix[0]) == 1:
                 method = "linear_regression"
             """
+            node_self_weight = 1 / sum(self.adjacency_matrix[i])
+            if 'expander' in self.graph_name:
+                node_self_weight = 0.5
+
             # instantiate new node for the just-selected subsample
             self.nodes.append(
                 Node(
                     i,
+                    node_self_weight,
                     node_X,
                     node_y,
                     self.real_w,
@@ -1019,7 +1023,7 @@ class Cluster:
         avg_iter = 0
 
         for _node in self.nodes:
-            _node_iter = _node.get_iteration_at_local_clock(self.clock)
+            _node_iter = _node.get_iteration_at_local_clock(self.max_time)
             if _node_iter < min_iter:
                 min_iter = _node_iter
             if _node_iter > max_iter:

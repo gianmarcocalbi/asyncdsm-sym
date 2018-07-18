@@ -9,7 +9,7 @@ class Node:
     Represent a computational node.
     """
 
-    def __init__(self, _id, X, y, real_w, obj_function, method, batch_size, dual_averaging_radius,
+    def __init__(self, _id, self_weight, X, y, real_w, obj_function, method, batch_size, dual_averaging_radius,
             alpha, learning_rate, metrics, real_metrics, real_metrics_toggle, shuffle, time_distr_class,
             time_distr_param, time_const_weight, starting_weights_domain, verbose, verbose_task):
         self.verbose = verbose
@@ -19,6 +19,7 @@ class Node:
         self.local_clock = 0.0  # local internal clock (float)
         self.iteration = 0  # current iteration
         self.log = [0.0]  # log indexed as "iteration" -> "completion clock"
+        self.self_weight = self_weight
         self.time_distr_class = time_distr_class
         if not type(time_distr_param) in (list, tuple,):
             time_distr_param = [time_distr_param]
@@ -84,7 +85,7 @@ class Node:
                 verbose_task
             )
         else:
-            warnings.warn('Method "{}" does not exist, nodes will compute nothing!'.format(method))
+            #warnings.warn('Method "{}" does not exist, nodes will compute nothing!'.format(method))
 
             self.training_task = tasks.GradientDescentTrainer(
                 X, y, real_w, obj_function,
@@ -227,11 +228,15 @@ class Node:
         Average self.w vector with weights w from dependencies.
         :return: None
         """
-        avg_w = self.training_task.get_w()
+        w = self.training_task.get_w()
+        dep_w_sum = np.zeros(len(w))
         if len(self.dependencies) > 0:
             for dep in self.dependencies:
-                avg_w += self.dequeue_incoming_data(dep.get_id())
-            avg_w /= (len(self.dependencies) + 1)
+                dep_w_sum += self.dequeue_incoming_data(dep.get_id())
+            dep_w = dep_w_sum / len(self.dependencies)
+            avg_w = self.self_weight * w + dep_w * (1-self.self_weight)
+        else:
+            avg_w = w
 
         print_verbose(self.verbose,
             "Node [{}] averages w({}) with dependencies' w({})".format(
