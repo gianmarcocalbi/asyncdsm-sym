@@ -52,11 +52,11 @@ def run():
     # plot_topologies_obj_func_at_time_over_c_comparison.main()
     # envelop.main()
     # test_different_nodes_timing()
-    # test_different_nodes_timing_loop()
+    test_different_nodes_timing_loop()
     # test_classic_gd()
     # test_spectral_ratios()
     # plot_spectral_gap_ratio_real_vs_prediction.main()
-    print_topologies_velocity.main()
+    # print_topologies_velocity.main()
 
 
 def test_classic_gd():
@@ -289,26 +289,35 @@ def test_different_nodes_timing_loop():
             seed=17072017,
             n=100,
             graphs=[
-                "0-diagonal",
+                # "0-diagonal",
                 "1-cycle",
                 # "2-uniform_edges",
-                "2-cycle",
+                # "2-cycle",
+                '2-expander',
                 # "3-uniform_edges",
                 # "3-cycle",
+                '3-expander',
                 # "4-uniform_edges",
-                "4-cycle",
+                # "4-cycle",
+                '4-expander',
                 # "5-uniform_edges",
                 # "5-cycle",
+                # '5-expander',
                 # "8-uniform_edges",
-                "8-cycle",
+                # "8-cycle",
+                '8-expander',
                 # "10-uniform_edges",
                 # "10-cycle",
+                # '10-expander',
                 # "20-uniform_edges",
-                "20-cycle",
+                # "20-cycle",
+                '20-expander',
                 # "50-uniform_edges",
-                "50-cycle",
+                # "50-cycle",
+                '50-expander',
                 # "80-uniform_edges",
                 # "80-cycle",
+                # '80-expander',
                 "99-clique",
             ],
             n_samples=100,
@@ -319,15 +328,15 @@ def test_different_nodes_timing_loop():
             method=None,
             alpha=0,
             learning_rate='constant',
-            time_distr_class=statistics.UniformDistribution,
-            time_distr_param=[[0,2*mu_slow], [0,2]],
+            time_distr_class=statistics.Type2ParetoDistribution,
+            time_distr_param=[[3, 2*mu_slow], [3,2]],
             time_distr_param_rule=rule,
             time_const_weight=0,
             obj_function='mse',
             real_metrics_toggle=False,
             save_test_to_file=True,
             test_folder_name_struct=[
-                'h005_hetertime',
+                'h007_hetertime',
                 # 'shuffle',
                 # 'w_domain',
                 # 'metrics',
@@ -345,7 +354,7 @@ def test_different_nodes_timing_loop():
                 'c',
                 # 'method',
             ],
-            test_parent_folder="h005",
+            test_parent_folder="",
             instant_plot=False,
             plots=tuple(),
             save_plot_to_file=True
