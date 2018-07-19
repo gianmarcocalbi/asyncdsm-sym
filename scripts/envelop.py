@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from src import plotter, graphs
 from src.mltoolbox.metrics import METRICS
-from src.functions import *
+from src.utils import *
 from shutil import copyfile, rmtree
 
 def main():

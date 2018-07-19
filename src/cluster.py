@@ -2,7 +2,7 @@ import copy, types, warnings
 from src import mltoolbox, statistics
 from src.mltoolbox.metrics import METRICS
 from src.mltoolbox import functions
-from src.functions import *
+from src.utils import *
 from src.node import Node
 from termcolor import colored as col
 
@@ -554,6 +554,10 @@ class Cluster:
         Run the cluster (distributed computation simulation).
         :return: None
         """
+
+        for node in self.nodes:
+            node.broadcast_weight_to_recipients()
+
         if len(self.nodes) == 0:
             raise Exception("Cluster has not been set up before calling run method")
 
@@ -796,6 +800,10 @@ class Cluster:
         Run the cluster (distributed computation simulation).
         :return: None
         """
+
+        for node in self.nodes:
+            node.broadcast_weight_to_recipients()
+
         if len(self.nodes) == 0:
             raise Exception("Cluster has not been set up before calling run method")
 
@@ -966,6 +974,8 @@ class Cluster:
                     self.logs["iter_time"].append(last_to_complete_iteration_clock)
                     self.logs["max_iter_time"].append((self.clock, min_iter))
                     self.logs["avg_iter_time"].append((self.clock, min_iter))
+
+                    self._compute_all_metrics()
 
                     print_verbose(
                         self.verbose,

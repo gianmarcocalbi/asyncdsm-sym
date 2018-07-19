@@ -1,6 +1,6 @@
 from src import statistics, graphs
 from src.mltoolbox import *
-from src.functions import *
+from src.utils import *
 import numpy as np
 from src.plotter import plot_from_files
 import main, time, math
@@ -55,9 +55,10 @@ def run():
     # test_different_100nodes_timing_loop(0)
     # test_different_1000nodes_timing_loop(2)
     # test_classic_gd()
-    test_spectral_ratios()
+    # test_spectral_ratios()
     # plot_spectral_gap_ratio_real_vs_prediction.main()
     # print_topologies_velocity.main()
+    test_unisvm_dataset()
 
 
 def test_classic_gd():
@@ -99,7 +100,7 @@ def test_classic_gd():
         alpha=1e-2,
         learning_rate='constant',
         time_distr_class=statistics.Type2ParetoDistribution,
-        time_distr_param=[[3,2]],
+        time_distr_param=[[3, 2]],
         obj_function='mse',
         real_metrics_toggle=False,
         metrics_type=2,
@@ -128,6 +129,93 @@ def test_classic_gd():
         instant_plot=True,
         plots=('mse_iter',),
         save_plot_to_file=False
+    )
+
+
+def test_unisvm_dataset():
+    input("test_unisvm_dataset()... click [ENTER] to continue or [CTRL]+[C] to abort")
+    main.main(
+        seed=None,
+        n=1000,
+        graphs=[
+            # "0-diagonal",
+            # "1-cycle",
+            # "2-uniform_edges",
+            # "2-cycle",
+            # '2-expander',
+            # "3-uniform_edges",
+            # "3-cycle",
+            '3-expander',
+            # "4-uniform_edges",
+            # "4-cycle",
+            '4-expander',
+            # "5-uniform_edges",
+            # "5-cycle",
+            # '5-expander',
+            # "8-uniform_edges",
+            # "8-cycle",
+            '8-expander',
+            # "10-uniform_edges",
+            # "10-cycle",
+            # '10-expander',
+            # "20-uniform_edges",
+            # "20-cycle",
+            '20-expander',
+            # "50-uniform_edges",
+            # "50-cycle",
+            '50-expander',
+            # "80-uniform_edges",
+            # "80-cycle",
+            # '80-expander',
+            '100-expander',
+            '200-expander',
+            '500-expander',
+            # '80-expander',
+            "999-clique",
+        ],
+        #n_samples=400,
+        dataset='unisvm',
+        starting_weights_domain=[1,1],
+        max_time=2000,
+        alpha=0.1,
+        learning_rate='constant',
+        time_distr_class=statistics.Type2ParetoDistribution,
+        time_distr_param=[[3,2]],
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='hinge_loss',
+        spectrum_dependent_learning_rate=True,
+        metrics=['score'],
+        metrics_type=2,
+        metrics_nodes='worst',
+        real_metrics_toggle=False,
+        method='classic',
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'us002',
+            'dataset',
+            # 'w_domain',
+            'alpha',
+            'shuffle',
+            'metrics',
+            'distr',
+            # 'error',
+            # 'nodeserror',
+            'nodes',
+            # 'samp',
+            # 'feat',
+            'time',
+            'iter',
+            # 'c',
+            # 'method',
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=('hinge_loss_iter', 'hinge_loss_time'),
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
     )
 
 
@@ -206,32 +294,32 @@ def test_spectral_ratios():
         seed=1531934976,
         n=100,
         graphs=[
-            # "0-diagonal",
+            "0-diagonal",
             "1-cycle",
             # "2-uniform_edges",
             "2-cycle",
-            #'2-expander',
+            '2-expander',
             # "3-uniform_edges",
             # "3-cycle",
             # '3-expander',
             # "4-uniform_edges",
             "4-cycle",
-            #'4-expander',
+            '4-expander',
             # "5-uniform_edges",
             # "5-cycle",
             # '5-expander',
             # "8-uniform_edges",
             "8-cycle",
-            #'8-expander',
+            '8-expander',
             # "10-uniform_edges",
             # "10-cycle",
             # '10-expander',
             # "20-uniform_edges",
             "20-cycle",
-            #'20-expander',
+            '20-expander',
             # "50-uniform_edges",
             "50-cycle",
-            #'50-expander',
+            '50-expander',
             # "80-uniform_edges",
             # "80-cycle",
             # '80-expander',
@@ -239,7 +327,7 @@ def test_spectral_ratios():
         ],
         n_samples=100,
         dataset='unireg',
-        starting_weights_domain=[-50, 50],
+        starting_weights_domain=[-70, -50],
         max_iter=100,
         alpha=0.01,
         learning_rate='constant',
@@ -248,13 +336,13 @@ def test_spectral_ratios():
         time_distr_param_rule=None,
         time_const_weight=0,
         spectrum_dependent_learning_rate=False,
-        metrics_type=2,
-        metrics_nodes='worst',
+        metrics_type=0,
+        metrics_nodes='all',
         method='classic',
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'ux003',
+            'ux004',
             'w_domain',
             'alpha',
             'shuffle',
@@ -276,7 +364,7 @@ def test_spectral_ratios():
         plots=('mse_iter',),
         save_plot_to_file=True,
         plot_global_w=True,
-        plot_node_w=False
+        plot_node_w=[0,5,10,20,50,55,60,70]
     )
 
 
@@ -318,19 +406,19 @@ def test_different_100nodes_timing_loop(index):
                 "0-diagonal",
                 "1-cycle",
                 "2-cycle",
-                #'2-expander',
+                # '2-expander',
                 "3-cycle",
-                #'3-expander',
+                # '3-expander',
                 "4-cycle",
-                #'4-expander',
+                # '4-expander',
                 "8-cycle",
-                #'8-expander',
+                # '8-expander',
                 "10-cycle",
-                #'10-expander',
+                # '10-expander',
                 "20-cycle",
-                #'20-expander',
+                # '20-expander',
                 "50-cycle",
-                #'50-expander',
+                # '50-expander',
                 "99-clique",
             ],
             n_samples=1000,

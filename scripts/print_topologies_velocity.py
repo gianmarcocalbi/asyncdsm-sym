@@ -1,7 +1,7 @@
 import glob
 import matplotlib.pyplot as plt
 from src import statistics
-from src.functions import *
+from src.utils import *
 
 
 def main():

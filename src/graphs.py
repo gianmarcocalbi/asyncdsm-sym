@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 import warnings, math, glob
-from src.functions import Pn_spectral_gap_from_adjacency_matrix
+from src.utils import Pn_spectral_gap_from_adjacency_matrix
 
 
 def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
@@ -196,8 +196,10 @@ def G(N, gtype, d=0):
         A = generate_uniform_edges_d_regular_graph_by_degree(N, d)
     elif gtype == 'root_expander':
         A = generate_graph_by_edges(N, ["i->i+1", "i->i+{}".format(int(math.sqrt(N)))])
+        d = 2
     elif 'clique' in gtype:
         A = generate_complete_graph(N)
+        d = N-1
     else:
         raise Exception("Graph gtype {} doesn't exist".format(gtype))
 

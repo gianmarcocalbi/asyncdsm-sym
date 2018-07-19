@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from src import plotter
 from src.mltoolbox.metrics import METRICS
-from src.functions import *
+from src.utils import *
 
 
 def main():

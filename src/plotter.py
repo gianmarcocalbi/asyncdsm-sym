@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os, warnings, glob, pickle
-from src.functions import *
+from src.utils import *
 from src import statistics
 from src.mltoolbox.metrics import METRICS
 

@@ -1,6 +1,6 @@
 import warnings
 from src import tasks
-from src.functions import *
+from src.utils import *
 from termcolor import colored as col
 
 
@@ -212,10 +212,11 @@ class Node:
         :return: a list containing [clock_before, clock_after] w.r.t. the computation
         """
         # avg internal self.w vector with w incoming from dependencies
-        if self.iteration > 0:
+        """if self.iteration > 0:
             avg_w = self.avg_weight_with_dependencies()
         else:
-            avg_w = self.training_task.get_w()
+            avg_w = self.training_task.get_w()"""
+        avg_w = self.avg_weight_with_dependencies()
 
         # compute the gradient descent step
         self.training_task.step(avg_w)

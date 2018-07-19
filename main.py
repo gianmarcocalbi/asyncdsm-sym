@@ -9,7 +9,7 @@ from src.plotter import Plotter, plot_from_files
 from src.mltoolbox import functions
 from src.graphs import generate_n_nodes_graphs
 import matplotlib.pyplot as plt
-from src.functions import *
+from src.utils import *
 from termcolor import colored as col
 
 
@@ -198,7 +198,7 @@ def main(
         time_distr_param,
         time_distr_param_rule
 
-    ) # exp[rate], par[a,s], U[a,b]
+    )  # exp[rate], par[a,s], U[a,b]
     setup['time_distr_param_rule'] = time_distr_param_rule
     setup['time_const_weight'] = time_const_weight
     setup['real_y_activation_func'] = real_y_activation_func
@@ -298,6 +298,8 @@ def main(
             error_mean=setup['error_mean'],
             error_std_dev=setup['error_std_dev']
         )
+    elif setup['dataset'] == 'unisvm':
+        pass
     elif setup['dataset'] == 'unireg':
         X, y, w = functions.generate_unidimensional_regression_training_set(setup['n'])
     elif setup['dataset'] == 'svm':
@@ -390,6 +392,9 @@ Summary:
         try:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
+            if setup['dataset'] == 'unisvm':
+                X, y, w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(adjmat)
+
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:
                 if 'expander' in graph:
@@ -400,7 +405,6 @@ Summary:
                     sg = mtm_spectral_gap_from_adjacency_matrix(adjmat)
 
                 alpha *= math.sqrt(sg)
-
 
             cluster.setup(
                 X, y, w,
@@ -433,13 +437,14 @@ Summary:
             if setup['method'] is None:
                 cluster.run_void()
             else:
-                cluster.run()
-        except ValueError:
+                cluster.run_void()
+
+            """except ValueError:
             print('Graph {} spectral gap sqrt raised ValueError exception (sg = {})'.format(
                 graph,
                 sg
             ))
-            continue
+            continue"""
 
         except:
             # if the cluster throws an exception then delete the folder created to host its output files
@@ -494,7 +499,10 @@ Summary:
 
         if not plot_node_w is False:
             try:
-                node_w_logs[graph] = cluster.nodes[plot_node_w].training_task.w
+                node_w_logs[graph] = np.array(cluster.nodes[plot_node_w[0]].training_task.w)
+                for i in range(1, len(plot_node_w)):
+                    node_w_logs[graph] += np.array(cluster.nodes[plot_node_w[i]].training_task.w)
+                node_w_logs[graph] /= len(plot_node_w)
             except:
                 plot_node_w = False
 
@@ -537,7 +545,7 @@ Summary:
         for graph in node_w_logs:
             plt.plot(
                 list(range(len(node_w_logs[graph]))),
-                node_w_logs[graph],
+                [p[0] for p in node_w_logs[graph]],
                 label=graph,
                 color=colors[graph],
                 marker='o',

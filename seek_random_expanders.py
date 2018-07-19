@@ -1,6 +1,6 @@
 import networkx as nx
 import numpy as np
-from src.functions import Pn_spectral_gap_from_adjacency_matrix
+from src.utils import Pn_spectral_gap_from_adjacency_matrix
 import os, argparse, glob, datetime, time
 
 

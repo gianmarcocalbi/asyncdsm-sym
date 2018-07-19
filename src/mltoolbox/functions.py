@@ -2,6 +2,7 @@
 import numpy as np
 import abc, types, warnings, math
 from sklearn.metrics import accuracy_score
+from src import utils
 
 
 class LossFunctionAbstract:
@@ -133,14 +134,26 @@ class SampleGenerator:
         # a lot of useful parameters
         pass
 
+
+def generate_unidimensional_svm_training_set_from_expander_adj_mat(adj_mat, c=0.1):
+    Pn = utils.Pn_from_adjacency_matrix(adj_mat)
+    eigvals, eigvecs = np.linalg.eig(Pn)
+    lambda2nd_index = np.argsort(np.abs(eigvals))[-2]
+    u = eigvecs[:, lambda2nd_index].real
+    X = np.abs(u + c)
+    y = -np.sign(u + c)
+    w = np.zeros(1)
+    return X.reshape(-1, 1), y, w
+
+
 def generate_unidimensional_regression_training_set(n_samples):
     X = np.ones((n_samples, 1))
     if n_samples % 2 == 0:
-        half = np.arange(1, 1 + n_samples/2)
+        half = np.arange(1, 1 + n_samples / 2)
         y = np.concatenate([half, -half])
         y.sort()
     else:
-        y = (np.arange(n_samples)/n_samples * 100) - 50
+        y = (np.arange(n_samples) / n_samples * 100) - 50
     w = np.zeros(1)
     return X, y, w
 
@@ -179,7 +192,7 @@ def generate_regression_training_set(n_samples, n_features, error_mean=0, error_
 
 
 def generate_regression_training_set_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
-                                                   error_mean=0, error_std_dev=1):
+        error_mean=0, error_std_dev=1):
     """
     Parameters
     ----------
@@ -225,7 +238,7 @@ def generate_regression_training_set_from_function(n_samples, n_features, func, 
 
 
 def sample_from_function_old(n_samples, n_features, func, domain_radius=1, domain_center=0,
-                             subdomains_radius=1, error_mean=0, error_std_dev=1):
+        subdomains_radius=1, error_mean=0, error_std_dev=1):
     """
     Parameters
     ----------
