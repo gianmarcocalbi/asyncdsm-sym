@@ -56,10 +56,10 @@ def run():
     # test_different_1000nodes_timing_loop(2)
     # test_classic_gd()
     # test_spectral_ratios()
-    plot_spectral_gap_ratio_real_vs_prediction.main()
+    # plot_spectral_gap_ratio_real_vs_prediction.main()
     # print_topologies_velocity.main()
     # print_expanders_spectrum.main()
-    # test_unisvm_dataset()
+    test_unisvm_dataset(0)
 
 
 def test_classic_gd():
@@ -133,11 +133,22 @@ def test_classic_gd():
     )
 
 
-def test_unisvm_dataset():
+def test_unisvm_dataset(distr):
+    time_distr_class = [
+        statistics.ExponentialDistribution,
+        statistics.UniformDistribution,
+        statistics.Type2ParetoDistribution
+    ][distr]
+    time_distr_param = [
+        [[1]],
+        [[0, 2]],
+        [[3, 2]],
+    ][distr]
+
     input("test_unisvm_dataset()... click [ENTER] to continue or [CTRL]+[C] to abort")
     main.main(
-        seed=1532087703,
-        n=1000,
+        seed=22052010,
+        n=100,
         graphs=[
             # "0-diagonal",
             # "1-cycle",
@@ -158,31 +169,33 @@ def test_unisvm_dataset():
             '8-expander',
             # "10-uniform_edges",
             # "10-cycle",
-            # '10-expander',
+            '10-expander',
             # "20-uniform_edges",
             # "20-cycle",
-            '18-expander',
-            '30-expander',
-            '40-expander',
+            #'18-expander',
+            '20-expander',
+            #'30-expander',
+            #'40-expander',
             # "50-uniform_edges",
             # "50-cycle",
             '50-expander',
             # "80-uniform_edges",
             # "80-cycle",
+            '80-expander',
+            #'100-expander',
+            #'200-expander',
+            #'300-expander',
+            #'500-expander',
             # '80-expander',
-            '100-expander',
-            '200-expander',
-            '500-expander',
-            # '80-expander',
-            "999-clique",
+            "99-clique",
         ],
         dataset='unisvm',
         starting_weights_domain=[1,1],
-        max_time=400,
+        max_time=10000,
         alpha=0.1,
         learning_rate='constant',
-        time_distr_class=statistics.Type2ParetoDistribution,
-        time_distr_param=[[3,2]],
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
         time_distr_param_rule=None,
         time_const_weight=0,
         obj_function='hinge_loss',
