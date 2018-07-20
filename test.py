@@ -58,7 +58,8 @@ def run():
     # test_spectral_ratios()
     # plot_spectral_gap_ratio_real_vs_prediction.main()
     # print_topologies_velocity.main()
-    test_unisvm_dataset()
+    print_expanders_spectrum.main()
+    # test_unisvm_dataset()
 
 
 def test_classic_gd():
@@ -135,14 +136,14 @@ def test_classic_gd():
 def test_unisvm_dataset():
     input("test_unisvm_dataset()... click [ENTER] to continue or [CTRL]+[C] to abort")
     main.main(
-        seed=None,
+        seed=1532087703,
         n=1000,
         graphs=[
             # "0-diagonal",
             # "1-cycle",
             # "2-uniform_edges",
             # "2-cycle",
-            # '2-expander',
+            '2-expander',
             # "3-uniform_edges",
             # "3-cycle",
             '3-expander',
@@ -160,7 +161,9 @@ def test_unisvm_dataset():
             # '10-expander',
             # "20-uniform_edges",
             # "20-cycle",
-            '20-expander',
+            '18-expander',
+            '30-expander',
+            '40-expander',
             # "50-uniform_edges",
             # "50-cycle",
             '50-expander',
@@ -173,10 +176,9 @@ def test_unisvm_dataset():
             # '80-expander',
             "999-clique",
         ],
-        #n_samples=400,
         dataset='unisvm',
         starting_weights_domain=[1,1],
-        max_time=2000,
+        max_time=400,
         alpha=0.1,
         learning_rate='constant',
         time_distr_class=statistics.Type2ParetoDistribution,
@@ -185,7 +187,7 @@ def test_unisvm_dataset():
         time_const_weight=0,
         obj_function='hinge_loss',
         spectrum_dependent_learning_rate=True,
-        metrics=['score'],
+        metrics=[],
         metrics_type=2,
         metrics_nodes='worst',
         real_metrics_toggle=False,
@@ -193,7 +195,7 @@ def test_unisvm_dataset():
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'us002',
+            'us003',
             'dataset',
             # 'w_domain',
             'alpha',
@@ -214,7 +216,7 @@ def test_unisvm_dataset():
         instant_plot=True,
         plots=('hinge_loss_iter', 'hinge_loss_time'),
         save_plot_to_file=True,
-        plot_global_w=False,
+        plot_global_w=True,
         plot_node_w=False
     )
 

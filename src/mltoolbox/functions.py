@@ -30,7 +30,7 @@ class HingeLossFunction(LossFunctionAbstract):
         return np.sum(((-y * y_hat_f_gradient.T) * np.sign(h)).T, axis=0)
 
     @staticmethod
-    def compute_gradient(y, y_hat_f, y_hat_f_gradient):
+    def compute_gradient2(y, y_hat_f, y_hat_f_gradient):
         N = len(y)
         P = y_hat_f_gradient.shape[1]
         h = HingeLossFunction.compute_value(y, y_hat_f)
@@ -139,7 +139,11 @@ def generate_unidimensional_svm_training_set_from_expander_adj_mat(adj_mat, c=0.
     Pn = utils.Pn_from_adjacency_matrix(adj_mat)
     eigvals, eigvecs = np.linalg.eig(Pn)
     lambda2nd_index = np.argsort(np.abs(eigvals))[-2]
+
     u = eigvecs[:, lambda2nd_index].real
+    u_abs_max_index = np.argmax(np.abs(u))
+    u /= -u[u_abs_max_index]
+
     X = np.abs(u + c)
     y = -np.sign(u + c)
     w = np.zeros(1)

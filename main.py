@@ -392,12 +392,26 @@ Summary:
         try:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
+            X, y, w = None, None, None
+
             if setup['dataset'] == 'unisvm':
-                X, y, w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(adjmat)
+                if 'clique' in graph:
+                    max_xpDeg = 0
+                    clique_adjmat = adjmat
+                    for xpG, xpA in setup['graphs'].items():
+                        if 'expander' not in xpG:
+                            continue
+                        xpDeg = int(xpG.split('-')[0])
+                        if xpDeg > max_xpDeg:
+                            clique_adjmat = xpA
+                            max_xpDeg = xpDeg
+                    X, y, w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(clique_adjmat)
+                else:
+                    X, y, w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(adjmat)
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:
-                if 'expander' in graph:
+                if 'expander' in graph or 'clique' in graph:
                     sg = Pn_spectral_gap_from_adjacency_matrix(adjmat)
                 elif 'cycle' in graph:
                     sg = n_cycle_spectral_gap_approx_from_adjacency_matrix(adjmat)
