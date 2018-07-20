@@ -10,58 +10,29 @@ from src.plotter import Plotter
 
 def main():
     # SETUP BEGIN
-    test_folder_path = './test_log/test_u043_Win[-70,-60]_sgC1alpha_!shuf_unireg_mtrT0all_500iter'
+    test_folder_path = './test_log/test_us003_unisvm_sgC0.1alpha_shuf_mtrT0all_lomax[3-2]_1000n_400time_INFiter'
+    target_x = 15
+
     logs, setup = load_test_logs(test_folder_path, return_setup=True)
+    objfunc = METRICS[setup['obj_function']]
     degrees = {}
     for graph in setup['graphs']:
         degrees[graph] = degree_from_adjacency_matrix(setup['graphs'][graph])
     graph_filter = [
-        # "0-diagonal",
-        "1-cycle",
-        # "2-uniform_edges",
-        "2-cycle",
-        # "3-uniform_edges",
-        "3-cycle",
-        # "4-uniform_edges",
-        "4-cycle",
-        # "5-uniform_edges",
-        # "5-cycle",
-        # "8-uniform_edges",
-        "8-cycle",
-        # "10-uniform_edges",
-        # "10-cycle",
-        # "20-uniform_edges",
-        "20-cycle",
-        # "50-uniform_edges",
-        "50-cycle",
-        # "80-uniform_edges",
-        "80-cycle",
-        "99-clique",
+        '*'
     ]
 
-    clique_mse_log = logs['metrics']['mse']['99-clique']
-
-    opt = 858.5
+    y0 = -1000
     pred_ratios = []
     real_ratios = []
 
-    for graph, graph_mse_log in dict(logs['metrics']['mse']).items():
-        if graph not in graph_filter:
-            del logs['metrics']['mse'][graph]
+    for graph, graph_objfunc_log in dict(logs['metrics'][objfunc.id]).items():
+        if graph not in graph_filter and '*' not in graph_filter:
+            del logs['metrics'][objfunc.id][graph]
             continue
-
-        ratio = []
-        for x in range(len(graph_mse_log)):
-            ry = (graph_mse_log[x] - opt) / (clique_mse_log[x] - opt + 1)
-            ratio.append(ry)
-        ratio = max(ratio)
-
-        real_ratios.append(ratio)
-        pred_ratios.append(1 / math.sqrt(mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
-
-        # y = np.max(mse_log)
-        # x = np.argmax(mse_log)
-        # a[graph] = y * math.sqrt(x)
+        y = logs['metrics'][objfunc.id][graph][target_x]
+        real_ratios.append((y - y0) / target_x)
+        pred_ratios.append(1 / math.sqrt(Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
 
     print(real_ratios)
 
@@ -85,7 +56,7 @@ def main():
         plt.text(
             pred_ratios[i] - 2,
             real_ratios[i] + 0.1,
-            'd={}'.format(degrees[list(logs['metrics']['mse'].keys())[i]]),
+            'd={}'.format(degrees[list(logs['metrics'][objfunc.id].keys())[i]]),
             size='xx-small'
         )
 
@@ -93,17 +64,17 @@ def main():
         list(setup['graphs'].keys()), setup['n']
     )
 
-    # MSE - AVG ITER SUBPLOT
+    # objfunc - AVG ITER SUBPLOT
     plt.subplot(1, 2, 2)
-    plt.title("MSE over AVG iteration", loc='left')
+    plt.title("{} over AVG iteration".format(objfunc.fullname), loc='left')
     plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel('AVG iter')
-    plt.ylabel('MSE')
+    plt.ylabel(setup['obj_function'].fullname)
     plt.yscale('linear')
-    for graph, graph_mse_log in dict(logs['metrics']['mse']).items():
+    for graph, graph_objfunc_log in dict(logs['metrics'][objfunc.id]).items():
         plt.plot(
-            list(range(len(graph_mse_log))),
-            graph_mse_log,
+            list(range(len(graph_objfunc_log))),
+            graph_objfunc_log,
             label=graph,
             color=colors[graph]
         )

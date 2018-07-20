@@ -53,5 +53,6 @@ if __name__ == "__main__":
         save_plots_to_test_folder=args.s_flag,
         instant_plot=not args.s_flag,
         plots=tuple(args.plots),
-        temp_index=int(args.temp_index)
+        temp_index=int(args.temp_index),
+        test_tag=args.folder_path
     )

@@ -56,9 +56,9 @@ def run():
     # test_different_1000nodes_timing_loop(2)
     # test_classic_gd()
     # test_spectral_ratios()
-    # plot_spectral_gap_ratio_real_vs_prediction.main()
+    plot_spectral_gap_ratio_real_vs_prediction.main()
     # print_topologies_velocity.main()
-    print_expanders_spectrum.main()
+    # print_expanders_spectrum.main()
     # test_unisvm_dataset()
 
 
