@@ -875,9 +875,10 @@ class Plotter:
             title_left="{}{} over {}".format(prefix, METRICS[METRICS_metrics_id].fullname, x_label),
             title_right=self.time_distr_name,
             xlabel=x_label,
-            ylabel=prefix + METRICS[METRICS_metrics_id].shortname)
+            ylabel=prefix + METRICS[METRICS_metrics_id].shortname
+        )
         if x_label == 'iter':
-            self._plot_metrics_over_iter_lines(metrics_id)
+            self._plot_metrics_over_iter_lines(metrics_id, markersize=2)
         elif x_label == 'time':
             self._plot_metrics_over_time_lines(metrics_id)
         else:

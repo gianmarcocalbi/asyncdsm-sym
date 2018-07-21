@@ -27,6 +27,13 @@ class MeanSquaredError(Metrics):
     loss_func = functions.SquaredLossFunction
 
 
+class ContinuousHingeLoss(Metrics):
+    fullname = "Continuous Hinge Loss"
+    shortname = "cHL"
+    id = "cont_hinge_loss"
+    loss_func = functions.ContinuousHingeLossFunction
+
+
 class HingeLoss(Metrics):
     fullname = "Hinge Loss"
     shortname = "HL"
@@ -57,5 +64,6 @@ METRICS = {
     MeanSquaredError.id: MeanSquaredError(),
     HingeLoss.id: HingeLoss(),
     EdgyHingeLoss.id: EdgyHingeLoss(),
-    Score.id: Score()
+    Score.id: Score(),
+    ContinuousHingeLoss.id : ContinuousHingeLoss()
 }

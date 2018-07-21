@@ -18,6 +18,15 @@ class LossFunctionAbstract:
     def compute_gradient(y, y_hat_f, y_hat_f_gradient):
         raise NotImplementedError('f_gradient method not implemented in LossFunctionAbstract child class')
 
+class ContinuousHingeLossFunction(LossFunctionAbstract):
+    @staticmethod
+    def compute_value(y, y_hat_f):
+        return -y * y_hat_f
+
+    @staticmethod
+    def compute_gradient(y, y_hat_f, y_hat_f_gradient):
+        return np.sum(-y * y_hat_f_gradient, axis=0)
+
 
 class HingeLossFunction(LossFunctionAbstract):
     @staticmethod
@@ -135,6 +144,15 @@ class SampleGenerator:
         pass
 
 
+def generate_unidimensional_svm_dual_averaging_training_set(n, label_flip_prob=0.05):
+    X = np.random.uniform(-1, 1, n)
+    y = -np.sign(X)
+    for i in range(len(y)):
+        if np.random.uniform(0,1) < label_flip_prob:
+            y[i] *= -1
+    w = np.zeros(1)
+    return X.reshape(-1, 1), y, w
+
 def generate_unidimensional_svm_training_set_from_expander_adj_mat(adj_mat, c=0.1):
     Pn = utils.Pn_from_adjacency_matrix(adj_mat)
     eigvals, eigvecs = np.linalg.eig(Pn)
@@ -165,10 +183,12 @@ def generate_unidimensional_regression_training_set(n_samples):
 def generate_svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05):
     X = []
     y = np.zeros(n_samples)
-    w = np.random.normal(0, 1, n_features)
+    #w = np.random.normal(0, 1, n_features)
+    w = np.ones(n_features)
+    """
     w_norm_2 = math.sqrt(np.inner(w, w))
     if w_norm_2 > 5:
-        w = w / w_norm_2 * 5
+        w = w / w_norm_2 * 5"""
     # e = np.random.normal(0, 1, n_features)
 
     for i in range(n_samples):
@@ -186,9 +206,8 @@ def generate_svm_dual_averaging_training_set(n_samples, n_features, label_flip_p
 
 
 def generate_regression_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):
-    w = np.random.uniform(-50, +50, n_features + 1)
-    # w = 50 * np.ones(n_features + 1)
-    # X = np.c_[np.ones(n_samples), np.random.normal(0,1,(n_samples, n_features))]
+    # w = np.random.uniform(-50, +50, n_features + 1)
+    w = np.ones(n_features + 1)
     X = np.c_[np.ones(n_samples), np.random.uniform(0, 1, (n_samples, n_features))]
     y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
 
@@ -285,7 +304,6 @@ def sample_from_function_old(n_samples, n_features, func, domain_radius=1, domai
         x = np.zeros(n_features)
         for j in range(n_features):
             x[j] = np.random.uniform(features_domain[j][0], features_domain[j][1])
-            # todo: implement threshold
         X.append(x)
         y[i] = func(x, w) + np.random.normal(error_mean, error_std_dev)
 

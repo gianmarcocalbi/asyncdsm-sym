@@ -331,7 +331,7 @@ class Cluster:
                 method = "linear_regression"
             """
             node_self_weight = 1 / sum(self.adjacency_matrix[i])
-            if 'expander' in self.graph_name:
+            if 'expander' in self.graph_name or 'clique' in self.graph_name:
                 node_self_weight = 0.5
 
             # instantiate new node for the just-selected subsample

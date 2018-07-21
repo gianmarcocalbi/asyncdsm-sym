@@ -40,7 +40,7 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
     iter = ('INF' if setup['max_iter'] is None else str(setup['max_iter'])) + 'iter'
     c = str(setup['time_const_weight']) + 'c'
     method = setup['method']
-    shuffle = 'shuf' if setup['shuffle'] else '!shuf'
+    shuffle = 'shuf' if setup['shuffle'] else 'noshuf'
     w_domain = 'Win[{},{}]'.format(setup['starting_weights_domain'][0], setup['starting_weights_domain'][1])
     metrics = 'mtrT{}{}'.format(setup['metrics_type'], setup['metrics_nodes'])
 
@@ -282,6 +282,7 @@ def main(
     # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
 
     ### BEGIN TRAINING SET GEN ###
+    X, y, w = None, None, None
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
     if setup['dataset'] == 'reg':
@@ -300,6 +301,11 @@ def main(
         )
     elif setup['dataset'] == 'unisvm':
         pass
+    elif setup['dataset'] == 'unisvm2':
+        X, y, w = functions.generate_unidimensional_svm_dual_averaging_training_set(
+            setup['n'],
+            label_flip_prob=setup['smv_label_flip_prob']
+        )
     elif setup['dataset'] == 'unireg':
         X, y, w = functions.generate_unidimensional_regression_training_set(setup['n'])
     elif setup['dataset'] == 'svm':
@@ -392,8 +398,7 @@ Summary:
         try:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
-            X, y, w = None, None, None
-
+            # TODO: temp
             if setup['dataset'] == 'unisvm':
                 if 'clique' in graph:
                     max_xpDeg = 0
@@ -408,6 +413,9 @@ Summary:
                     X, y, w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(clique_adjmat)
                 else:
                     X, y, w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(adjmat)
+            """X,y,w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(
+                setup['graphs']['50-expander']
+            )"""
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:

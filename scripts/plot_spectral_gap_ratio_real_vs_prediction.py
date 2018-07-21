@@ -10,8 +10,9 @@ from src.plotter import Plotter
 
 def main():
     # SETUP BEGIN
-    test_folder_path = './test_log/test_us003_unisvm_sgC0.1alpha_shuf_mtrT0all_lomax[3-2]_1000n_400time_INFiter'
-    target_x = 15
+    test_folder_path = './test_log/test_us006_unisvm_sgC0.14142135623730953alpha_noshuf_mtrT0all_lomax[3-2]_100n_INFtime_800iter'
+    target_x0 = 100
+    target_x = 400
 
     logs, setup = load_test_logs(test_folder_path, return_setup=True)
     objfunc = METRICS[setup['obj_function']]
@@ -22,18 +23,36 @@ def main():
         '*'
     ]
 
-    y0 = -1000
     pred_ratios = []
-    real_ratios = []
+    real_slopes = []
+
+    # equal to None so that if it will not be reassigned then it will raise exception
+    clique_slope = None
+    clique_spectral_gap = None
 
     for graph, graph_objfunc_log in dict(logs['metrics'][objfunc.id]).items():
         if graph not in graph_filter and '*' not in graph_filter:
             del logs['metrics'][objfunc.id][graph]
             continue
+
+        y0 = logs['metrics'][objfunc.id][graph][target_x0]
         y = logs['metrics'][objfunc.id][graph][target_x]
-        real_ratios.append((y - y0) / target_x)
+        """if degrees[graph] == 2:
+            y0 = logs['metrics'][objfunc.id][graph][3000]
+            y = logs['metrics'][objfunc.id][graph][3600]"""
+
+        slope = y - y0
+        print(slope)
+
+        real_slopes.append(slope)
         pred_ratios.append(1 / math.sqrt(Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
 
+        if 'clique' in graph:
+            clique_slope = slope
+            clique_spectral_gap = Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])
+
+    real_ratios = clique_slope / np.array(real_slopes)
+    pred_ratios = np.array(pred_ratios) * math.sqrt(0.5)
     print(real_ratios)
 
     plt.figure(1, figsize=(12, 6))
@@ -54,8 +73,8 @@ def main():
 
     for i in range(len(pred_ratios)):
         plt.text(
-            pred_ratios[i] - 2,
-            real_ratios[i] + 0.1,
+            pred_ratios[i],
+            real_ratios[i],
             'd={}'.format(degrees[list(logs['metrics'][objfunc.id].keys())[i]]),
             size='xx-small'
         )
@@ -66,10 +85,10 @@ def main():
 
     # objfunc - AVG ITER SUBPLOT
     plt.subplot(1, 2, 2)
-    plt.title("{} over AVG iteration".format(objfunc.fullname), loc='left')
+    plt.title("{} over iteration".format(objfunc.fullname), loc='left')
     plt.title("({})".format(setup['time_distr_class'].name), loc='right')
-    plt.xlabel('AVG iter')
-    plt.ylabel(setup['obj_function'].fullname)
+    plt.xlabel('iter')
+    plt.ylabel(objfunc.fullname)
     plt.yscale('linear')
     for graph, graph_objfunc_log in dict(logs['metrics'][objfunc.id]).items():
         plt.plot(
