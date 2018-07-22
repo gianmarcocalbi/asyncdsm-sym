@@ -7,6 +7,8 @@ from src.utils import *
 def main(compute=True):
     # SETUP BEGIN
 
+    spectral_gap_function = mtm_spectral_gap_from_adjacency_matrix
+
     exp_path_list_pattern = os.path.normpath("./graphs/exp_*")
     exp_path_list = list(glob.iglob(exp_path_list_pattern))
 
@@ -18,7 +20,7 @@ def main(compute=True):
         n = int(len(adj))
         d = int(sum(adj[0]))-1
         if compute:
-            spectrum = Pn_spectral_gap_from_adjacency_matrix(adj)
+            spectrum = spectral_gap_function(adj)
         else:
             spectrum = float(exp_path.split('_')[-1].split('spectrum')[0])
 
@@ -36,3 +38,6 @@ def main(compute=True):
         for d in degrees:
             print('N = {}, d = {}, spectral_gap = {}'.format(n,d,spectrums[n][d]))
         print('')
+
+if __name__ == "__main__":
+    main()

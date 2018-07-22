@@ -23,7 +23,7 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
     dataset = setup['dataset']
     distr = setup['time_distr_class'].shortname + '[' + '-'.join([str(e) for e in setup['time_distr_param'][0]]) + ']'
     distr_rule = str(setup['time_distr_param_rule']) + 'Rule'
-    if setup['dataset'] == 'svm':
+    if 'svm' in setup['dataset']:
         error = str(setup['smv_label_flip_prob']) + 'flip'
         nodeserror = ''
     else:
@@ -534,7 +534,7 @@ Summary:
         with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
             f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
 
-    colors = Plotter.generate_color_dict_from_graph_keys(
+    colors = Plotter.generate_rainbow_color_dict_from_graph_keys(
         list(w_logs.keys()), setup['n']
     )
 

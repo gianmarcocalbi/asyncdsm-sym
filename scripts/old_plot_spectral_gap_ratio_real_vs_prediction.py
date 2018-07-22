@@ -89,7 +89,7 @@ def main():
             size='xx-small'
         )
 
-    colors = Plotter.generate_color_dict_from_graph_keys(
+    colors = Plotter.generate_rainbow_color_dict_from_graph_keys(
         list(setup['graphs'].keys()), setup['n']
     )
 

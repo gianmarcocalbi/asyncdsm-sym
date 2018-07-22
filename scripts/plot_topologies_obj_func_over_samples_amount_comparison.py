@@ -123,7 +123,7 @@ def main():
 
     clique_name = [c for c in points if 'clique' in c][0]
 
-    colors = plotter.Plotter.generate_color_dict_from_graph_keys(
+    colors = plotter.Plotter.generate_rainbow_color_dict_from_graph_keys(
         list(points.keys()), n
     )
 

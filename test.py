@@ -9,44 +9,7 @@ from sklearn.preprocessing import normalize
 
 
 def run():
-    """
-    n_samples_list = [100, 200, 300, 400, 500, 600, 800, 1000, 2000, 5000, 8000, 10100, 20200]
-    for n_features in [100]:
-        for n_samples in n_samples_list:
-            for _ in range(20):
-                try:
-                    main.main0(n_samples=n_samples, n_features=n_features)
-                except:
-                    continue
-    """
-
-    """ TEST VELOCITY OVER DEGREES
-    nodes_list = [20, 50, 100, 200, 300, 400, 500, 600, 800, 1000]
-    for N in nodes_list:
-        for _ in range(2):
-            try:
-                main.main0(
-                    n=N,
-                    time_distr_class=statistics.ExponentialDistribution,
-                    time_distr_param=[1],
-                    seed=N*_
-                )
-                main.main0(
-                    n=N,
-                    time_distr_class=statistics.UniformDistribution,
-                    time_distr_param=[0,2],
-                    seed=N*_
-                )
-                main.main0(
-                    n=N,
-                    time_distr_class=statistics.ExponentialDistribution,
-                    time_distr_param=[3,2],
-                    seed=N*_
-                )
-            except:
-                continue
-    """
-
+    pass
     # merge_tests.main()
     # plot_of_over_c.main()
     # plot_topologies_obj_func_at_time_over_c_comparison.main()
@@ -61,11 +24,263 @@ def run():
     # print_expanders_spectrum.main()
     # test_unisvm2_dataset(2)
     # test_unisvm_dataset(2)
-    test_dual_average_svm()
 
 
+def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_reg_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
 
-def test_dual_average_svm():
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    main.main(
+        seed=22052010,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        n_features=100,
+        dataset='reg2',
+        error_std_dev=1,
+        starting_weights_domain=[-10, 50],
+        max_iter=None,
+        max_time=None,
+        alpha=1e-3,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=True,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='mse',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=(
+            'r2000',
+            'dataset',
+            'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            'feat',
+            'time',
+            'iter'
+        ),
+        test_parent_folder="",
+        instant_plot=False,
+        plots=('mse_iter', 'mse_time'),
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_unisvm_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    main.main(
+        seed=22052010,
+        n=n,
+        graphs=graphs,
+        dataset='unisvm',
+        starting_weights_domain=[1, 1],
+        smv_label_flip_prob=0.00,
+        max_iter=800,
+        max_time=None,
+        alpha=0.1,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=True,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='hinge_loss',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=(
+            'us006',
+            'dataset',
+            'alpha',
+            'nodes',
+            'shuffle',
+            'distr',
+            'metrics',
+            'time',
+            'iter'
+        ),
+        test_parent_folder="",
+        instant_plot=False,
+        plots=('hinge_loss_iter', 'hinge_loss_time'),
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_unisvm2_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_unisvm2_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    main.main(
+        seed=22052010,
+        n=n,
+        graphs=graphs,
+        dataset='unisvm2',
+        starting_weights_domain=[1, 1],
+        max_iter=1000,
+        max_time=None,
+        alpha=0.05,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=True,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='hinge_loss',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'us2000',
+            'dataset',
+            'alpha',
+            'nodes',
+            'shuffle',
+            'distr',
+            'metrics',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=('hinge_loss_iter', 'hinge_loss_time'),
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_dual_average_svm()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    main.main(
+        seed=22052010,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        n_features=100,
+        dataset='svm',
+        smv_label_flip_prob=0.05,
+        starting_weights_domain=[-2, 2],
+        max_iter=500,
+        max_time=None,
+        method='classic',
+        alpha=1e-0,
+        learning_rate='constant',
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='hinge_loss',
+        spectrum_dependent_learning_rate=True,
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        real_metrics_toggle=False,
+        shuffle=False,
+        save_test_to_file=False,
+        test_folder_name_struct=[
+            'da000',
+            'dataset',
+            'alpha',
+            'nodes',
+            'shuffle',
+            'distr',
+            'metrics',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=('hinge_loss_iter', 'hinge_loss_time'),
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+
+    )
+
+
+def test_classic_gd():
     input("sim_spectral_ratios()... click [ENTER] to continue or [CTRL]+[C] to abort")
     main.main(
         seed=22052010,
@@ -112,103 +327,10 @@ def test_dual_average_svm():
         ],
         n_samples=1000,
         n_features=100,
-        dataset='svm',
-        smv_label_flip_prob=0.05,
-        starting_weights_domain=[-2, 2],
-        max_iter=500,
-        max_time=None,
-        method='classic',
-        alpha=1e-0,
-        learning_rate='constant',
-        time_distr_class=statistics.Type2ParetoDistribution,
-        time_distr_param=[[3, 2]],
-        time_distr_param_rule=None,
-        time_const_weight=0,
-        obj_function='hinge_loss',
-        spectrum_dependent_learning_rate=True,
-        metrics=[],
-        metrics_type=2,
-        metrics_nodes='worst',
-        real_metrics_toggle=False,
-        shuffle=False,
-        save_test_to_file=False,
-        test_folder_name_struct=[
-            'n006',
-            'dataset',
-            'w_domain',
-            'alpha',
-            'shuffle',
-            'metrics',
-            'distr',
-            'error',
-            'nodeserror',
-            'nodes',
-            'samp',
-            'feat',
-            'time',
-            'iter',
-            'c',
-            'method',
-        ],
-        test_parent_folder="",
-        instant_plot=True,
-        plots=('hinge_loss_iter', 'hinge_loss_time'),
-        save_plot_to_file=True,
-        plot_global_w=True,
-        plot_node_w=False
-    )
-
-def test_classic_gd():
-    input("sim_spectral_ratios()... click [ENTER] to continue or [CTRL]+[C] to abort")
-    main.main(
-        seed=22052010,
-        n=100,
-        graphs=[
-            # "0-diagonal",
-            # "1-cycle",
-            # "2-uniform_edges",
-            # "2-cycle",
-            '2-expander',
-            # "3-uniform_edges",
-            # "3-cycle",
-            #'3-expander',
-            # "4-uniform_edges",
-            # "4-cycle",
-            '4-expander',
-            # "5-uniform_edges",
-            # "5-cycle",
-            # '5-expander',
-            # "8-uniform_edges",
-            # "8-cycle",
-            '8-expander',
-            # "10-uniform_edges",
-            # "10-cycle",
-            #'10-expander',
-            # "20-uniform_edges",
-            # "20-cycle",
-            # '18-expander',
-            '20-expander',
-            # '30-expander',
-            # '40-expander',
-            # "50-uniform_edges",
-            # "50-cycle",
-            #'50-expander',
-            # "80-uniform_edges",
-            # "80-cycle",
-            #'80-expander',
-            # '100-expander',
-            # '200-expander',
-            # '300-expander',
-            # '500-expander',
-            # '80-expander',
-            "99-clique",
-        ],
-        n_samples=1000,
-        n_features=100,
         dataset='reg2',
         error_std_dev=1.0,
         node_error_std_dev=0.0,
-        starting_weights_domain=[-10,50],
+        starting_weights_domain=[-10, 50],
         max_iter=500,
         max_time=None,
         method='classic',
@@ -292,26 +414,26 @@ def test_unisvm2_dataset(distr):
             '10-expander',
             # "20-uniform_edges",
             # "20-cycle",
-            #'18-expander',
+            # '18-expander',
             '20-expander',
-            #'30-expander',
-            #'40-expander',
+            # '30-expander',
+            # '40-expander',
             # "50-uniform_edges",
             # "50-cycle",
             '50-expander',
             # "80-uniform_edges",
             # "80-cycle",
             # '80-expander',
-            #'100-expander',
-            #'200-expander',
-            #'300-expander',
-            #'500-expander',
+            # '100-expander',
+            # '200-expander',
+            # '300-expander',
+            # '500-expander',
             # '80-expander',
             "99-clique",
         ],
         dataset='unisvm2',
         smv_label_flip_prob=0.05,
-        starting_weights_domain=[1,1],
+        starting_weights_domain=[1, 1],
         max_time=None,
         max_iter=1000,
         alpha=0.05,
@@ -395,28 +517,28 @@ def test_unisvm_dataset(distr):
             '10-expander',
             # "20-uniform_edges",
             # "20-cycle",
-            #'18-expander',
+            # '18-expander',
             '20-expander',
-            #'30-expander',
-            #'40-expander',
+            # '30-expander',
+            # '40-expander',
             # "50-uniform_edges",
             # "50-cycle",
             '50-expander',
             # "80-uniform_edges",
             # "80-cycle",
             '80-expander',
-            #'100-expander',
-            #'200-expander',
-            #'300-expander',
-            #'500-expander',
+            # '100-expander',
+            # '200-expander',
+            # '300-expander',
+            # '500-expander',
             # '80-expander',
             "99-clique",
         ],
         dataset='unisvm',
-        starting_weights_domain=[1,1],
+        starting_weights_domain=[1, 1],
         max_time=None,
         max_iter=800,
-        alpha=0.1, # * math.sqrt(2),
+        alpha=0.1,  # * math.sqrt(2),
         learning_rate='constant',
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
@@ -604,7 +726,7 @@ def test_spectral_ratios():
         plots=('mse_iter',),
         save_plot_to_file=True,
         plot_global_w=True,
-        plot_node_w=[0,5,10,20,50,55,60,70]
+        plot_node_w=[0, 5, 10, 20, 50, 55, 60, 70]
     )
 
 

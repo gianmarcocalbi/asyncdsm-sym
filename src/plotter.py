@@ -30,6 +30,18 @@ class Plotter:
         "n-1_star": '#F8FE21',  # yellow
     }
 
+    degree_colors = {
+        0: 'purple',
+        1: 'red',
+        2: (0xff, 0x00, 0xff),  #magenta
+        3: (0xff, 0x00, 0x00),  # red
+        4: (0xff, 0x9d, 0x00),  # orange
+        8: (0xec, 0xec, 0x00),  # yellow
+        10: (0x62, 0xe3, 0x00),
+        20: (0x00, 0xff, 0xcc),
+        50: (0x00, 0xba, 0xe3)
+    }
+
     def __init__(
             self,
             test_folder_root="./test_log/",
@@ -221,7 +233,7 @@ class Plotter:
                     warnings.warn('Log "{}" not found'.format(metrics_log_path))
                     # self.graphs.remove(graph)
 
-        self.colors = Plotter.generate_color_dict_from_graph_keys(self.graphs, self.setup['n'])
+        self.colors = Plotter.generate_rainbow_color_dict_from_graph_keys(self.graphs, self.setup['n'])
 
         # TODO: update moving average with new metrics logs
         """if self.moving_average_window != 0:
@@ -264,7 +276,7 @@ class Plotter:
         return os.path.normpath(os.path.join("./test_log/temp/", Plotter.get_temp_test_folder_name_by_index(index)))
 
     @staticmethod
-    def generate_color_dict_from_graph_keys(graphs, N=None):
+    def generate_rainbow_color_dict_from_graph_keys(graphs, N=None):
         if N is None:
             N = len(graphs[list(graphs.keys())[0]])
         degrees = {}
@@ -292,13 +304,38 @@ class Plotter:
             d = degrees[graph]
             index = graphs_degrees_count[d]
             max_index = graphs_degrees_max[d]
-            colors[graph] = Plotter.generate_color_from_degree(d, N, index=index, max_index=max_index)
+            colors[graph] = Plotter.generate_rainbow_color_from_degree(d, N, index=index, max_index=max_index)
             graphs_degrees_count[d] -= 1
 
         return colors
 
     @staticmethod
-    def generate_color_from_degree(d, N, index=1, max_index=1):
+    def generate_color_dict_from_graph_keys(graphs, N=None):
+        pass
+
+    @staticmethod
+    def generate_color_dict_from_degrees(degrees, fixed=False):
+        degrees.sort()
+        color_dict = {}
+
+        for i in range(len(degrees)):
+            d = degrees[i]
+            if fixed:
+                if d in Plotter.degree_colors:
+                    color_dict[d] = Plotter.degree_colors[d]
+                else:
+                    Plotter.get_graph_color('')
+            else:
+                try:
+                    color_dict[d] = Plotter.degree_colors.values()[i]
+                except IndexError:
+                    color_dict[d] = Plotter.get_graph_color('')
+
+        return color_dict
+
+
+    @staticmethod
+    def generate_rainbow_color_from_degree(d, N, index=1, max_index=1):
 
         if d == 0:
             return tuple([200/255, 0, 1])

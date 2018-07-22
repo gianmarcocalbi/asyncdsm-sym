@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 import warnings, math, glob
-from src.utils import Pn_spectral_gap_from_adjacency_matrix
+from src.utils import Pn_spectral_gap_from_adjacency_matrix, mtm_spectral_gap_from_adjacency_matrix
 
 
 def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
@@ -163,14 +163,21 @@ def generate_n_cycle_d_regular_graph_by_degree(N, K):
     return generate_graph_by_edges(N, edges)
 
 
-def generate_expander_graph(N, degree):
+def generate_expander_graph(N, degree, matrix_type='mtm'):
     max_spectrum = 0
     max_exp = None
 
-    exp_path_list = list(glob.iglob('./graphs/exp_{}n_{}d*'.format(N, degree)))
+    if matrix_type == 'mtm':
+        graphs_root = './graphs/exp_mtm'
+        spectral_gap_function = mtm_spectral_gap_from_adjacency_matrix
+    else:
+        graphs_root = './graphs/exp_half_weighted'
+        spectral_gap_function = Pn_spectral_gap_from_adjacency_matrix
+
+    exp_path_list = list(glob.iglob('{}/exp_{}n_{}d*'.format(graphs_root, N, degree)))
     for exp_path in exp_path_list:
         adj = np.loadtxt(exp_path)
-        spectrum = Pn_spectral_gap_from_adjacency_matrix(adj)
+        spectrum = spectral_gap_function(adj)
         if spectrum > max_spectrum:
             max_spectrum = spectrum
             max_exp = adj

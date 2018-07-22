@@ -55,7 +55,7 @@ def main():
         #a[graph] = y * math.sqrt(x)
 
 
-    colors = plotter.Plotter.generate_color_dict_from_graph_keys(
+    colors = plotter.Plotter.generate_rainbow_color_dict_from_graph_keys(
         list(setup['graphs'].keys()), setup['n']
     )
 
@@ -144,7 +144,7 @@ def main3():
         #a[graph] = y * math.sqrt(x)
 
 
-    colors = plotter.Plotter.generate_color_dict_from_graph_keys(
+    colors = plotter.Plotter.generate_rainbow_color_dict_from_graph_keys(
         list(setup['graphs'].keys()), setup['n']
     )
 
@@ -236,7 +236,7 @@ def main2():
 
         a[graph] = sum(a[graph]) / len(a[graph])
 
-    colors = plotter.Plotter.generate_color_dict_from_graph_keys(
+    colors = plotter.Plotter.generate_rainbow_color_dict_from_graph_keys(
         list(setup['graphs'].keys()), setup['n']
     )
 

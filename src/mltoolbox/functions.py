@@ -18,6 +18,7 @@ class LossFunctionAbstract:
     def compute_gradient(y, y_hat_f, y_hat_f_gradient):
         raise NotImplementedError('f_gradient method not implemented in LossFunctionAbstract child class')
 
+
 class ContinuousHingeLossFunction(LossFunctionAbstract):
     @staticmethod
     def compute_value(y, y_hat_f):
@@ -69,7 +70,7 @@ class EdgyHingeLossFunction(LossFunctionAbstract):
         return (-y * y_hat_f_gradient.T).T * np.sign(h)
 
     @staticmethod
-    def compute_gradient2(y, y_hat_f, y_hat_f_gradient):
+    def compute_gradient_iteratively(y, y_hat_f, y_hat_f_gradient):
         N = len(y)
         P = y_hat_f_gradient.shape[1]
         h = HingeLossFunction.compute_value(y, y_hat_f)
@@ -97,7 +98,7 @@ class SquaredLossFunction(LossFunctionAbstract):
     def compute_gradient(y, y_hat_f, y_hat_f_gradient):
         # the minus sign from the derivative of "- y_hat_f" is represented as follows:
         #   - (y - y_hat_f) = y_hat_f - y
-        return y_hat_f_gradient.T.dot(y_hat_f - y)
+        return y_hat_f_gradient.T.dot(y_hat_f - y) / 2
 
 
 class YHatFunctionAbstract:
@@ -148,10 +149,11 @@ def generate_unidimensional_svm_dual_averaging_training_set(n, label_flip_prob=0
     X = np.random.uniform(-1, 1, n)
     y = -np.sign(X)
     for i in range(len(y)):
-        if np.random.uniform(0,1) < label_flip_prob:
+        if np.random.uniform(0, 1) < label_flip_prob:
             y[i] *= -1
     w = np.zeros(1)
     return X.reshape(-1, 1), y, w
+
 
 def generate_unidimensional_svm_training_set_from_expander_adj_mat(adj_mat, c=0.1):
     Pn = utils.Pn_from_adjacency_matrix(adj_mat)
@@ -183,7 +185,7 @@ def generate_unidimensional_regression_training_set(n_samples):
 def generate_svm_dual_averaging_training_set(n_samples, n_features, label_flip_prob=0.05):
     X = []
     y = np.zeros(n_samples)
-    #w = np.random.normal(0, 1, n_features)
+    # w = np.random.normal(0, 1, n_features)
     w = np.ones(n_features)
     """
     w_norm_2 = math.sqrt(np.inner(w, w))
