@@ -3,13 +3,12 @@ from src.mltoolbox import *
 from src.utils import *
 import numpy as np
 from src.plotter import plot_from_files
-import main, time, math
+import main, time, math, argparse
 from scripts import *
 from sklearn.preprocessing import normalize
 
 
-def run():
-    pass
+def run(core):
     # merge_tests.main()
     # plot_of_over_c.main()
     # plot_topologies_obj_func_at_time_over_c_comparison.main()
@@ -25,38 +24,26 @@ def run():
     # test_unisvm2_dataset(2)
     # test_unisvm_dataset(2)
 
-    """
-    test_exp_on_reg2_dataset(n=100, distr='exp', metrics_nodes='all', alert=False)
-    test_exp_on_reg2_dataset(n=100, distr='exp', metrics_nodes='worst', alert=False)
-    test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=False)
-    test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='worst', alert=False)
-    test_exp_on_reg2_dataset(n=100, distr='unif', metrics_nodes='all', alert=False)
-    test_exp_on_reg2_dataset(n=100, distr='unif', metrics_nodes='worst', alert=False)
-    """
-    """
-    test_exp_on_unisvm_dataset(n=100, distr='exp', metrics_nodes='all', alert=False)
-    test_exp_on_unisvm_dataset(n=100, distr='exp', metrics_nodes='worst', alert=False)
-    test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='all', alert=False)
-    test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='worst', alert=False)
-    test_exp_on_unisvm_dataset(n=100, distr='unif', metrics_nodes='all', alert=False)
-    test_exp_on_unisvm_dataset(n=100, distr='unif', metrics_nodes='worst', alert=False)
-    """
-    """
-    test_exp_on_unisvm2_dataset(n=100, distr='exp', metrics_nodes='all', alert=False)
-    test_exp_on_unisvm2_dataset(n=100, distr='exp', metrics_nodes='worst', alert=False)
-    test_exp_on_unisvm2_dataset(n=100, distr='par', metrics_nodes='all', alert=False)
-    test_exp_on_unisvm2_dataset(n=100, distr='par', metrics_nodes='worst', alert=False)
-    test_exp_on_unisvm2_dataset(n=100, distr='unif', metrics_nodes='all', alert=False)
-    test_exp_on_unisvm2_dataset(n=100, distr='unif', metrics_nodes='worst', alert=False)
-    """
-    #"""
-    test_exp_on_dual_average_svm(n=100, distr='exp', metrics_nodes='all', alert=False)
-    test_exp_on_dual_average_svm(n=100, distr='exp', metrics_nodes='worst', alert=False)
-    test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='all', alert=False)
-    test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='worst', alert=False)
-    test_exp_on_dual_average_svm(n=100, distr='unif', metrics_nodes='all', alert=False)
-    test_exp_on_dual_average_svm(n=100, distr='unif', metrics_nodes='worst', alert=False)
-    #"""
+    if core == 0:
+        test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(n=1000, distr='exp', metrics_nodes='worst', alert=False)
+
+    elif core == 1:
+        test_exp_on_reg2_dataset(n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(n=1000, distr='unif', metrics_nodes='worst', alert=False)
+        test_exp_on_reg2_dataset(n=1000, distr='par', metrics_nodes='worst', alert=False)
+
+    elif core == 2:
+        test_exp_on_dual_average_svm(n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='worst', alert=False)
+
+    elif core == 3:
+        test_exp_on_dual_average_svm(n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(n=1000, distr='exp', metrics_nodes='worst', alert=False)
+        test_exp_on_reg2_dataset(n=1000, distr='unif', metrics_nodes='worst', alert=False)
+
 
 def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
     if alert:
@@ -1100,4 +1087,18 @@ print(uni_str)
 """
 
 if __name__ == "__main__":
-    run()
+    parser = argparse.ArgumentParser(
+        description='Run test simulations'
+    )
+
+    parser.add_argument(
+        '-c', '--core',
+        action='store',
+        required=True,
+        help='Specify core test suite',
+        dest='core'
+    )
+
+    args = parser.parse_args()
+
+    run(int(args.core))
