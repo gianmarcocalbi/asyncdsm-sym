@@ -1,19 +1,39 @@
-import random, math, time, os, pickle, shutil, datetime, pprint, warnings, argparse
-import numpy as np
-from sklearn.datasets.samples_generator import make_blobs, make_regression
-from sklearn.preprocessing import normalize
-from sklearn import linear_model, svm
-from src.cluster import Cluster
-from src import mltoolbox, statistics
-from src.plotter import Plotter, plot_from_files
-from src.mltoolbox import functions
-from src.graphs import generate_n_nodes_graphs
+import datetime
+import shutil
+import time
+
 import matplotlib.pyplot as plt
+from sklearn import linear_model, svm
+from sklearn.datasets.samples_generator import make_regression
+from src import statistics
+from src.cluster import Cluster
+from src.graphs import generate_n_nodes_graphs
+from src.mltoolbox import functions
+from src.plotter import Plotter, plot_from_files
 from src.utils import *
-from termcolor import colored as col
+
+from typing import *
 
 
-def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
+def generate_test_subfolder_name(setup: dict, test_num: str, *argslist, parent_folder='') -> str:
+    """
+    Generate test folder relative path and name inside test_log folder.
+
+    Parameters
+    ----------
+    setup : dict
+        Test setup dict.
+    test_num : str
+        Test number or any label, it will be prepended to the test folder.
+    argslist : unfolded list
+        Variables names that will be included in the path.
+    parent_folder : str
+
+    Returns
+    -------
+    Test folder relative path to be used inside test_log folder.
+    """
+
     def join_name_parts(*args):
         name = ""
         for a in args:
@@ -55,7 +75,31 @@ def generate_test_subfolder_name(setup, test_num, *argslist, parent_folder=""):
     return os.path.normpath(os.path.join(parent_folder, name))
 
 
-def generate_time_distr_param_list(N, params, rule):
+def generate_time_distr_param_list(N: int, params: list, rule: str) -> list:
+    """
+    Assign time distribution parameters to each node.
+    Create a list with length equal to N (so one element for each node) so that to node i will be assigned parameters
+    in position i of the list.
+    NB: any time random distribution takes exactly on list of parameters!
+
+    Parameters
+    ----------
+    N : int
+        Total amount of nodes in the cluster.
+    params : list or list of list
+        If just a list of simple objects (float, int) then such list will be assigned to all nodes.
+        If params is a list of list then each node will have on list assigned following the rule below.
+    rule : str
+        'split' : if there are K lists inside params list then N nodes are divided into K set, i-th set will
+            take i-th list as parameter.
+        'random' : each node has probability 1/K to take one list as parameter.
+        'alternate' : node i takes parameter list (i mod K).
+
+    Returns
+    -------
+    List of list like explained in this function's description.
+    """
+
     if not isinstance(params[0], list) and not isinstance(params[0], tuple):
         params = [params]
 
@@ -80,40 +124,40 @@ def generate_time_distr_param_list(N, params, rule):
 
 
 def main(
-        seed=None,
-        n=100,
-        graphs=[],
-        n_samples=None,
-        n_features=100,
-        dataset=None,
-        smv_label_flip_prob=0.0,
-        error_mean=0.0,
-        error_std_dev=0.0,
-        node_error_mean=0.0,
-        node_error_std_dev=0.0,
-        starting_weights_domain=None,
-        max_iter=None,
-        max_time=None,
-        method='classic',
-        alpha=None,
-        learning_rate='constant',
-        spectrum_dependent_learning_rate=False,
-        time_distr_class=statistics.ExponentialDistribution,
-        time_distr_param=(1,),
-        time_distr_param_rule=None,
-        time_const_weight=0,
-        real_y_activation_func=None,
-        obj_function='mse',
-        metrics=[],
-        real_metrics=[],
-        real_metrics_toggle=False,
-        metrics_type=0,
-        metrics_nodes='all',
-        shuffle=True,
-        batch_size=20,
-        epsilon=None,
-        save_test_to_file=False,
-        test_folder_name_struct=(
+        seed: int = None,
+        n: int = 100,
+        graphs: Iterable[str] = (),
+        n_samples: int = None,
+        n_features: int = 100,
+        dataset: str = None,
+        smv_label_flip_prob: float = 0.0,
+        error_mean: float = 0.0,
+        error_std_dev: float = 0.0,
+        node_error_mean: float = 0.0,
+        node_error_std_dev: float = 0.0,
+        starting_weights_domain: Union[List[float], Tuple[float]] = None,
+        max_iter: int = None,
+        max_time: float = None,
+        method: str = 'classic',
+        alpha: float = None,
+        learning_rate: str = 'constant',
+        spectrum_dependent_learning_rate: bool = False,
+        time_distr_class: object = statistics.ExponentialDistribution,
+        time_distr_param: list = (1,),
+        time_distr_param_rule: str = None,
+        time_const_weight: float = 0,
+        real_y_activation_func: function = None,
+        obj_function: str = 'mse',
+        metrics: list = (),
+        real_metrics: list = (),
+        real_metrics_toggle: bool = False,
+        metrics_type: int = 0,
+        metrics_nodes: str = 'all',
+        shuffle: bool = True,
+        batch_size: int = 20,
+        epsilon: float = None,
+        save_test_to_file: bool = False,
+        test_folder_name_struct: list = (
                 'u040',
                 'shuffle',
                 'w_domain',
@@ -129,22 +173,156 @@ def main(
                 'time',
                 'iter',
                 'c',
-                'method',
+                'method'
         ),
-        test_parent_folder="",
-        instant_plot=False,
-        plots=('mse_iter',),
-        save_plot_to_file=False,
-        plot_global_w=False,
-        plot_node_w=False,
-        verbose_main=0,
-        verbose_cluster=0,
-        verbose_node=0,
-        verbose_task=0,
-        verbose_plotter=0
+        test_parent_folder: str = "",
+        instant_plot: bool = False,
+        plots: list = ('mse_iter',),
+        save_plot_to_file: bool = False,
+        plot_global_w: bool = False,
+        plot_node_w: Union[bool, int, List[int]] = False,
+        verbose_main: int = 0,
+        verbose_cluster: int = 0,
+        verbose_node: int = 0,
+        verbose_task: int = 0,
+        verbose_plotter: int = 0
 ):
-    # console.stdout.screen = stdscr
-    # console.stdout.open()
+    """
+    Main method.
+
+    Parameters
+    ----------
+    seed : int or None:
+        Random simulation seed. If None will be taken from current time.
+    n : int
+        Amount of nodes in the cluster.
+    graphs: List[str]
+        List of topologies to run the simulation with.
+    n_samples : int
+        Total number of samples in the generated dataset.
+    n_features : int
+        Number of feature each sample will have.
+    dataset : str
+        Dataset label:
+        - "reg": general customizable linear regression dataset;
+        - "reg2": ready linear regression dataset;
+        - "unireg": unidimensional regression;
+        - "svm": multidimensional classification problem;
+        - "unisvm": unidimensional dataset that changes with topology spectral gap;
+        - "unisvm2": unidimensional classification dataset;
+        - "skreg" : regression dataset from sklearn library.
+    smv_label_flip_prob : float
+        Probability that a label is flipped in svm dataset generation.
+        Kind of noise added in the dataset.
+    error_mean : float
+        Mean of noise to introduce in regression datasets.
+    error_std_dev : float
+        Standard deviation of noise introduced in regression datasets.
+    node_error_mean : float
+        Mean of the per-node noise introduced in each node's sample.
+        Be careful because if used with SVM this can change values of labels.
+    node_error_std_dev : float
+        Standard deviation of the per-node noise introduced in each node's sample.
+        Be careful because if used with SVM this can change values of labels.
+    starting_weights_domain : List[float]
+        In the form of [a,b]. Domain of each node's w is uniformly randomly picked within a and b.
+    max_iter : int
+        Maximum iteration after which the simulation is stopped.
+    max_time : float
+        Maximum time value after which the simulation is stopped.
+    epsilon : float
+        Accuracy threshold for objective function below which the simulation is stopped.
+    method : str
+        - "classic" : classic gradient descent, batch is equal to the whole dataset;
+        - "stochastic" : stochastic gradient descent;
+        - "batch" : batch gradient descent;
+        - "dual_averaging" : dual averaging method.
+    alpha : float
+        Learning rate constant coefficient.
+    learning_rate : str
+        - 'constant' : the learning rate never changes during the simulation (it is euqual to alpha);
+        - 'root_decreasing' : learning rate is alpha * 1/math.sqrt(K) where K = #iter.
+    spectrum_dependent_learning_rate : bool
+        If True the learning rate is also multiplied by math.sqrt(spectral_gap), so it is different for each graph.
+    time_distr_class : object
+        Class of the random time distribution.
+    time_distr_param : list or list of list
+        Parameters list.
+        See Also generate_time_distr_param_list.
+    time_distr_param_rule : str
+        Parameters distribution rule.
+        See Also generate_time_distr_param_list.
+    time_const_weight : float
+        Weight assigned to constant part of the computation time.
+        It is calculated as T_u(t) = E[X_u] * c + (1-c) * X_u(t).
+    real_y_activation_func : function
+        Activation function applied on real_y calculation.
+    obj_function : str
+        Identifier of the objective function (one of those declared in metrics.py).
+    metrics : list of str
+        List of additional metrics to compute (objective function is automatically added to this list).
+    real_metrics : list of str
+        List of real metrics to compute (with regards to the real noiseless model).
+    real_metrics_toggle : bool
+        If False real metrics are not computed (useful to speed up the computation).
+    metrics_type : int
+        - 0 : metrics are computed over the whole dataset using model W equal to the avg of nodes' locla models;
+        - 1 : metrics are computed as AVG of local nodes' metrics;
+        - 2 : metrics are computed over the whole dataset using the model only from metrics_nodes (see below).
+    metrics_nodes : int or list of int
+        If type is int then it will be put into a list and treated as [int].
+        Depends on the value of metrics_type:
+        - metrics_type == 0 : no effects;
+        - metrics_type == 1 : metrics are computed as avg of local metrics of nodes inside metrics_nodes list;
+        - metrics_type == 2 : metrics are computed over the whole dataset using the model obtained as mean of
+            nodes inside metrics_nodes.
+    shuffle : bool
+        If True the dataset is shuffled before being split into nodes, otherwise the dataset is untouched.
+    batch_size : int
+        Useful only for batch gradient descent, is the size of the batch.
+    save_test_to_file : bool
+        If True the test is saved to specified folder, otherwise it is stored into tempo folder.
+    test_folder_name_struct : list
+        See generate_test_subfolder_name.
+    test_parent_folder : str
+        Parent test folder: the test will be located in ./test_log/{$PARENT_FOLDER}/{$TEST_NAME_FOLDER}.
+        Can be more than one-folder-deep!
+    instant_plot : bool
+        If True plots will be prompted upon finishing simulation. Be careful since it will pause the thread!
+    plots : list of str
+        List of plots' names to create / prompt upon finishing simulation.
+        See plotter.py.
+    save_plot_to_file : bool
+        If True plots will be saved into .../{$TEST_FOLDER_NAME}/plots/ folder.
+    plot_global_w : bool
+        If True global W will be prompted after finishing simulation.
+        This plot is never automatically saved, save it by yourself if you need to keep it.
+    plot_node_w : list or False
+        List of nodes to plot w which. If False nothing will be prompted.
+    verbose_main : int
+        Verbose policy in main.py script.
+        - <0 : no print at all except from errors (unsafe).
+        -  0 : default messages;
+        -  1 : verbose + default messages
+        -  2 : verbose + default messages + input required to continue after each message (simulation will be paused
+            after each message and will require to press ENTER to go on, useful for debugging).
+    verbose_cluster : int
+        Verbose policy in cluster.py script.
+        See verbose_main.
+    verbose_node : int
+        Verbose policy in node.py script.
+        See verbose_main.
+    verbose_task : int
+        Verbose policy in tasks.py script.
+        See verbose_main.
+    verbose_plotter : int
+        Verbose policy in plotter.py script.
+        See verbose_main.
+
+    Returns
+    -------
+    None
+    """
 
     ### BEGIN SETUP ###
 
@@ -588,6 +766,7 @@ Summary:
         )
 
 
+# old and no more used
 def main1():
     # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
     X, y = functions.generate_regression_training_set_from_function(100000, 10, functions.linear_function, 1,
@@ -597,6 +776,7 @@ def main1():
     print(cls.score(X, y))
 
 
+# old and no more used
 def main2():
     X, y, w = functions.generate_svm_dual_averaging_training_set(
         100000, 100
@@ -607,89 +787,5 @@ def main2():
 
 
 if __name__ == "__main__":
-    raise Exception("Main shouldn't be called directly")
-    main(
-        seed=None,
-        n=100,
-        graphs=(
-            # "0-diagonal",
-            "1-cycle",
-                # "2-uniform_edges",
-            "2-cycle",
-                # "3-uniform_edges",
-                # "3-cycle",
-                # "4-uniform_edges",
-            "4-cycle",
-                # "5-uniform_edges",
-                # "5-cycle",
-                # "8-uniform_edges",
-            "8-cycle",
-                # "10-uniform_edges",
-                # "10-cycle",
-                # "20-uniform_edges",
-            "20-cycle",
-                # "50-uniform_edges",
-            "50-cycle",
-                # "80-uniform_edges",
-                # "80-cycle",
-            "99-clique",
-        ),
-        n_samples=None,
-        n_features=100,
-        dataset=None,
-        smv_label_flip_prob=0.0,
-        error_mean=0.0,
-        error_std_dev=0.0,
-        node_error_mean=0.0,
-        node_error_std_dev=0.0,
-        starting_weights_domain=None,
-        max_iter=None,
-        max_time=None,
-        method='classic',
-        alpha=None,
-        learning_rate='constant',
-        time_distr_class=statistics.ExponentialDistribution,
-        time_distr_param=(1,),
-        time_distr_param_list=None,
-        time_const_weight=0,
-        real_y_activation_func=None,
-        obj_function='mse',
-        metrics=(),
-        real_metrics=(),
-        real_metrics_toggle=False,
-        metrics_type=0,
-        metrics_nodes='all',
-        shuffle=True,
-        batch_size=20,
-        epsilon=None,
-        save_test_to_file=False,
-        test_folder_name_struct=(
-            'u040',
-            'shuffle',
-            'w_domain',
-            'metrics',
-            'dataset',
-            'distr',
-            'error',
-            'nodeserror',
-            'alpha',
-            'nodes',
-            'samp',
-            'feat',
-            'time',
-            'iter',
-            'c',
-            'method',
-        ),
-        test_parent_folder="",
-        instant_plot=False,
-        plots=('mse_iter',),
-        save_plot_to_file=False,
-        plot_global_w=False,
-        plot_node_w=False,
-        verbose_main=0,
-        verbose_cluster=0,
-        verbose_node=0,
-        verbose_task=0,
-        verbose_plotter=0
-    )
+    pass
+    # this module's functions are called from inside test.py script

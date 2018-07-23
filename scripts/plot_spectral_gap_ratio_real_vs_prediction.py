@@ -10,9 +10,9 @@ from src.plotter import Plotter
 
 def main():
     # SETUP BEGIN
-    test_folder_path = './test_log/test_us006_unisvm_sgC0.14142135623730953alpha_noshuf_mtrT0all_lomax[3-2]_100n_INFtime_800iter'
-    target_x0 = 100
-    target_x = 400
+    test_folder_path = './test_log/test_us2000_unisvm2_sgC0.05alpha_100n_shuf_lomax[3-2]_mtrT2worst_INFtime_1000iter'
+    target_x0 = 20
+    target_x = 80
 
     logs, setup = load_test_logs(test_folder_path, return_setup=True)
     objfunc = METRICS[setup['obj_function']]
@@ -45,14 +45,14 @@ def main():
         print(slope)
 
         real_slopes.append(slope)
-        pred_ratios.append(1 / math.sqrt(Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
+        pred_ratios.append(1 / math.sqrt(mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
 
         if 'clique' in graph:
             clique_slope = slope
-            clique_spectral_gap = Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])
+            clique_spectral_gap = mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])
 
     real_ratios = clique_slope / np.array(real_slopes)
-    pred_ratios = np.array(pred_ratios) * math.sqrt(0.5)
+    pred_ratios = np.array(pred_ratios)
     print(real_ratios)
 
     plt.figure(1, figsize=(12, 6))
@@ -108,3 +108,6 @@ def main():
     )
     plt.show()
     plt.close()
+
+if __name__ == '__main__':
+    main()

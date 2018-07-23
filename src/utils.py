@@ -129,6 +129,8 @@ def iteration_speed_lower_bound(l, k, time_arr):
         lb.append(t * l / (1 + sum(1 / i for i in range(1, k + 1))))
     return lb
 
+def degree_from_label(label):
+    return int(label.split('-')[0])
 
 def degree_from_adjacency_matrix(adj_mat):
     degree = 0
