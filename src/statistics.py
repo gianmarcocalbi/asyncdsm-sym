@@ -166,7 +166,7 @@ class UniformDistribution(DistributionAbstract):
 
 class Type2ParetoDistribution(DistributionAbstract):
     name = "Type II Pareto"
-    shortname = 'lomax'
+    shortname = 'par'
 
     @staticmethod
     def sample(alpha, sigma=1):

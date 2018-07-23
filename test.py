@@ -25,6 +25,38 @@ def run():
     # test_unisvm2_dataset(2)
     # test_unisvm_dataset(2)
 
+    """
+    test_exp_on_reg2_dataset(n=100, distr='exp', metrics_nodes='all', alert=False)
+    test_exp_on_reg2_dataset(n=100, distr='exp', metrics_nodes='worst', alert=False)
+    test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=False)
+    test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='worst', alert=False)
+    test_exp_on_reg2_dataset(n=100, distr='unif', metrics_nodes='all', alert=False)
+    test_exp_on_reg2_dataset(n=100, distr='unif', metrics_nodes='worst', alert=False)
+    """
+    """
+    test_exp_on_unisvm_dataset(n=100, distr='exp', metrics_nodes='all', alert=False)
+    test_exp_on_unisvm_dataset(n=100, distr='exp', metrics_nodes='worst', alert=False)
+    test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='all', alert=False)
+    test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='worst', alert=False)
+    test_exp_on_unisvm_dataset(n=100, distr='unif', metrics_nodes='all', alert=False)
+    test_exp_on_unisvm_dataset(n=100, distr='unif', metrics_nodes='worst', alert=False)
+    """
+    """
+    test_exp_on_unisvm2_dataset(n=100, distr='exp', metrics_nodes='all', alert=False)
+    test_exp_on_unisvm2_dataset(n=100, distr='exp', metrics_nodes='worst', alert=False)
+    test_exp_on_unisvm2_dataset(n=100, distr='par', metrics_nodes='all', alert=False)
+    test_exp_on_unisvm2_dataset(n=100, distr='par', metrics_nodes='worst', alert=False)
+    test_exp_on_unisvm2_dataset(n=100, distr='unif', metrics_nodes='all', alert=False)
+    test_exp_on_unisvm2_dataset(n=100, distr='unif', metrics_nodes='worst', alert=False)
+    """
+    """
+    test_exp_on_dual_average_svm(n=100, distr='exp', metrics_nodes='all', alert=False)
+    test_exp_on_dual_average_svm(n=100, distr='exp', metrics_nodes='worst', alert=False)
+    test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='all', alert=False)
+    test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='worst', alert=False)
+    test_exp_on_dual_average_svm(n=100, distr='unif', metrics_nodes='all', alert=False)
+    test_exp_on_dual_average_svm(n=100, distr='unif', metrics_nodes='worst', alert=False)
+    """
 
 def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
     if alert:
@@ -56,7 +88,7 @@ def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True
         dataset='reg2',
         error_std_dev=1,
         starting_weights_domain=[-10, 50],
-        max_iter=None,
+        max_iter=1000,
         max_time=None,
         alpha=1e-3,
         learning_rate='constant',
@@ -119,7 +151,7 @@ def test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='all', alert=Tr
         dataset='unisvm',
         starting_weights_domain=[1, 1],
         smv_label_flip_prob=0.00,
-        max_iter=800,
+        max_iter=1000,
         max_time=None,
         alpha=0.1,
         learning_rate='constant',
@@ -133,7 +165,7 @@ def test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='all', alert=Tr
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=(
-            'us006',
+            'us007',
             'dataset',
             'alpha',
             'nodes',
@@ -242,7 +274,7 @@ def test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='all', alert=
         dataset='svm',
         smv_label_flip_prob=0.05,
         starting_weights_domain=[-2, 2],
-        max_iter=500,
+        max_iter=1000,
         max_time=None,
         method='classic',
         alpha=1e-0,
@@ -470,10 +502,10 @@ def test_unisvm2_dataset(distr):
             # 'method',
         ],
         test_parent_folder="",
-        instant_plot=True,
+        instant_plot=False,
         plots=('cont_hinge_loss_iter', 'hinge_loss_time'),
         save_plot_to_file=True,
-        plot_global_w=True,
+        plot_global_w=False,
         plot_node_w=False
     )
 
