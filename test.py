@@ -290,7 +290,7 @@ def test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='all', alert=
         metrics_nodes=metrics_nodes,
         real_metrics_toggle=False,
         shuffle=False,
-        save_test_to_file=False,
+        save_test_to_file=True,
         test_folder_name_struct=[
             'da000',
             'dataset',
