@@ -146,7 +146,7 @@ def main(
         time_distr_param: list = (1,),
         time_distr_param_rule: str = None,
         time_const_weight: float = 0,
-        real_y_activation_func: function = None,
+        real_y_activation_func: callable = None,
         obj_function: str = 'mse',
         metrics: list = (),
         real_metrics: list = (),

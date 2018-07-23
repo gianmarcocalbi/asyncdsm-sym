@@ -49,14 +49,14 @@ def run():
     test_exp_on_unisvm2_dataset(n=100, distr='unif', metrics_nodes='all', alert=False)
     test_exp_on_unisvm2_dataset(n=100, distr='unif', metrics_nodes='worst', alert=False)
     """
-    """
+    #"""
     test_exp_on_dual_average_svm(n=100, distr='exp', metrics_nodes='all', alert=False)
     test_exp_on_dual_average_svm(n=100, distr='exp', metrics_nodes='worst', alert=False)
     test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='all', alert=False)
     test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='worst', alert=False)
     test_exp_on_dual_average_svm(n=100, distr='unif', metrics_nodes='all', alert=False)
     test_exp_on_dual_average_svm(n=100, distr='unif', metrics_nodes='worst', alert=False)
-    """
+    #"""
 
 def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
     if alert:
