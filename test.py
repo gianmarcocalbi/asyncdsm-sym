@@ -24,17 +24,9 @@ def run(core):
     # test_unisvm2_dataset(2)
     # test_unisvm_dataset(2)
 
-    if core == 0:
-        test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
-
-    elif core == 1:
-        test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
-
-    elif core == 2:
-        test_exp_on_dual_average_svm(n=1000, distr='unif', metrics_nodes='all', alert=False)
-
-    elif core == 3:
-        test_exp_on_dual_average_svm(n=1000, distr='exp', metrics_nodes='all', alert=False)
+    test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
+    test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
+    test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
 
 
 def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
@@ -1085,7 +1077,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '-c', '--core',
         action='store',
-        required=True,
+        required=False,
+        default=0,
         help='Specify core test suite',
         dest='core'
     )
