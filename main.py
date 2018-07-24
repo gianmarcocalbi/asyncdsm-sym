@@ -100,6 +100,9 @@ def generate_time_distr_param_list(N: int, params: list, rule: str) -> list:
     List of list like explained in this function's description.
     """
 
+    if len(params) == 0:
+        return [[None] for _ in range(N)]
+
     if not isinstance(params[0], list) and not isinstance(params[0], tuple):
         params = [params]
 

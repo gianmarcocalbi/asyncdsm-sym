@@ -24,9 +24,9 @@ def run(core):
     # test_unisvm2_dataset(2)
     # test_unisvm_dataset(2)
 
-    test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
-    test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
-    test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
+    if core == 0:
+        test_exp_on_dual_average_svm(n=100, distr='real', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(n=100, distr='real', metrics_nodes='all', alert=False)
 
 
 def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
@@ -37,9 +37,9 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
 
     time_distr_class = {
         'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
-        'par': statistics.Type2ParetoDistribution
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
     }[distr]
-    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
     graphs = {
         100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
             '80-expander', '99-clique', ],
@@ -102,7 +102,7 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
 
     time_distr_class = {
         'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
-        'par': statistics.Type2ParetoDistribution
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
     }[distr]
     time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
     graphs = {
@@ -1077,8 +1077,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '-c', '--core',
         action='store',
+        default=-1,
         required=False,
-        default=0,
         help='Specify core test suite',
         dest='core'
     )

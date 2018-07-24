@@ -188,6 +188,24 @@ class Type2ParetoDistribution(DistributionAbstract):
         return (alpha * sigma ** 2) / ((alpha - 1) ** 2 * (alpha - 2))
 
 
+class SparkRealTimings(DistributionAbstract):
+    name = "Spark Real Timings"
+    shortname = 'spark_real'
+    pool = np.loadtxt('./distr/spark_sgd_timings.txt')
+
+    @staticmethod
+    def sample(*args):
+        return np.random.choice(SparkRealTimings.pool)
+
+    @staticmethod
+    def mean(*args, out_decimal=False):
+        return sum(SparkRealTimings.pool) / len(SparkRealTimings.pool)
+
+    @staticmethod
+    def variance(*args):
+        return np.var(SparkRealTimings.pool)
+
+
 class MaxOfExponentialDistribution(DistributionAbstract):
     @staticmethod
     def sample(lambd, k=1, out_decimal=False):

@@ -72,26 +72,29 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 def run():
     logs, setup = load_test_logs(
-        './test_log/test_us2000_unisvm2_sgC0.05alpha_100n_shuf_lomax[3-2]_mtrT2worst_INFtime_1000iter'
+        './test_log/test_r2000_reg2_Win[-10,50]_100n_lomax[3-2]_mtrT0all_sgC0.001alpha_1000samp_100feat_INFtime_1000iter'
     )
-    #unisvm2_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False)
+    # svm_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False)
     save_all()
 
 
 def save_all():
     logs, setup = load_test_logs(
         './test_log/test_us2000_unisvm2_sgC0.05alpha_100n_shuf_lomax[3-2]_mtrT2worst_INFtime_1000iter')
-    unisvm2_1000n_par_iter_time(logs, setup, save=True)
-    unisvm2_1000n_par_worst_err_vs_iter(logs, setup, save=True)
-    unisvm2_1000n_par_worst_err_vs_time(logs, setup, save=True)
-    unisvm2_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=True)
+    svm_1000n_par_iter_time(logs, setup, save=True)
+    svm_1000n_par_worst_err_vs_iter(logs, setup, save=True)
+    svm_1000n_par_worst_err_vs_time(logs, setup, save=True)
+    svm_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=True)
 
 
-# a) iterations VS time
-def unisvm2_1000n_par_iter_time(logs, setup, save=False):
-    #plt.suptitle('Fig YYY (a)', fontsize=12)
+"""
+SVM dataset
+Iterations VS Time plot
+"""
+def svm_1000n_par_iter_time(logs, setup, save=False):
+    # plt.suptitle('Fig YYY (a)', fontsize=12)
     plt.title('Min iteration VS time', loc='left')
-    #plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+    # plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel('Time')
     plt.ylabel('Iteration')
 
@@ -107,17 +110,17 @@ def unisvm2_1000n_par_iter_time(logs, setup, save=False):
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + 'unisvm_1000n_par_iter_vs_time.png')
+        plt.savefig(root_folder_path + 'svm_1000n_par_iter_vs_time.png')
     else:
         plt.show()
     plt.close()
 
 
 # b) error VS iter
-def unisvm2_1000n_par_worst_err_vs_iter(logs, setup, save=False):
-    #plt.suptitle('Fig YYY (b)', fontsize=12)
+def svm_1000n_par_worst_err_vs_iter(logs, setup, save=False):
+    # plt.suptitle('Fig YYY (b)', fontsize=12)
     plt.title('Error VS iterations', loc='left')
-    #plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+    # plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel('Iterations')
     plt.ylabel('Hinge loss')
 
@@ -135,17 +138,17 @@ def unisvm2_1000n_par_worst_err_vs_iter(logs, setup, save=False):
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + 'unisvm_1000n_par_worst_err_vs_iter.png')
+        plt.savefig(root_folder_path + 'svm_1000n_par_worst_err_vs_iter.png')
     else:
         plt.show()
     plt.close()
 
 
 # c) worst error VS time
-def unisvm2_1000n_par_worst_err_vs_time(logs, setup, save=False):
-    #plt.suptitle('Fig YYY (b)', fontsize=12)
+def svm_1000n_par_worst_err_vs_time(logs, setup, save=False):
+    # plt.suptitle('Fig YYY (b)', fontsize=12)
     plt.title('Error VS time', loc='left')
-    #plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+    # plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel('Time')
     plt.ylabel('Hinge loss')
 
@@ -163,13 +166,13 @@ def unisvm2_1000n_par_worst_err_vs_time(logs, setup, save=False):
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + 'unisvm_1000n_par_worst_err_vs_time.png')
+        plt.savefig(root_folder_path + 'svm_1000n_par_worst_err_vs_time.png')
     else:
         plt.show()
     plt.close()
 
 
-def unisvm2_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False):
+def svm_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False):
     target_x0 = 20
     target_x = 80
 
@@ -201,7 +204,7 @@ def unisvm2_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False):
             y = logs['metrics'][objfunc.id][graph][3600]"""
 
         slope = y - y0
-        #print(slope)
+        # print(slope)
 
         real_slopes[graph] = slope
         pred_ratios[graph] = 1 / math.sqrt(mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph]))
@@ -250,7 +253,7 @@ def unisvm2_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False):
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + 'unisvm2_1000n_par_error_slope_vs_iter_comparison.png')
+        plt.savefig(root_folder_path + 'svm_1000n_par_worst_error_slope_vs_iter_comparison.png')
     else:
         plt.show()
     plt.close()
