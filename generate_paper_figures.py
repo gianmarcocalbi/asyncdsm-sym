@@ -3,8 +3,8 @@ from src.utils import *
 from src.mltoolbox.metrics import METRICS
 import os, math
 
-# root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/figures/simulations/'
-root_folder_path = './figures/'
+root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/figures/simulations/'
+# root_folder_path = './figures/'
 colors = {
     'black': [0x00, 0x00, 0x00],
     'purple': [0x88, 0x64, 0xff],
@@ -89,9 +89,9 @@ def save_all():
 
 # a) iterations VS time
 def unisvm2_1000n_par_iter_time(logs, setup, save=False):
-    plt.suptitle('Fig YYY (a)', fontsize=12)
+    #plt.suptitle('Fig YYY (a)', fontsize=12)
     plt.title('Min iteration VS time', loc='left')
-    plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+    #plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel('Time')
     plt.ylabel('Iteration')
 
@@ -115,9 +115,9 @@ def unisvm2_1000n_par_iter_time(logs, setup, save=False):
 
 # b) error VS iter
 def unisvm2_1000n_par_worst_err_vs_iter(logs, setup, save=False):
-    plt.suptitle('Fig YYY (b)', fontsize=12)
+    #plt.suptitle('Fig YYY (b)', fontsize=12)
     plt.title('Error VS iterations', loc='left')
-    plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+    #plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel('Iterations')
     plt.ylabel('Hinge loss')
 
@@ -143,9 +143,9 @@ def unisvm2_1000n_par_worst_err_vs_iter(logs, setup, save=False):
 
 # c) worst error VS time
 def unisvm2_1000n_par_worst_err_vs_time(logs, setup, save=False):
-    plt.suptitle('Fig YYY (b)', fontsize=12)
+    #plt.suptitle('Fig YYY (b)', fontsize=12)
     plt.title('Error VS time', loc='left')
-    plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+    #plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel('Time')
     plt.ylabel('Hinge loss')
 
@@ -201,7 +201,7 @@ def unisvm2_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False):
             y = logs['metrics'][objfunc.id][graph][3600]"""
 
         slope = y - y0
-        print(slope)
+        #print(slope)
 
         real_slopes[graph] = slope
         pred_ratios[graph] = 1 / math.sqrt(mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph]))

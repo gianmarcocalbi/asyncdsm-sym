@@ -26,26 +26,18 @@ def run(core):
 
     if core == 0:
         test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_reg2_dataset(n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_reg2_dataset(n=1000, distr='exp', metrics_nodes='worst', alert=False)
 
     elif core == 1:
-        test_exp_on_reg2_dataset(n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_dual_average_svm(n=1000, distr='unif', metrics_nodes='worst', alert=False)
-        test_exp_on_reg2_dataset(n=1000, distr='par', metrics_nodes='worst', alert=False)
+        test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='all', alert=False)
 
     elif core == 2:
         test_exp_on_dual_average_svm(n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_reg2_dataset(n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_dual_average_svm(n=1000, distr='par', metrics_nodes='worst', alert=False)
 
     elif core == 3:
         test_exp_on_dual_average_svm(n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_dual_average_svm(n=1000, distr='exp', metrics_nodes='worst', alert=False)
-        test_exp_on_reg2_dataset(n=1000, distr='unif', metrics_nodes='worst', alert=False)
 
 
-def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
+def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
     if alert:
         print('test_exp_on_reg_dataset()')
         print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
@@ -67,7 +59,7 @@ def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True
     metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
     main.main(
-        seed=22052010,
+        seed=seed,
         n=n,
         graphs=graphs,
         n_samples=1000,
@@ -75,8 +67,8 @@ def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True
         dataset='reg2',
         error_std_dev=1,
         starting_weights_domain=[-10, 50],
-        max_iter=1000,
-        max_time=None,
+        max_iter=2000,
+        max_time=10000,
         alpha=1e-3,
         learning_rate='constant',
         spectrum_dependent_learning_rate=True,
@@ -110,7 +102,74 @@ def test_exp_on_reg2_dataset(n=100, distr='par', metrics_nodes='all', alert=True
     )
 
 
-def test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
+def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_dual_average_svm()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    main.main(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        n_features=100,
+        dataset='svm',
+        smv_label_flip_prob=0.05,
+        starting_weights_domain=[-2, 2],
+        max_iter=2000,
+        max_time=10000,
+        method='classic',
+        alpha=1e-0,
+        learning_rate='constant',
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='hinge_loss',
+        spectrum_dependent_learning_rate=True,
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        real_metrics_toggle=False,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'da000',
+            'dataset',
+            'alpha',
+            'nodes',
+            'shuffle',
+            'distr',
+            'metrics',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=('hinge_loss_iter', 'hinge_loss_time'),
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_unisvm_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
     if alert:
         print('test_exp_on_unisvm_dataset()')
         print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
@@ -132,7 +191,7 @@ def test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='all', alert=Tr
     metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
     main.main(
-        seed=22052010,
+        seed=seed,
         n=n,
         graphs=graphs,
         dataset='unisvm',
@@ -171,7 +230,7 @@ def test_exp_on_unisvm_dataset(n=100, distr='par', metrics_nodes='all', alert=Tr
     )
 
 
-def test_exp_on_unisvm2_dataset(n=100, distr='par', metrics_nodes='all', alert=True):
+def test_exp_on_unisvm2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
     if alert:
         print('test_exp_on_unisvm2_dataset()')
         print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
@@ -193,7 +252,7 @@ def test_exp_on_unisvm2_dataset(n=100, distr='par', metrics_nodes='all', alert=T
     metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
     main.main(
-        seed=22052010,
+        seed=seed,
         n=n,
         graphs=graphs,
         dataset='unisvm2',
@@ -228,74 +287,6 @@ def test_exp_on_unisvm2_dataset(n=100, distr='par', metrics_nodes='all', alert=T
         save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
-    )
-
-
-def test_exp_on_dual_average_svm(n=100, distr='par', metrics_nodes='all', alert=True):
-    if alert:
-        print('test_exp_on_dual_average_svm()')
-        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
-        input("click [ENTER] to continue or [CTRL]+[C] to abort")
-
-    time_distr_class = {
-        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
-        'par': statistics.Type2ParetoDistribution
-    }[distr]
-    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
-    graphs = {
-        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
-            '80-expander', '99-clique', ],
-        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
-            '200-expander', '300-expander', '399-clique', ],
-        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
-            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
-    }[n]
-    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
-
-    main.main(
-        seed=22052010,
-        n=n,
-        graphs=graphs,
-        n_samples=1000,
-        n_features=100,
-        dataset='svm',
-        smv_label_flip_prob=0.05,
-        starting_weights_domain=[-2, 2],
-        max_iter=1000,
-        max_time=None,
-        method='classic',
-        alpha=1e-0,
-        learning_rate='constant',
-        time_distr_class=time_distr_class,
-        time_distr_param=time_distr_param,
-        time_distr_param_rule=None,
-        time_const_weight=0,
-        obj_function='hinge_loss',
-        spectrum_dependent_learning_rate=True,
-        metrics=[],
-        metrics_type=metrics_type,
-        metrics_nodes=metrics_nodes,
-        real_metrics_toggle=False,
-        shuffle=False,
-        save_test_to_file=True,
-        test_folder_name_struct=[
-            'da000',
-            'dataset',
-            'alpha',
-            'nodes',
-            'shuffle',
-            'distr',
-            'metrics',
-            'time',
-            'iter'
-        ],
-        test_parent_folder="",
-        instant_plot=False,
-        plots=('hinge_loss_iter', 'hinge_loss_time'),
-        save_plot_to_file=True,
-        plot_global_w=False,
-        plot_node_w=False
-
     )
 
 
