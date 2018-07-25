@@ -494,6 +494,12 @@ def main(
             setup['n_samples'], setup['n_features'],
             label_flip_prob=setup['smv_label_flip_prob']
         )
+    elif setup['dataset'] == 'enereg':
+        X, y, w = functions.load_appliances_energy_regression_dataset(setup['n_samples'])
+    elif setup['dataset'] == 'sloreg':
+        X, y, w = functions.load_slice_localization_regression_dataset(setup['n_samples'])
+    elif setup['dataset'] == 'susysvm':
+        X, y, w = functions.load_susy_svm_dataset(setup['n_samples'])
     elif setup['dataset'] == 'skreg':
         X, y, w = make_regression(
             n_samples=setup['n_samples'],

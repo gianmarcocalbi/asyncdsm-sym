@@ -10,9 +10,9 @@ from src.plotter import Plotter
 
 def main():
     # SETUP BEGIN
-    test_folder_path = './test_log/test_us2000_unisvm2_sgC0.05alpha_100n_shuf_lomax[3-2]_mtrT2worst_INFtime_1000iter'
-    target_x0 = 20
-    target_x = 80
+    test_folder_path = './test_log/test_rslo100_sloreg_100n_exp[1]_mtrT0all_sgC1e-05alpha_52000samp_INFtime_400iter'
+    target_x0 = 100
+    target_x = 300
 
     logs, setup = load_test_logs(test_folder_path, return_setup=True)
     objfunc = METRICS[setup['obj_function']]

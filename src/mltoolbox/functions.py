@@ -1,6 +1,6 @@
 # import the necessary packages
 import numpy as np
-import abc, types, warnings, math
+import abc, types, warnings, math, csv
 from sklearn.metrics import accuracy_score
 from src import utils
 
@@ -205,6 +205,63 @@ def generate_svm_dual_averaging_training_set(n_samples, n_features, label_flip_p
         # x = np.sign(x.T.dot(e)) * x  # + np.random.normal(error_mean, error_std_dev)
 
     return np.array(X), y, w
+
+
+def load_susy_svm_dataset(n_samples):
+    X = []
+    y = []
+    with open('./dataset/SUSY.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        i = 0
+        for row in reader:
+            if 0 <= i < n_samples:
+                y.append(row[-1])
+                X.append(row[1:])
+            elif i >= n_samples:
+                break
+            i += 1
+    X = np.c_[np.ones(n_samples), np.array(X, dtype=float)]
+    y = np.array(y, dtype=float)
+    w = np.zeros(X.shape[1])
+    return X, y, w
+
+
+def load_slice_localization_regression_dataset(n_samples):
+    X = []
+    y = []
+    with open('./dataset/slice_localization_dataset.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        i = -1
+        for row in reader:
+            if 0 <= i < n_samples:
+                y.append(row[-1])
+                X.append(row[1:-1])
+            elif i >= n_samples:
+                break
+            i += 1
+    X = np.c_[np.ones(n_samples), np.array(X, dtype=float)]
+    y = np.array(y, dtype=float)
+    w = np.zeros(X.shape[1])
+    return X, y, w
+
+
+def load_appliances_energy_regression_dataset(n_samples):
+    X = []
+    y = []
+    with open('./dataset/appliances_energy_prediction_training.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        i = -1
+        for row in reader:
+            if 0 <= i < n_samples:
+                y.append(row[1])
+                X.append(row[2:-3])
+            elif i >= n_samples:
+                break
+            i += 1
+    X = np.c_[np.ones(n_samples), np.array(X, dtype=float)]
+    y = np.array(y, dtype=float)
+    w = np.zeros(X.shape[1])
+    return X, y, w
 
 
 def generate_regression_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):

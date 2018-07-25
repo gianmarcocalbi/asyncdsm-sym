@@ -48,6 +48,9 @@ def run(core):
         test_different_nodes_speed(seed=22052010, n=10, distr='exp', alert=False)
     """
 
+    test_exp_on_susysvm_dataset(seed=None, n=100, distr='exp', metrics_nodes='all', alert=False)
+    # test_exp_on_reg2_dataset(seed=None, n=100, distr='real', metrics_nodes='worst', alert=False)
+
     if core == 0:
         test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
         test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
@@ -99,11 +102,11 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
         dataset='reg2',
         error_std_dev=1,
         starting_weights_domain=[-10, 50],
-        max_iter=3000,
-        max_time=50000,
-        alpha=1e-4,
+        max_iter=500,
+        max_time=500000,
+        alpha=1e-3,
         learning_rate='constant',
-        spectrum_dependent_learning_rate=True,
+        spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
         obj_function='mse',
@@ -111,7 +114,7 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
         metrics_type=metrics_type,
         metrics_nodes=metrics_nodes,
         shuffle=True,
-        save_test_to_file=True,
+        save_test_to_file=False,
         test_folder_name_struct=[
             'r2100',
             'dataset',
@@ -126,9 +129,9 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
             'iter'
         ],
         test_parent_folder="",
-        instant_plot=False,
+        instant_plot=True,
         plots=['mse_iter', 'mse_time'],
-        save_plot_to_file=False,
+        save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
     )
@@ -196,6 +199,198 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         instant_plot=False,
         plots=['hinge_loss_iter', 'hinge_loss_time'],
         save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_enereg_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_enereg_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    # linear_regression result = 8658.025636439765
+    main.main(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=14000,
+        dataset='enereg',
+        starting_weights_domain=[0, 0],
+        max_iter=1000,
+        max_time=None,
+        alpha=1e-6,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=True,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='mse',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            're100',
+            'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            # 'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_enereg_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    # linear_regression result = 67.30972320004327
+
+    main.main(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=52000,
+        dataset='sloreg',
+        starting_weights_domain=[-0.47, 1.55],
+        max_iter=400,
+        max_time=None,
+        alpha=1e-5,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=True,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='mse',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'rslo100',
+            'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            # 'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_susysvm_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    main.main(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=500000,
+        dataset='susysvm',
+        starting_weights_domain=[-0.5,2],
+        max_iter=200,
+        max_time=None,
+        alpha=1e-2,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=True,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='hinge_loss',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'ss100',
+            'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            # 'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
     )

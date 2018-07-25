@@ -106,7 +106,7 @@ ENV/
 *.iml
 
 # datasets
-dataset/largescale_challenge/
+dataset/
 test_log/temp/
 test_log/bulk/
 test_log/trash/
