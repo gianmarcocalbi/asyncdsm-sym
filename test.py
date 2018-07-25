@@ -24,9 +24,17 @@ def run(core):
     # test_unisvm2_dataset(2)
     # test_unisvm_dataset(2)
 
+    """
     if core == 0:
-        # test_exp_on_dual_average_svm(n=100, distr='real', metrics_nodes='all', alert=False)
-        # test_exp_on_reg2_dataset(n=100, distr='real', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=100, distr='real', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='real', metrics_nodes='all', alert=False)
+    elif core == 1:
+        test_exp_on_reg2_dataset(seed=22052010, n=100, distr='real', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='real', metrics_nodes='all', alert=False)
+    """
+
+    """
+    if core == 0:
         test_different_nodes_speed(seed=22052010, n=1000, distr='par', alert=False)
         test_different_nodes_speed(seed=22052010, n=100, distr='exp', alert=False)
         test_different_nodes_speed(seed=22052010, n=10, distr='unif', alert=False)
@@ -38,6 +46,27 @@ def run(core):
         test_different_nodes_speed(seed=22052010, n=1000, distr='unif', alert=False)
         test_different_nodes_speed(seed=22052010, n=100, distr='par', alert=False)
         test_different_nodes_speed(seed=22052010, n=10, distr='exp', alert=False)
+    """
+
+    if core == 0:
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='worst', alert=False)
+
+    elif core == 1:
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='unif', metrics_nodes='worst', alert=False)
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='worst', alert=False)
+
+    elif core == 2:
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='par', metrics_nodes='worst', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='exp', metrics_nodes='worst', alert=False)
+
+    elif core == 3:
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='worst', alert=False)
 
 
 def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
@@ -70,9 +99,9 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
         dataset='reg2',
         error_std_dev=1,
         starting_weights_domain=[-10, 50],
-        max_iter=2000,
-        max_time=10000,
-        alpha=1e-3,
+        max_iter=3000,
+        max_time=50000,
+        alpha=1e-4,
         learning_rate='constant',
         spectrum_dependent_learning_rate=True,
         time_distr_class=time_distr_class,
@@ -83,10 +112,10 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
         metrics_nodes=metrics_nodes,
         shuffle=True,
         save_test_to_file=True,
-        test_folder_name_struct=(
-            'r2000',
+        test_folder_name_struct=[
+            'r2100',
             'dataset',
-            'w_domain',
+            # 'w_domain',
             'nodes',
             'distr',
             'metrics',
@@ -95,11 +124,11 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
             'feat',
             'time',
             'iter'
-        ),
+        ],
         test_parent_folder="",
         instant_plot=False,
-        plots=('mse_iter', 'mse_time'),
-        save_plot_to_file=True,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=False,
         plot_global_w=False,
         plot_node_w=False
     )
@@ -115,7 +144,7 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
         'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
     }[distr]
-    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
     graphs = {
         100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
             '80-expander', '99-clique', ],
@@ -135,10 +164,10 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         dataset='svm',
         smv_label_flip_prob=0.05,
         starting_weights_domain=[-2, 2],
-        max_iter=2000,
-        max_time=10000,
+        max_iter=3000,
+        max_time=50000,
         method='classic',
-        alpha=1e-0,
+        alpha=1e-1,
         learning_rate='constant',
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
@@ -153,11 +182,11 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'da000',
+            'da100',
             'dataset',
             'alpha',
             'nodes',
-            'shuffle',
+            # 'shuffle',
             'distr',
             'metrics',
             'time',
@@ -165,8 +194,8 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         ],
         test_parent_folder="",
         instant_plot=False,
-        plots=('hinge_loss_iter', 'hinge_loss_time'),
-        save_plot_to_file=True,
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        save_plot_to_file=False,
         plot_global_w=False,
         plot_node_w=False
     )
