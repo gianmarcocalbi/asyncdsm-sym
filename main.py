@@ -141,7 +141,7 @@ def main(
         starting_weights_domain: Union[List[float], Tuple[float]] = None,
         max_iter: int = None,
         max_time: float = None,
-        method: str = 'classic',
+        method: Union[str, None] = 'classic',
         alpha: float = None,
         learning_rate: str = 'constant',
         spectrum_dependent_learning_rate: bool = False,

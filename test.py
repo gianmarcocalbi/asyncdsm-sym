@@ -25,8 +25,19 @@ def run(core):
     # test_unisvm_dataset(2)
 
     if core == 0:
-        test_exp_on_dual_average_svm(n=100, distr='real', metrics_nodes='all', alert=False)
-        test_exp_on_reg2_dataset(n=100, distr='real', metrics_nodes='all', alert=False)
+        # test_exp_on_dual_average_svm(n=100, distr='real', metrics_nodes='all', alert=False)
+        # test_exp_on_reg2_dataset(n=100, distr='real', metrics_nodes='all', alert=False)
+        test_different_nodes_speed(seed=22052010, n=1000, distr='par', alert=False)
+        test_different_nodes_speed(seed=22052010, n=100, distr='exp', alert=False)
+        test_different_nodes_speed(seed=22052010, n=10, distr='unif', alert=False)
+    elif core == 1:
+        test_different_nodes_speed(seed=22052010, n=1000, distr='exp', alert=False)
+        test_different_nodes_speed(seed=22052010, n=100, distr='unif', alert=False)
+        test_different_nodes_speed(seed=22052010, n=10, distr='par', alert=False)
+    elif core == 2:
+        test_different_nodes_speed(seed=22052010, n=1000, distr='unif', alert=False)
+        test_different_nodes_speed(seed=22052010, n=100, distr='par', alert=False)
+        test_different_nodes_speed(seed=22052010, n=10, distr='exp', alert=False)
 
 
 def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
@@ -279,6 +290,76 @@ def test_exp_on_unisvm2_dataset(seed=None, n=100, distr='par', metrics_nodes='al
         save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
+    )
+
+
+def test_different_nodes_speed(seed=None, n=100, distr='par', alert=True):
+    if alert:
+        print('test_different_nodes_timing()')
+        print('seed={}, n={}, distr={}'.format(seed, n, distr))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+
+    """100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+        '80-expander', '99-clique', ],
+    400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+        '200-expander', '300-expander', '399-clique', ],
+    1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+        '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    """
+    graphs = {
+        10: ['2-expander', '3-expander', '5-expander'],
+        100: ['4-expander', '10-expander', '50-expander'],
+        1000: ['6-expander', '32-expander', '500-expander']
+    }[n]
+
+    main.main(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        dataset='unireg',
+        starting_weights_domain=[0, 0],
+        max_iter=1000,
+        max_time=None,
+        method=None,
+        alpha=0,
+        learning_rate='constant',
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='mse',
+        real_metrics_toggle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'speed_001',
+            # 'shuffle',
+            # 'w_domain',
+            # 'metrics',
+            # 'dataset',
+            'distr',
+            # 'distr_rule',
+            # 'error',
+            # 'nodeserror',
+            # 'alpha',
+            'nodes',
+            # 'samp',
+            # 'feat',
+            'time',
+            'iter',
+            'c',
+            # 'method',
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=[],
+        save_plot_to_file=False
     )
 
 
@@ -914,75 +995,6 @@ def test_different_1000nodes_timing_loop(index):
             ),
             save_plot_to_file=True
         )
-
-
-def test_different_nodes_timing():
-    input("test_different_nodes_timing()... click [ENTER] to continue or [CTRL]+[C] to abort")
-
-    main.main(
-        seed=18062018,
-        n=100,
-        graphs=[
-            "0-diagonal",
-            "1-cycle",
-            "2-cycle",
-            '2-expander',
-            "3-cycle",
-            '3-expander',
-            "4-cycle",
-            '4-expander',
-            "8-cycle",
-            '8-expander',
-            "10-cycle",
-            '10-expander',
-            "20-cycle",
-            '20-expander',
-            "50-cycle",
-            '50-expander',
-            "99-clique",
-        ],
-        n_samples=1000,
-        dataset='unireg',
-        starting_weights_domain=[0, 0],
-        max_iter=None,
-        max_time=10000,
-        method=None,
-        alpha=0,
-        learning_rate='constant',
-        time_distr_class=statistics.ExponentialDistribution,
-        time_distr_param=[[0.5], [1]],
-        time_distr_param_rule='split',
-        time_const_weight=0,
-        obj_function='mse',
-        real_metrics_toggle=False,
-        save_test_to_file=True,
-        test_folder_name_struct=[
-            'hxx01_hetertime',
-            # 'shuffle',
-            # 'w_domain',
-            # 'metrics',
-            # 'dataset',
-            'distr',
-            'distr_rule',
-            # 'error',
-            # 'nodeserror',
-            # 'alpha',
-            'nodes',
-            # 'samp',
-            # 'feat',
-            'time',
-            'iter',
-            'c',
-            # 'method',
-        ],
-        test_parent_folder="",
-        instant_plot=False,
-        plots=(
-            'iter_time',
-            'avg_iter_time'
-        ),
-        save_plot_to_file=True
-    )
 
 
 def test_eigenvalue_computation_suite():
