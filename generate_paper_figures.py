@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from src.utils import *
 from src.mltoolbox.metrics import METRICS
+from src import statistics
 import os, math
 
 root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/figures/simulations/'
@@ -57,12 +58,16 @@ degree_colors = {
     }
 }
 
-for Dict in degree_colors.values():
+for col in colors:
+    rgb = colors[col][:]
+    for i in [0, 1, 2]:
+        rgb[i] /= 0xff
+    colors[col] = rgb
+
+for n in degree_colors:
+    Dict = degree_colors[n]
     for deg in Dict:
         Dict[deg] = colors[Dict[deg]]
-        for i in [0, 1, 2]:
-            Dict[deg][i] /= 0xff
-        Dict[deg] = tuple(Dict[deg])
 """
 UNISVM
 Fig. YYY
@@ -71,30 +76,69 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 
 def run():
-    logs, setup = load_test_logs(
-        './test_log/test_r2000_reg2_Win[-10,50]_100n_lomax[3-2]_mtrT0all_sgC0.001alpha_1000samp_100feat_INFtime_1000iter'
-    )
-    # svm_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False)
     save_all()
 
 
 def save_all():
-    logs, setup = load_test_logs(
-        './test_log/test_us2000_unisvm2_sgC0.05alpha_100n_shuf_lomax[3-2]_mtrT2worst_INFtime_1000iter')
-    svm_1000n_par_iter_time(logs, setup, save=True)
-    svm_1000n_par_worst_err_vs_iter(logs, setup, save=True)
-    svm_1000n_par_worst_err_vs_time(logs, setup, save=True)
-    svm_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=True)
+    svm_1000n_avg_par_logs, svm_1000n_avg_par_load_test_setup = load_test_logs(
+        './test_log/bulk/da002/test_da002_svm_sgC0.1alpha_1000n_shuf_par[3-2]_mtrT0all_10000time_2000iter'
+    )
+    reg_1000n_avg_par_logs, reg_1000n_avg_par_setup = load_test_logs(
+        './test_log/bulk/r2002/test_r2002_reg2_1000n_par[3-2]_mtrT0all_sgC0.0001alpha_1000samp_100feat_10000time_2000iter'
+    )
+    svm_1000n_avg_exp_logs, svm_1000n_avg_exp_load_test_setup = load_test_logs(
+        './test_log/bulk/da002/test_da002_svm_sgC0.1alpha_1000n_shuf_exp[1]_mtrT0all_10000time_2000iter'
+    )
+    reg_1000n_avg_exp_logs, reg_1000n_avg_exp_setup = load_test_logs(
+        './test_log/bulk/r2002/test_r2002_reg2_1000n_exp[1]_mtrT0all_sgC0.0001alpha_1000samp_100feat_10000time_2000iter'
+    )
+    svm_1000n_avg_unif_logs, svm_1000n_avg_unif_load_test_setup = load_test_logs(
+        './test_log/bulk/da002/test_da002_svm_sgC0.1alpha_1000n_shuf_unif[0-2]_mtrT0all_10000time_2000iter'
+    )
+    reg_1000n_avg_unif_logs, reg_1000n_avg_unif_setup = load_test_logs(
+        './test_log/bulk/r2002/test_r2002_reg2_1000n_unif[0-2]_mtrT0all_sgC0.0001alpha_1000samp_100feat_10000time_2000iter'
+    )
+    """
+    plot_dataset_nodes_distr_iter_vs_time(
+        'svm', 1000, 'par', svm_1000n_avg_par_logs, svm_1000n_avg_par_load_test_setup, save=True
+    )
+    plot_dataset_nodes_distr_err_vs_iter(
+        'svm', 1000, 'par', 'avg', svm_1000n_avg_par_logs, svm_1000n_avg_par_load_test_setup, save=True
+    )
+    plot_dataset_nodes_distr_err_vs_time(
+        'svm', 1000, 'par', 'avg', svm_1000n_avg_par_logs, svm_1000n_avg_par_load_test_setup, save=True
+    )
+    plot_dataset_nodes_distr_err_slope_vs_iter_comparison(
+        'svm', 1000, 'par', 'avg', svm_1000n_avg_par_logs, svm_1000n_avg_par_load_test_setup, save=True
+    )
+    plot_dataset_nodes_distr_iter_vs_time(
+        'reg', 1000, 'par', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=True
+    )
+    plot_dataset_nodes_distr_err_vs_iter(
+        'reg', 1000, 'par', 'avg', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=True
+    )
+    plot_dataset_nodes_distr_err_vs_time(
+        'reg', 1000, 'par', 'avg', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=False
+    )
+    plot_dataset_nodes_distr_err_slope_vs_iter_comparison(
+        'reg', 1000, 'par', 'avg', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=True
+    )
+    """
+    logs_dict = {
+        'par' : reg_1000n_avg_par_logs,
+        'exp' : reg_1000n_avg_exp_logs,
+        'unif' : reg_1000n_avg_unif_logs
+    }
+    setup_dict = {
+        'par' : reg_1000n_avg_par_setup,
+        'exp' : reg_1000n_avg_exp_setup,
+        'unif' : reg_1000n_avg_unif_setup
+    }
+    plot_distr_iter_time_vs_degree('reg', 1000, 'avg', logs_dict, setup_dict, save=True)
 
 
-"""
-SVM dataset
-Iterations VS Time plot
-"""
-def svm_1000n_par_iter_time(logs, setup, save=False):
-    # plt.suptitle('Fig YYY (a)', fontsize=12)
-    plt.title('Min iteration VS time', loc='left')
-    # plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=False):
+    # plt.title('Min iteration VS time', loc='left')
     plt.xlabel('Time')
     plt.ylabel('Iteration')
 
@@ -110,22 +154,26 @@ def svm_1000n_par_iter_time(logs, setup, save=False):
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + 'svm_1000n_par_iter_vs_time.png')
+        plt.savefig(root_folder_path + '{}_{}n_{}_iter_vs_time.png'.format(
+            dataset,
+            n,
+            distr
+        ))
     else:
         plt.show()
     plt.close()
 
 
-# b) error VS iter
-def svm_1000n_par_worst_err_vs_iter(logs, setup, save=False):
-    # plt.suptitle('Fig YYY (b)', fontsize=12)
-    plt.title('Error VS iterations', loc='left')
-    # plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+def plot_dataset_nodes_distr_err_vs_iter(dataset, n, distr, error, logs, setup, save=False):
+    # plt.title('Error VS iterations', loc='left')
     plt.xlabel('Iterations')
-    plt.ylabel('Hinge loss')
+    if dataset == 'svm':
+        plt.ylabel('Hinge loss')
+    elif dataset == 'reg':
+        plt.ylabel('Mean Squared Error')
 
     xlim = -math.inf
-    for graph, loss in logs['metrics']['hinge_loss'].items():
+    for graph, loss in logs['metrics'][setup['obj_function']].items():
         plt.plot(
             list(range(len(loss))),
             loss,
@@ -138,25 +186,30 @@ def svm_1000n_par_worst_err_vs_iter(logs, setup, save=False):
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + 'svm_1000n_par_worst_err_vs_iter.png')
+        plt.savefig(root_folder_path + '{}_{}n_{}_{}_err_vs_iter.png'.format(
+            dataset,
+            n,
+            distr,
+            error
+        ))
     else:
         plt.show()
     plt.close()
 
 
-# c) worst error VS time
-def svm_1000n_par_worst_err_vs_time(logs, setup, save=False):
-    # plt.suptitle('Fig YYY (b)', fontsize=12)
-    plt.title('Error VS time', loc='left')
-    # plt.title("({})".format(setup['time_distr_class'].name), loc='right')
+def plot_dataset_nodes_distr_err_vs_time(dataset, n, distr, error, logs, setup, save=False):
+    # plt.title('Error VS time', loc='left')
     plt.xlabel('Time')
-    plt.ylabel('Hinge loss')
+    if dataset == 'svm':
+        plt.ylabel('Hinge loss')
+    elif dataset == 'reg':
+        plt.ylabel('Mean Squared Error')
 
     xlim = math.inf
-    for graph in logs['metrics']['hinge_loss']:
+    for graph in logs['metrics'][setup['obj_function']]:
         plt.plot(
             logs['iter_time'][graph],
-            logs['metrics']['hinge_loss'][graph],
+            logs['metrics'][setup['obj_function']][graph],
             label=degree_from_label(graph),
             markersize=2,
             color=degree_colors[setup['n']][degree_from_label(graph)],
@@ -166,15 +219,20 @@ def svm_1000n_par_worst_err_vs_time(logs, setup, save=False):
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + 'svm_1000n_par_worst_err_vs_time.png')
+        plt.savefig(root_folder_path + '{}_{}n_{}_{}_err_vs_time.png'.format(
+            dataset,
+            n,
+            distr,
+            error
+        ))
     else:
         plt.show()
     plt.close()
 
 
-def svm_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False):
-    target_x0 = 20
-    target_x = 80
+def plot_dataset_nodes_distr_err_slope_vs_iter_comparison(dataset, n, distr, error, logs, setup, save=False):
+    target_x0 = 50
+    target_x = 250
 
     objfunc = METRICS[setup['obj_function']]
     degrees = {}
@@ -217,9 +275,6 @@ def svm_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False):
         real_ratios[graph] = clique_slope / real_slopes[graph]
         pred_ratios[graph] = pred_ratios[graph] * clique_spectral_gap
 
-    plt.suptitle('Fig ZZZ', fontsize=12)
-    plt.title('Error vs iteration curve slope vs their theoretical values', loc='left')
-    # plt.title("({})".format(setup['time_distr_class'].name), loc='right')
     plt.xlabel('Predicted value')
     plt.ylabel('Measured value')
 
@@ -253,20 +308,74 @@ def svm_1000n_par_error_slope_vs_iter_comparison(logs, setup, save=False):
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + 'svm_1000n_par_worst_error_slope_vs_iter_comparison.png')
+        plt.savefig(root_folder_path + '{}_{}n_{}_{}_err_slope_vs_iter_comparison.png'.format(
+            dataset,
+            n,
+            distr,
+            error
+        ))
     else:
         plt.show()
     plt.close()
 
-    """
-    for i in range(len(pred_ratios)):
-        plt.text(
-            pred_ratios[i],
-            real_ratios[i],
-            'd={}'.format(degrees[list(logs['metrics'][objfunc.id].keys())[i]]),
-            size='xx-small'
+
+def plot_distr_iter_time_vs_degree(dataset, n, error, logs_dict, setup_dict, save=False):
+    ly = {}
+
+    target_err = 700000
+
+    for distr in ['par', 'exp', 'unif']:
+        ly[distr] = {}
+        logs = logs_dict[distr]
+        setup = setup_dict[distr]
+        for graph in setup['graphs']:
+            deg = degree_from_label(graph)
+            if deg == 2:
+                continue
+            """
+            speed = len(logs['iter_time'][graph]) / logs['iter_time'][graph][-1]
+            ly[distr][degree_from_label(graph)] = speed
+            """
+            t = 0
+            e = 0
+            for i in range(len(logs['metrics'][setup['obj_function']][graph])):
+                e = logs['metrics'][setup['obj_function']][graph][i]
+                t = logs['iter_time'][graph][i]
+                if e <= target_err:
+                    break
+            ly[distr][deg] = t
+
+
+    plt.xlabel('Degree')
+    plt.ylabel('Convergence time'.format(target_err))
+
+    distr_colors = {
+        'par' : 'red',
+        'exp' : 'black',
+        'unif' : 'blue'
+    }
+
+    for distr in ['par', 'exp', 'unif']:
+        plt.plot(
+            ly[distr].keys(),
+            ly[distr].values(),
+            label=distr,
+            markersize=4,
+            color=distr_colors[distr]
         )
-    """
+
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.legend(title="", fontsize='small', fancybox=True)
+    if save:
+        plt.savefig(root_folder_path + '{}_{}n_{}_distr_iter_time_vs_degree.png'.format(
+            dataset,
+            n,
+            error
+        ))
+    else:
+        plt.show()
+    plt.close()
 
 
 if __name__ == '__main__':
