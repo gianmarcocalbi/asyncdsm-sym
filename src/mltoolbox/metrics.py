@@ -1,13 +1,13 @@
 import numpy as np
 import abc
-from src.mltoolbox import functions
+from src.mltoolbox import functions as f
 from sklearn.metrics import accuracy_score
 
 
 class Metrics:
     __metaclass__ = abc.ABCMeta
     loss_func = None
-    y_hat_func = functions.LinearYHatFunction
+    y_hat_func = f.LinearYHatFunction
 
     def compute_value(self, X, y, w):
         return np.sum(self.loss_func.compute_value(y, self.y_hat_func.compute_value(X, w))) / len(y)
@@ -24,35 +24,35 @@ class MeanSquaredError(Metrics):
     fullname = "Mean Squared Error"
     shortname = "MSE"
     id = 'mse'
-    loss_func = functions.SquaredLossFunction
+    loss_func = f.SquaredLossFunction
 
 
 class ContinuousHingeLoss(Metrics):
     fullname = "Continuous Hinge Loss"
     shortname = "cHL"
     id = "cont_hinge_loss"
-    loss_func = functions.ContinuousHingeLossFunction
+    loss_func = f.ContinuousHingeLossFunction
 
 
 class HingeLoss(Metrics):
     fullname = "Hinge Loss"
     shortname = "HL"
     id = 'hinge_loss'
-    loss_func = functions.HingeLossFunction
+    loss_func = f.HingeLossFunction
 
 
 class EdgyHingeLoss(Metrics):
     fullname = "Edgy Hinge Loss"
     shortname = "eHL"
     id = 'edgy_hinge_loss'
-    loss_func = functions.EdgyHingeLossFunction
+    loss_func = f.EdgyHingeLossFunction
 
 
 class Score(Metrics):
     fullname = "Score"
     shortname = "score"
     id = 'score'
-    loss_func = functions.EdgyHingeLossFunction
+    loss_func = f.EdgyHingeLossFunction
 
     def compute_value(self, X, y, w):
         # return accuracy_score(y, np.sign(self.y_hat_func.compute_value(X, w)))

@@ -33,24 +33,22 @@ def run(core):
         test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='real', metrics_nodes='all', alert=False)
     """
 
-    """
-    if core == 0:
-        test_different_nodes_speed(seed=22052010, n=1000, distr='par', alert=False)
-        test_different_nodes_speed(seed=22052010, n=100, distr='exp', alert=False)
-        test_different_nodes_speed(seed=22052010, n=10, distr='unif', alert=False)
-    elif core == 1:
-        test_different_nodes_speed(seed=22052010, n=1000, distr='exp', alert=False)
-        test_different_nodes_speed(seed=22052010, n=100, distr='unif', alert=False)
-        test_different_nodes_speed(seed=22052010, n=10, distr='par', alert=False)
-    elif core == 2:
-        test_different_nodes_speed(seed=22052010, n=1000, distr='unif', alert=False)
-        test_different_nodes_speed(seed=22052010, n=100, distr='par', alert=False)
-        test_different_nodes_speed(seed=22052010, n=10, distr='exp', alert=False)
-    """
 
-    test_exp_on_susysvm_dataset(seed=None, n=100, distr='exp', metrics_nodes='all', alert=False)
+    if core == 0:
+        test_different_nodes_speed(seed=22052010, n=300, max_iter=1000, distr='exp', alert=False)
+        test_different_nodes_speed(seed=22052010, n=1000, max_iter=10000, distr='par', alert=False)
+    elif core == 1:
+        test_different_nodes_speed(seed=22052010, n=300, max_iter=1000, distr='unif', alert=False)
+        test_different_nodes_speed(seed=22052010, n=1000, max_iter=1000, distr='exp', alert=False)
+    elif core == 2:
+        test_different_nodes_speed(seed=22052010, n=300, max_iter=10000, distr='par', alert=False)
+        test_different_nodes_speed(seed=22052010, n=1000, max_iter=1000, distr='unif', alert=False)
+
+
+    # test_exp_on_susysvm_dataset(seed=None, n=100, distr='exp', metrics_nodes='all', alert=False)
     # test_exp_on_reg2_dataset(seed=None, n=100, distr='real', metrics_nodes='worst', alert=False)
 
+    """
     if core == 0:
         test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
         test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
@@ -70,6 +68,7 @@ def run(core):
         test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
         test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
         test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='worst', alert=False)
+    """
 
 
 def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
@@ -510,14 +509,14 @@ def test_exp_on_unisvm2_dataset(seed=None, n=100, distr='par', metrics_nodes='al
         ],
         test_parent_folder="",
         instant_plot=False,
-        plots=('hinge_loss_iter', 'hinge_loss_time'),
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
         save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
     )
 
 
-def test_different_nodes_speed(seed=None, n=100, distr='par', alert=True):
+def test_different_nodes_speed(seed=None, n=100, max_iter=1000, distr='exp', alert=True):
     if alert:
         print('test_different_nodes_timing()')
         print('seed={}, n={}, distr={}'.format(seed, n, distr))
@@ -537,8 +536,9 @@ def test_different_nodes_speed(seed=None, n=100, distr='par', alert=True):
         '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
     """
     graphs = {
-        10: ['2-expander', '3-expander', '5-expander'],
+        #10: ['2-cycle', '3-cycle', '5-cycle'],
         100: ['4-expander', '10-expander', '50-expander'],
+        300: ['4-expander', '17-expander', '150-expander'],
         1000: ['6-expander', '32-expander', '500-expander']
     }[n]
 
@@ -549,7 +549,7 @@ def test_different_nodes_speed(seed=None, n=100, distr='par', alert=True):
         n_samples=1000,
         dataset='unireg',
         starting_weights_domain=[0, 0],
-        max_iter=1000,
+        max_iter=max_iter,
         max_time=None,
         method=None,
         alpha=0,
@@ -562,17 +562,17 @@ def test_different_nodes_speed(seed=None, n=100, distr='par', alert=True):
         real_metrics_toggle=False,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'speed_001',
+            'speed_003',
             # 'shuffle',
             # 'w_domain',
             # 'metrics',
             # 'dataset',
+            'nodes',
             'distr',
             # 'distr_rule',
             # 'error',
             # 'nodeserror',
             # 'alpha',
-            'nodes',
             # 'samp',
             # 'feat',
             'time',

@@ -1,6 +1,5 @@
 import copy, types, warnings
 from src import mltoolbox, statistics
-from src.mltoolbox.metrics import METRICS
 from src.mltoolbox import functions
 from src.utils import *
 from src.node import Node
@@ -1033,8 +1032,13 @@ class Cluster:
         max_iter = -1
         avg_iter = 0
 
+        if self.max_time is None or math.isinf(self.max_time):
+            last_time = self.clock
+        else:
+            last_time = self.max_time
+
         for _node in self.nodes:
-            _node_iter = _node.get_iteration_at_local_clock(self.max_time)
+            _node_iter = _node.get_iteration_at_local_clock(last_time)
             if _node_iter < min_iter:
                 min_iter = _node_iter
             if _node_iter > max_iter:
@@ -1042,8 +1046,13 @@ class Cluster:
             avg_iter += _node_iter
         avg_iter /= len(self.nodes)
 
-        self.logs["max_iter_time"][-1] = (self.max_time, max_iter)
-        self.logs["avg_iter_time"][-1] = (self.max_time, avg_iter)
+        self.logs["max_iter_time"][-1] = (last_time, max_iter)
+        self.logs["avg_iter_time"][-1] = (last_time, avg_iter)
+
+        #todo: temp
+        print("Cluster simulation run ended at iter={} and clock={}".format(
+            self.iteration, self.clock
+        ))
 
         print_verbose(self.verbose, "Cluster simulation run ended at iter={} and clock={}".format(
             self.iteration, self.clock

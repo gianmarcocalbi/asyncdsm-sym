@@ -4,9 +4,7 @@ from src.mltoolbox.metrics import METRICS
 from src import statistics
 import os, math
 
-# root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/figures/simulations/'
-root_folder_path = 'C:/Users/grimidev/workspace/asyadcml/test_log/' \
-                 'test_rslo100_sloreg_100n_exp[1]_mtrT0all_sgC0.01alpha_52000samp_INFtime_600iter/figures/'
+root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/figures/simulations/'
 # root_folder_path = './figures/'
 colors = {
     'black': [0x00, 0x00, 0x00],
@@ -100,7 +98,7 @@ def save_all():
     reg_1000n_avg_unif_logs, reg_1000n_avg_unif_setup = load_test_logs(
         './test_log/bulk/r2002/test_r2002_reg2_1000n_unif[0-2]_mtrT0all_sgC0.0001alpha_1000samp_100feat_10000time_2000iter'
     )
-    #"""
+    """
     plot_dataset_nodes_distr_iter_vs_time(
         'svm', 1000, 'par', svm_1000n_avg_par_logs, svm_1000n_avg_par_setup, save=True
     )
@@ -125,18 +123,23 @@ def save_all():
     plot_dataset_nodes_distr_err_slope_vs_iter_comparison(
         'reg', 1000, 'par', 'avg', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=True
     )
-    #"""
+    """
+
+    reg_1000n_avg_par_logsAVG, reg_1000n_avg_par_setupAVG = load_test_logs(
+        './test_log/bulk/r2001/test_r2001_reg2_1000n_par3-2_mtrT0all_sgC0.001alpha_1000samp_100feat_10000time_2000iterAVG'
+    )
+
     reg_logs_dict = {
-        'par': reg_1000n_avg_par_logs,
+        'par': reg_1000n_avg_par_logsAVG,
         'exp': reg_1000n_avg_exp_logs,
         'unif': reg_1000n_avg_unif_logs
     }
     reg_setup_dict = {
-        'par': reg_1000n_avg_par_setup,
+        'par': reg_1000n_avg_par_setupAVG,
         'exp': reg_1000n_avg_exp_setup,
         'unif': reg_1000n_avg_unif_setup
     }
-    plot_distr_iter_time_vs_degree('reg', 1000, 'avg', reg_logs_dict, reg_setup_dict, save=True)
+    plot_distr_iter_time_vs_degree('reg', 1000, 'avg', reg_logs_dict, reg_setup_dict, save=False)
 
     svm_logs_dict = {
         'par': svm_1000n_avg_par_logs,
@@ -148,7 +151,7 @@ def save_all():
         'exp': svm_1000n_avg_exp_setup,
         'unif': svm_1000n_avg_unif_setup
     }
-    plot_distr_iter_time_vs_degree('svm', 1000, 'avg', svm_logs_dict, svm_setup_dict, save=True)
+    #plot_distr_iter_time_vs_degree('svm', 1000, 'avg', svm_logs_dict, svm_setup_dict, save=True)
 
 
 def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=False):
@@ -204,7 +207,7 @@ def plot_dataset_nodes_distr_err_vs_iter(dataset, n, distr, error, logs, setup, 
     for l in labels:
         l = l.get_text()
         if int(l) > 10000:
-            l =  "{:.2e}".format(int(l))
+            l = "{:.2e}".format(int(l))
         new_labels.append(l)
     plt.yticks(locs, new_labels)
 
@@ -353,11 +356,11 @@ def plot_dataset_nodes_distr_err_slope_vs_iter_comparison(dataset, n, distr, err
 def plot_distr_iter_time_vs_degree(dataset, n, error, logs_dict, setup_dict, save=False):
     ly = {}
     if dataset == 'reg':
-        target_err = 700000
-    elif dataset =='svm':
-        target_err = 0.92
+        target_err = 140000
+    elif dataset == 'svm':
+        target_err = 0.80
 
-    for distr in ['par', 'exp', 'unif']:
+    for distr in logs_dict:
         ly[distr] = {}
         logs = logs_dict[distr]
         setup = setup_dict[distr]
@@ -402,7 +405,7 @@ def plot_distr_iter_time_vs_degree(dataset, n, error, logs_dict, setup_dict, sav
     plt.xticks(
         [x for x in ly['exp'].keys()],
         [x for x in ly['exp'].keys()],
-        #rotation='vertical',
+        # rotation='vertical',
         size='x-small'
     )
 
