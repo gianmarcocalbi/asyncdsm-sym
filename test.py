@@ -108,6 +108,20 @@ def run(core=-1):
         for _ in range(10):
             test_exp_on_dual_average_svm(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
     """
+
+    if core == 0:
+    	test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+    elif core == 1:
+    	test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+    elif core == 2:
+    	test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+    elif core == 3
+    	test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+    elif core == 4:
+    	test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+    elif core == 5:
+    	test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+
     pass
 
 
@@ -323,7 +337,7 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
             '80-expander', '99-clique', ],
         400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
             '200-expander', '300-expander', '399-clique', ],
-        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander', '40-expander',
             '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
     }[n]
     metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
@@ -337,9 +351,9 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
         n_samples=52000,
         dataset='sloreg',
         starting_weights_domain=[-0.47, 1.55],
-        max_iter=400,
-        max_time=None,
-        alpha=1e-5,
+        max_iter=2400,
+        max_time=12000,
+        alpha=1e-3,
         learning_rate='constant',
         spectrum_dependent_learning_rate=True,
         time_distr_class=time_distr_class,
@@ -351,7 +365,7 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'rslo100',
+            'rslo000',
             'dataset',
             # 'w_domain',
             'nodes',
@@ -364,9 +378,9 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
             'iter'
         ],
         test_parent_folder="",
-        instant_plot=True,
+        instant_plot=False,
         plots=['mse_iter', 'mse_time'],
-        save_plot_to_file=True,
+        save_plot_to_file=False,
         plot_global_w=False,
         plot_node_w=False
     )
@@ -388,8 +402,8 @@ def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='al
             '80-expander', '99-clique', ],
         400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
             '200-expander', '300-expander', '399-clique', ],
-        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
-            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander',
+       		'40-expander', '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
     }[n]
     metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
@@ -400,9 +414,9 @@ def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='al
         n_samples=500000,
         dataset='susysvm',
         starting_weights_domain=[-0.5, 2],
-        max_iter=200,
-        max_time=None,
-        alpha=1e-2,
+        max_iter=2400,
+        max_time=12000,
+        alpha=5e-2,
         learning_rate='constant',
         spectrum_dependent_learning_rate=True,
         time_distr_class=time_distr_class,
@@ -414,7 +428,7 @@ def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='al
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'ss100',
+            'ss000',
             'dataset',
             # 'w_domain',
             'nodes',
@@ -427,9 +441,9 @@ def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='al
             'iter'
         ],
         test_parent_folder="",
-        instant_plot=True,
+        instant_plot=False,
         plots=['hinge_loss_iter', 'hinge_loss_time'],
-        save_plot_to_file=True,
+        save_plot_to_file=False,
         plot_global_w=False,
         plot_node_w=False
     )
