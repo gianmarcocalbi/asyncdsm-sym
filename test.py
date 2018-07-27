@@ -110,17 +110,17 @@ def run(core=-1):
     """
 
     if core == 0:
-    	test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
     elif core == 1:
-    	test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
     elif core == 2:
-    	test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
-    elif core == 3
-    	test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+    elif core == 3:
+        test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
     elif core == 4:
-    	test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
     elif core == 5:
-    	test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
 
     pass
 
@@ -490,7 +490,7 @@ def test_exp_on_unisvm_dataset(seed=None, n=100, distr='par', metrics_nodes='all
         metrics_nodes=metrics_nodes,
         shuffle=False,
         save_test_to_file=True,
-        test_folder_name_struct=(
+        test_folder_name_struct=[
             'us007',
             'dataset',
             'alpha',
@@ -500,10 +500,10 @@ def test_exp_on_unisvm_dataset(seed=None, n=100, distr='par', metrics_nodes='all
             'metrics',
             'time',
             'iter'
-        ),
+        ],
         test_parent_folder="",
         instant_plot=False,
-        plots=('hinge_loss_iter', 'hinge_loss_time'),
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
         save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
