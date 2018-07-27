@@ -8,7 +8,17 @@ from scripts import *
 from sklearn.preprocessing import normalize
 
 
-def run(core):
+def run(core=-1):
+    """
+    Parameters
+    ----------
+    core: int
+        Integer from argparse module to be used as switcher.
+
+    Returns
+    -------
+    None
+    """
     # merge_tests.main()
     # plot_of_over_c.main()
     # plot_topologies_obj_func_at_time_over_c_comparison.main()
@@ -33,7 +43,7 @@ def run(core):
         test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='real', metrics_nodes='all', alert=False)
     """
 
-
+    """
     if core == 0:
         test_different_nodes_speed(seed=22052010, n=300, max_iter=1000, distr='exp', alert=False)
         test_different_nodes_speed(seed=22052010, n=1000, max_iter=10000, distr='par', alert=False)
@@ -43,7 +53,7 @@ def run(core):
     elif core == 2:
         test_different_nodes_speed(seed=22052010, n=300, max_iter=10000, distr='par', alert=False)
         test_different_nodes_speed(seed=22052010, n=1000, max_iter=1000, distr='unif', alert=False)
-
+    """
 
     # test_exp_on_susysvm_dataset(seed=None, n=100, distr='exp', metrics_nodes='all', alert=False)
     # test_exp_on_reg2_dataset(seed=None, n=100, distr='real', metrics_nodes='worst', alert=False)
@@ -69,6 +79,12 @@ def run(core):
         test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
         test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='worst', alert=False)
     """
+    if core == 0:
+        test_different_nodes_speed(seed=None, n=300, max_iter=5000, distr='par', alert=False)
+    elif core == 1:
+        test_different_nodes_speed(seed=None, n=300, max_iter=5000, distr='unif', alert=False)
+    elif core == 2:
+        test_different_nodes_speed(seed=None, n=300, max_iter=5000, distr='exp', alert=False)
 
 
 def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
@@ -359,7 +375,7 @@ def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='al
         graphs=graphs,
         n_samples=500000,
         dataset='susysvm',
-        starting_weights_domain=[-0.5,2],
+        starting_weights_domain=[-0.5, 2],
         max_iter=200,
         max_time=None,
         alpha=1e-2,
@@ -536,10 +552,22 @@ def test_different_nodes_speed(seed=None, n=100, max_iter=1000, distr='exp', ale
         '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
     """
     graphs = {
-        #10: ['2-cycle', '3-cycle', '5-cycle'],
-        100: ['4-expander', '10-expander', '50-expander'],
-        300: ['4-expander', '17-expander', '150-expander'],
-        1000: ['6-expander', '32-expander', '500-expander']
+        # 10: ['2-cycle', '3-cycle', '5-cycle'],
+        100: [
+            '4-expander',
+            '10-expander',
+            '50-expander'
+        ],
+        300: [
+            '5-expander',
+            '17-expander',
+            '150-expander'
+        ],
+        1000: [
+            '6-expander',
+            '32-expander',
+            '500-expander'
+        ]
     }[n]
 
     main.main(
