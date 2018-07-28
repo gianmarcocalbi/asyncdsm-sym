@@ -57,6 +57,7 @@ def run(core=-1):
 
     # test_exp_on_susysvm_dataset(seed=None, n=100, distr='exp', metrics_nodes='all', alert=False)
     # test_exp_on_reg2_dataset(seed=None, n=100, distr='real', metrics_nodes='worst', alert=False)
+    # test_exp_on_sloreg_dataset(seed=22052010, n=100, distr='exp', metrics_nodes='all', alert=False)
 
     """
     if core == 0:
@@ -88,42 +89,52 @@ def run(core=-1):
     elif core == 2:
         test_different_nodes_speed(seed=None, n=300, max_iter=5000, distr='exp', alert=False)
     """
-    """
-    if core == 0:
-        for _ in range(10):
-            test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 1:
-        for _ in range(10):
-            test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    elif core == 2:
-        for _ in range(10):
-            test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-    elif core == 3:
-        for _ in range(10):
-            test_exp_on_dual_average_svm(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 4:
-        for _ in range(10):
-            test_exp_on_dual_average_svm(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    elif core == 5:
-        for _ in range(10):
-            test_exp_on_dual_average_svm(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-    """
 
     """
     if core == 0:
-        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
     elif core == 1:
-        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    elif core == 2:
-        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
-    elif core == 3:
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+    """
+
+    #"""
+    if core == 0:
         test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 4:
+    elif core == 1:
         test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    elif core == 5:
+    elif core == 2:
         test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+    elif core == 3:
+        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+    elif core == 4:
+        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+    elif core == 5:
+        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+    #"""
+
     """
-    
     if core == 0:
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
@@ -167,7 +178,7 @@ def run(core=-1):
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-
+    """
 
     pass
 
@@ -380,8 +391,17 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
     }[distr]
     time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
     graphs = {
-        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
-            '80-expander', '99-clique', ],
+        100: [
+            '2-expander',
+            '3-expander',
+            '4-expander',
+            '8-expander',
+            '10-expander',
+            '20-expander',
+            '50-expander',
+            '80-expander',
+            '99-clique'
+        ],
         400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
             '200-expander', '300-expander', '399-clique', ],
         1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander',
@@ -397,10 +417,10 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
         graphs=graphs,
         n_samples=52000,
         dataset='sloreg',
-        starting_weights_domain=[-0.47, 1.55],
-        max_iter=1000,
-        max_time=None,
-        alpha=1e-3,
+        starting_weights_domain=[2, 3],
+        max_iter=2400,
+        max_time=12000,
+        alpha=5e-6,
         learning_rate='constant',
         spectrum_dependent_learning_rate=True,
         time_distr_class=time_distr_class,
@@ -412,9 +432,9 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'rsloC00',
+            'rslo001',
             'dataset',
-            # 'w_domain',
+            #'w_domain',
             'nodes',
             'distr',
             'metrics',

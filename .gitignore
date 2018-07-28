@@ -111,3 +111,4 @@ test_log/temp/
 test_log/bulk/
 test_log/trash/
 /test_log/.directory
+test_log/
