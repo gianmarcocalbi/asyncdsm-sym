@@ -235,7 +235,7 @@ def load_slice_localization_regression_dataset(n_samples):
         for row in reader:
             if 0 <= i < n_samples:
                 y.append(row[-1])
-                X.append(row[1:-1])
+                X.append(row[0:-1])
             elif i >= n_samples:
                 break
             i += 1
