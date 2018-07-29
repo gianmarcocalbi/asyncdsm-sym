@@ -90,7 +90,7 @@ def run(core=-1):
         test_different_nodes_speed(seed=None, n=300, max_iter=5000, distr='exp', alert=False)
     """
 
-    #"""
+    """
     if core == 0:
         test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
         test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
@@ -133,7 +133,7 @@ def run(core=-1):
         test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
         test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
         test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    #"""
+    """
 
     """
     if core == 0:
@@ -195,6 +195,10 @@ def run(core=-1):
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
     """
+
+    test_exp_on_dual_average_svm(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+    test_exp_on_dual_average_svm(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+    test_exp_on_dual_average_svm(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
 
     pass
 
