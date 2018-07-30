@@ -17,9 +17,9 @@ def main():
     x04 : svm
     """
 
-    test_suite_root = './test_log/bulk/'
-    test_suite_code = 'r2001'
-    test_suite_pattern = 'test_r2001_reg2*'
+    test_suite_root = './test_log/paper/'
+    test_suite_code = 'conv_synt_svm'
+    test_suite_pattern = 'test_*n_unif*'
     log_pattern = re.compile(r'.*')  # re.compile(r'.*mse_log\.gz$')
     excluded_graphs = []
 
@@ -86,6 +86,8 @@ def main():
             )
         ]
 
+        print("Extract logs from {}".format(test_folder_path))
+
         # loop through all logs inside current test folder
         for test_log_path in test_logs_paths:
             # take only the name of the log file
@@ -130,6 +132,7 @@ def main():
             min_log_lengths[log_name] = min(min_log_lengths[log_name], len(logs[test_folder_path][log_name]))
 
     for log_name in list(avg_log_names):
+        print("Create merged {}".format(log_name))
         avg_logs[log_name] = [l[0:min_log_lengths[log_name]] for l in avg_logs[log_name]]
         avg_logs[log_name] = np.array(np.sum(avg_logs[log_name], axis=0)) / len(avg_logs[log_name])
 
@@ -144,7 +147,7 @@ def main():
 
     avg_output_dir = os.path.normpath(os.path.join(
         test_folder_paths[0].rsplit('/', maxsplit=1)[0],
-        test_folder_paths[0].rsplit('/', maxsplit=1)[1].split('conflict')[0] + 'AVG'
+        test_folder_paths[0].rsplit('/', maxsplit=1)[1].split('conflict')[0] + '.AVG'
     ))
 
     if os.path.exists(avg_output_dir):
@@ -157,13 +160,16 @@ def main():
     os.makedirs(avg_output_dir)
 
     for log_name in avg_logs:
-        np.savetxt(os.path.normpath(os.path.join(
+        dest = os.path.normpath(os.path.join(
             avg_output_dir,
             log_name
-        )), avg_logs[log_name], delimiter=',')
+        ))
+        np.savetxt(dest, avg_logs[log_name], delimiter=',')
+        print('Saved {}'.format(log_name, dest))
 
     with open(os.path.join(avg_output_dir, '.setup.pkl'), "wb") as f:
         pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
+        print('Setup dumped into {}'.format(os.path.join(avg_output_dir, '.setup.pkl')))
 
     # Fill descriptor with setup dictionary
     descriptor = """>>> Test Descriptor File
@@ -179,6 +185,7 @@ def main():
 
     with open(os.path.join(avg_output_dir, '.descriptor.txt'), "w") as f:
         f.write(descriptor)
+        print('Descriptor file created at {}'.format(os.path.join(avg_output_dir, '.descriptor.txt')))
 
 
 if __name__ == '__main__':

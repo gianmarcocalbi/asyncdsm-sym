@@ -1,4 +1,6 @@
 from matplotlib import pyplot as plt
+import matplotlib.ticker as ticker
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 from src.utils import *
 from src.mltoolbox.metrics import METRICS
 from src import statistics
@@ -7,22 +9,23 @@ import os, math
 root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/figures/simulations/'
 # root_folder_path = './figures/'
 colors = {
-    'black': [0x00, 0x00, 0x00],
-    'purple': [0x88, 0x64, 0xff],
-    'magenta': [0xff, 0x64, 0xff],
-    'red': [0xff, 0x64, 0x64],
-    'light-pink': [0xff, 0xb5, 0xd7],
-    'light-orange': [0xff, 0xb2, 0x7b],
-    'yellow': [0xdc, 0xdf, 0x00],
-    'light-green': [0x99, 0xf4, 0x5c],
-    'dark-green': [0x66, 0x9c, 0x65],
-    'water-green': [0x59, 0xdd, 0xb1],
-    'cyan': [0x78, 0xc7, 0xe3],
-    'light-blue': [0x72, 0x9c, 0xff],
-    'light-purple': [0x9f, 0x81, 0xff],
-    'blue': [0x46, 0x46, 0xff],
-    'dark-blue': [0x36, 0x00, 0xab],
-    'purple-blue': [0xbe, 0xbe, 0xff]
+    'black': [0x00, 0x00, 0x00, 0xff],
+    'purple': [0x88, 0x64, 0xff, 0xff],
+    'magenta': [0xff, 0x64, 0xff, 0xff],
+    'red': [0xff, 0x64, 0x64, 0xff],
+    'light-pink': [0xff, 0xb5, 0xd7, 0xff],
+    'light-orange': [0xff, 0xb2, 0x7b, 0xff],
+    'yellow': [0xcf, 0xc8, 0x00, 0xc8], #[0xdc, 0xdf, 0x00, 0x80],
+    'light-green': [0x99, 0xf4, 0x5c, 0xff],
+    'green' : [0x00, 0xff, 0x00, 0xff],
+    'dark-green': [0x66, 0x9c, 0x65, 0xff],
+    'water-green': [0x59, 0xdd, 0xb1, 0xff],
+    'cyan': [0x78, 0xc7, 0xe3, 0xff],
+    'light-blue': [0x72, 0x9c, 0xff, 0xff],
+    'light-purple': [0x9f, 0x81, 0xff, 0xff],
+    'blue': [0x46, 0x46, 0xff, 0xff],
+    'dark-blue': [0x36, 0x00, 0xab, 0xff],
+    'purple-blue': [0xbe, 0xbe, 0xff, 0xff]
 }
 
 degree_colors = {
@@ -46,7 +49,7 @@ degree_colors = {
         8: 'light-orange',
         16: 'yellow',
         18: 'black',
-        20: 'black',
+        20: 'green',
         30: 'light-green',
         40: 'water-green',
         50: 'dark-green',
@@ -60,10 +63,10 @@ degree_colors = {
 }
 
 for col in colors:
-    rgb = colors[col][:]
-    for i in [0, 1, 2]:
-        rgb[i] /= 0xff
-    colors[col] = rgb
+    rgba = colors[col][:]
+    for i in [0, 1, 2, 3]:
+        rgba[i] /= 0xff
+    colors[col] = rgba
 
 for n in degree_colors:
     Dict = degree_colors[n]
@@ -125,6 +128,50 @@ def save_all():
             'exp': None
         },
     }
+    avg_logs = {
+        'synt_reg': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'synt_svm': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'real_reg': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'real_svm': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+    }
+    avg_setup = {
+        'synt_reg': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'synt_svm': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'real_reg': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'real_svm': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+    }
 
     logs['synt_reg']['par'], setup['synt_reg']['par'] = load_test_logs(
         './test_log/paper/fixedseed_synt_reg/test_r2100_reg2_1000n_par[3-2]_mtrT0all_sgC0.0001alpha_1000samp_100feat_50000time_3000iter')
@@ -144,8 +191,9 @@ def save_all():
         './test_log/paper/fixedseed_real_reg/test_rslo001_sloreg_1000n_par[3-2]_mtrT0all_sgC5e-06alpha_52000samp_12000time_2400iter')
     logs['real_reg']['exp'], setup['real_reg']['exp'] = load_test_logs(
         './test_log/paper/fixedseed_real_reg/test_rslo001_sloreg_1000n_exp[1]_mtrT0all_sgC5e-06alpha_52000samp_12000time_2400iter')
-    #logs['real_reg']['unif'], setup['real_reg']['unif'] = load_test_logs(
+    # logs['real_reg']['unif'], setup['real_reg']['unif'] = load_test_logs(
     #    './test_log/paper/fixedseed_real_reg/test_rslo001_sloreg_1000n_unif[0-2]_mtrT0all_sgC5e-06alpha_52000samp_12000time_2400iter')
+
 
     logs['real_svm']['par'], setup['real_svm']['par'] = load_test_logs(
         './test_log/paper/fixedseed_real_svm/test_ss000_susysvm_1000n_par[3-2]_mtrT0all_sgC0.05alpha_500000samp_12000time_2400iter')
@@ -154,10 +202,48 @@ def save_all():
     logs['real_svm']['unif'], setup['real_svm']['unif'] = load_test_logs(
         './test_log/paper/fixedseed_real_svm/test_ss000_susysvm_1000n_unif[0-2]_mtrT0all_sgC0.05alpha_500000samp_12000time_2400iter')
 
-    plot_dataset_nodes_distr_err_vs_iter('real_reg', 1000, 'exp', logs['real_reg']['exp'], setup['real_reg']['exp'], save=False)
+    avg_logs['synt_svm']['par'], avg_setup['synt_svm']['par'] = load_test_logs(
+        './test_log/paper/conv_synt_svm/test_conv01_svm_sgC1.0alpha_1000n_par[3-2]_mtrT0all_INFtime_500iter.AVG')
+    avg_logs['synt_svm']['exp'], avg_setup['synt_svm']['exp'] = load_test_logs(
+        './test_log/paper/conv_synt_svm/test_conv01_svm_sgC1.0alpha_1000n_exp[1]_mtrT0all_INFtime_500iter.AVG')
+    avg_logs['synt_svm']['unif'], avg_setup['synt_svm']['unif'] = load_test_logs(
+        './test_log/paper/conv_synt_svm/test_conv01_svm_sgC1.0alpha_1000n_unif[0-2]_mtrT0all_INFtime_500iter.AVG')
+    
+    avg_logs['synt_reg']['par'], avg_setup['synt_reg']['par'] = load_test_logs(
+        './test_log/paper/conv_synt_reg/test_conv01_reg2_1000n_par[3-2]_mtrT0all_sgC0.001alpha_1000samp_100feat_INFtime_500iter.AVG')
+    avg_logs['synt_reg']['exp'], avg_setup['synt_reg']['exp'] = load_test_logs(
+        './test_log/paper/conv_synt_reg/test_conv01_reg2_1000n_exp[1]_mtrT0all_sgC0.001alpha_1000samp_100feat_INFtime_500iter.AVG')
+    avg_logs['synt_reg']['unif'], avg_setup['synt_reg']['unif'] = load_test_logs(
+        './test_log/paper/conv_synt_reg/test_conv01_reg2_1000n_unif[0-2]_mtrT0all_sgC0.001alpha_1000samp_100feat_INFtime_500iter.AVG')
+    
+    avg_logs['real_svm']['par'], avg_setup['real_svm']['par'] = load_test_logs(
+        './test_log/paper/conv_real_svm/test_ssC00_susysvm_1000n_par[3-2]_mtrT0all_sgC0.05alpha_500000samp_INFtime_1000iter.AVG')
+    avg_logs['real_svm']['exp'], avg_setup['real_svm']['exp'] = load_test_logs(
+        './test_log/paper/conv_real_svm/test_ssC00_susysvm_1000n_exp[1]_mtrT0all_sgC0.05alpha_500000samp_INFtime_1000iter.AVG')
+    avg_logs['real_svm']['unif'], avg_setup['real_svm']['unif'] = load_test_logs(
+        './test_log/paper/conv_real_svm/test_ssC00_susysvm_1000n_unif[0-2]_mtrT0all_sgC0.05alpha_500000samp_INFtime_1000iter.AVG')
+
+    avg_logs['real_reg']['par'], avg_setup['real_reg']['par'] = load_test_logs(
+        './test_log/paper/conv_real_reg/test_rsloC01_sloreg_1000n_par[3-2]_mtrT0all_sgC5e-06alpha_52000samp_INFtime_500iter.AVG')
+    avg_logs['real_reg']['exp'], avg_setup['real_reg']['exp'] = load_test_logs(
+        './test_log/paper/conv_real_reg/test_rsloC01_sloreg_1000n_exp[1]_mtrT0all_sgC5e-06alpha_52000samp_INFtime_500iter.AVG')
+    #avg_logs['real_reg']['unif'], avg_setup['real_reg']['unif'] = load_test_logs(
+    #    './test_log/paper/conv_real_reg/test_rsloC01_sloreg_1000n_unif[0-2]_mtrT0all_sgC5e-06alpha_52000samp_INFtime_500iter.AVG')
+
+
+    #plot_dataset_nodes_distr_iter_vs_time('real_reg', 1000, 'par', logs['real_reg']['par'], setup['real_reg']['par'], save=False)
+    #plot_dataset_nodes_distr_err_vs_iter('real_reg', 1000, 'par', logs['real_reg']['par'], setup['real_reg']['par'], save=False)
+    #plot_dataset_nodes_distr_err_vs_time('real_reg', 1000, 'par', logs['real_reg']['par'], setup['real_reg']['par'], save=False)
+    #plot_dataset_nodes_distr_err_vs_time('real_svm', 1000, 'par', logs['real_svm']['par'], setup['real_svm']['par'], save=False)
+
+    #plot_distr_iter_time_vs_degree('synt_reg', 1000, avg_logs['synt_reg'], avg_setup['synt_reg'], save=False)
+    #plot_distr_iter_time_vs_degree('synt_svm', 1000, avg_logs['synt_svm'], avg_setup['synt_svm'], save=True)
+    #plot_distr_iter_time_vs_degree('real_reg', 1000, avg_logs['real_reg'], avg_setup['real_reg'], save=False)
+
+    #plot_distr_iter_time_vs_degree('real_svm', 1000, avg_logs['real_svm'], avg_setup['real_svm'], save=False)
+    #plot_distr_iter_time_vs_degree('real_reg', 1000, avg_logs['real_svm'], avg_setup['real_svm'], save=False)
 
     for sim in logs:
-        continue
         for distr in logs[sim]:
             if not logs[sim][distr] is None:
                 plot_dataset_nodes_distr_iter_vs_time(sim, 1000, distr, logs[sim][distr], setup[sim][distr], save=True)
@@ -170,6 +256,8 @@ def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=F
     plt.xlabel('Time')
     plt.ylabel('Iteration')
 
+    xlim = 0
+
     for graph, iters in logs['iter_time'].items():
         plt.plot(
             iters,
@@ -178,9 +266,11 @@ def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=F
             # markersize=2,
             color=degree_colors[setup['n']][degree_from_label(graph)]
         )
+        xlim = max(xlim, iters[-1])
 
+    plt.xlim(xmax=xlim)
     plt.yscale('linear')
-    plt.legend(title="", fontsize='small', fancybox=True)
+    plt.legend(title="Degree (d)", fontsize='small', fancybox=True)
     if save:
         dest = root_folder_path + '{}_{}n_{}_iter_vs_time.png'.format(
             dataset,
@@ -196,39 +286,74 @@ def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=F
 
 def plot_dataset_nodes_distr_err_vs_iter(dataset, n, distr, logs, setup, error='avg', save=False):
     # plt.title('Error VS iterations', loc='left')
+
+    fig, ax = plt.subplots()
+
     plt.xlabel('Iterations')
     if 'svm' in dataset:
         plt.ylabel('Hinge loss')
     elif 'reg' in dataset:
         plt.ylabel('Mean Squared Error')
 
+    ylim_up = -math.inf
+    ylim_dw = math.inf
     xlim = -math.inf
+
     for graph, loss in logs['metrics'][setup['obj_function']].items():
+        deg = degree_from_label(graph)
+        zorder = 1
+        if distr == 'par' and deg == 20:
+            markersize = 3
+            marker = '>'
+            zorder = -1
+        elif distr == 'par' and 'clique' in graph:
+            markersize = 3
+            marker = 'x'
+        else:
+            markersize = 0
+            marker = 'o'
+
         plt.plot(
             list(range(len(loss))),
             loss,
-            label=degree_from_label(graph),
-            markersize=2,
-            color=degree_colors[setup['n']][degree_from_label(graph)],
+            label=deg,
+            markersize=markersize,
+            marker = marker,
+            markevery = len(loss) // 33,
+            color=degree_colors[setup['n']][deg],
+            zorder = zorder
         )
-        xlim = max(xlim, len(loss))
+        if degree_from_label(graph) >= 4:
+            xlim = max(xlim, len(loss))
+        ylim_up = max(ylim_up, loss[0])
+        ylim_dw = min(ylim_dw, loss[-1])
     plt.xlim(-20, xlim)
     plt.yscale('linear')
-    locs, labels = plt.yticks()
 
-    new_labels = []
-    for l in labels:
-        l = l.get_text()
-        try:
-            if int(l) > 10000:
-                l = "{:.2e}".format(int(l))
-        except:
-            pass
-        new_labels.append(str(l))
-    plt.yticks(locs, new_labels)
-    #plt.yticks([10000], ['mamma mia'])
+    if 'reg' in dataset:
+        locs, _ = plt.yticks()
+        labels = []
+        for y in locs:
+            if y >= 100000:
+                _n = "$\\mathdefault{{{0}\\times10^{{{1}}}}}$".format(
+                    round(y / (10**int(math.log10(y))), 1),
+                    int(math.log10(y))
+                )
+            else:
+                _n = y
+            labels.append(_n)
 
-    plt.legend(title="", fontsize='small', fancybox=True)
+        plt.yticks(
+            locs,
+            labels,
+            # rotation='vertical',
+            size='x-small'
+        )
+
+    ylim_padding = (ylim_up - ylim_dw) / 20
+    plt.ylim(max(ylim_dw-ylim_padding, 0), ylim_up+ylim_padding)
+
+    plt.legend(title="Degree (d)", fontsize='small', fancybox=True)
     if save:
         dest = root_folder_path + '{}_{}n_{}_{}_err_vs_iter.png'.format(
             dataset,
@@ -251,26 +376,92 @@ def plot_dataset_nodes_distr_err_vs_time(dataset, n, distr, logs, setup, error='
     elif 'reg' in dataset:
         plt.ylabel('Mean Squared Error')
 
+    ylim_up = -math.inf
+    ylim_dw = math.inf
     xlim = math.inf
     for graph in logs['metrics'][setup['obj_function']]:
         deg = degree_from_label(graph)
-        linestyle = '-'
-
-        if n == 1000 and deg == 20:
-            linestyle = ':'
+        zorder = 2
+        if distr == 'par' and deg == 20:
+            markersize = 3
+            marker = '>'
+            zorder = 10
+        elif distr == 'par' and 'clique' in graph:
+            markersize = 3
+            marker = 'x'
+        else:
+            markersize = 0
+            marker = 'o'
 
         plt.plot(
             logs['iter_time'][graph],
             logs['metrics'][setup['obj_function']][graph],
             label=degree_from_label(graph),
-            markersize=2,
             color=degree_colors[setup['n']][deg],
-            linestyle=linestyle
+            markersize=markersize,
+            marker = marker,
+            markevery = 20 ,#int(logs['iter_time'][graph][-1] // 33),
+            zorder = zorder
         )
         xlim = min(xlim, logs['iter_time'][graph][-1])
+        ylim_up = max(ylim_up, logs['metrics'][setup['obj_function']][graph][0])
+        ylim_dw = min(ylim_dw, logs['metrics'][setup['obj_function']][graph][-1])
+
+    """fig, ax = plt.subplots(figsize=[5, 4])
+
+    # prepare the demo image
+    Z = logs['metrics'][setup['obj_function']]['20-expander']
+    extent = (-3,4,-4,3)
+    Z2 = np.zeros(1000, dtype="d")
+    Z2[100:400] = Z[100:400]
+
+    # extent = [-3, 4, -4, 3]
+    ax.imshow(np.arange(100, 400), extent=extent, interpolation="nearest", origin="lower")
+    axins = zoomed_inset_axes(ax, 6, loc=1)  # zoom = 6
+    axins.imshow(Z2, extent=extent, interpolation="nearest", origin="lower")
+
+    # sub region of the original image
+    #x1, x2, y1, y2 = -1.5, -0.9, -2.5, -1.9
+    #axins.set_xlim(x1, x2)
+    #axins.set_ylim(y1, y2)
+
+    plt.xticks(visible=False)
+    plt.yticks(visible=False)
+
+    # draw a bbox of the region of the inset axes in the parent axes and
+    # connecting lines between the bbox and the inset axes area
+    mark_inset(ax, axins, loc1=2, loc2=4, fc="none", ec="0.5")
+
+    plt.draw()"""
+
     plt.xlim(-50, xlim)
     plt.yscale('linear')
-    plt.legend(title="", fontsize='small', fancybox=True)
+
+
+    if 'reg' in dataset:
+        locs, _ = plt.yticks()
+        labels = []
+        for y in locs:
+            if y >= 100000:
+                _n = "$\\mathdefault{{{0}\\times10^{{{1}}}}}$".format(
+                    round(y / (10 ** int(math.log10(y))),1),
+                    int(math.log10(y))
+                )
+            else:
+                _n = y
+            labels.append(_n)
+
+        plt.yticks(
+            locs,
+            labels,
+            # rotation='vertical',
+            size='x-small'
+        )
+
+    ylim_padding = (ylim_up - ylim_dw) / 30
+    plt.ylim(max(ylim_dw - ylim_padding, 0), ylim_up + ylim_padding)
+
+    plt.legend(title="Degree (d)", fontsize='small', fancybox=True)
     if save:
         dest = root_folder_path + '{}_{}n_{}_{}_err_vs_time.png'.format(
             dataset,
@@ -376,12 +567,19 @@ def plot_dataset_nodes_distr_err_slope_vs_iter_comparison(dataset, n, distr, err
     plt.close()
 
 
-def plot_distr_iter_time_vs_degree(dataset, n, error, logs_dict, setup_dict, save=False):
+def plot_distr_iter_time_vs_degree(dataset, n, logs_dict, setup_dict, error='avg', save=False):
     ly = {}
-    if dataset == 'reg':
-        target_err = 140000
-    elif dataset == 'svm':
-        target_err = 0.80
+    if dataset == 'synt_reg':
+        target_err = 150000
+    elif dataset == 'synt_svm':
+        target_err = 0.60
+    elif dataset == 'real_reg':
+        target_err = 15000
+    elif dataset == 'real_svm':
+        target_err = 0.20
+
+    ylim_up = -math.inf
+    ylim_dw = math.inf
 
     for distr in logs_dict:
         ly[distr] = {}
@@ -403,8 +601,11 @@ def plot_distr_iter_time_vs_degree(dataset, n, error, logs_dict, setup_dict, sav
                 if e <= target_err:
                     break
             ly[distr][deg] = t
+            ylim_up = max(t, ylim_up)
+            ylim_dw = min(ylim_dw, t)
 
-    plt.xlabel('Degree')
+
+    plt.xlabel('Degree (d)')
     plt.ylabel('Convergence time'.format(target_err))
     plt.yscale('log')
     plt.xscale('log')
@@ -415,7 +616,7 @@ def plot_distr_iter_time_vs_degree(dataset, n, error, logs_dict, setup_dict, sav
         'unif': 'blue'
     }
 
-    for distr in ['par', 'exp', 'unif']:
+    for distr in ['par','exp','unif']:
         plt.plot(
             ly[distr].keys(),
             ly[distr].values(),
@@ -423,6 +624,29 @@ def plot_distr_iter_time_vs_degree(dataset, n, error, logs_dict, setup_dict, sav
             markersize=4,
             marker='o',
             color=distr_colors[distr]
+        )
+
+    ylim_padding = (ylim_up - ylim_dw) / 20
+    #plt.ylim(ymax=ylim_up + ylim_padding)
+
+    y_tick_values = []
+    k = 0
+    while 10 ** k <= ylim_up and k < 100:
+        if ylim_dw <= 10 ** k:
+            y_tick_values.append(10 ** k)
+        k += 1
+
+    if len(y_tick_values) > 0:
+        if len(y_tick_values) == 1:
+            tick = y_tick_values[0]
+            y_tick_values.append(math.floor(ylim_up/tick) * tick)
+        y_tick_values.sort()
+        #'$\\mathdefault{10^{4}}$'
+        plt.yticks(
+            y_tick_values,
+            ["$\\mathdefault{{{0}\\times10^{{{1}}}}}$".format(str(_n)[0], int(math.log10(_n))) for _n in y_tick_values],
+            #rotation='vertical',
+            size='x-small'
         )
 
     plt.xticks(
