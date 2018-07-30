@@ -44,8 +44,9 @@ degree_colors = {
         3: 'red',
         4: 'light-pink',
         8: 'light-orange',
+        16: 'yellow',
         18: 'black',
-        20: 'yellow',
+        20: 'black',
         30: 'light-green',
         40: 'water-green',
         50: 'dark-green',
@@ -80,78 +81,88 @@ def run():
 
 
 def save_all():
-    svm_1000n_avg_par_logs, svm_1000n_avg_par_setup = load_test_logs(
-        './test_log/bulk/da002/test_da002_svm_sgC0.1alpha_1000n_shuf_par[3-2]_mtrT0all_10000time_2000iter'
-    )
-    reg_1000n_avg_par_logs, reg_1000n_avg_par_setup = load_test_logs(
-        './test_log/bulk/r2002/test_r2002_reg2_1000n_par[3-2]_mtrT0all_sgC0.0001alpha_1000samp_100feat_10000time_2000iter'
-    )
-    svm_1000n_avg_exp_logs, svm_1000n_avg_exp_setup = load_test_logs(
-        './test_log/bulk/da002/test_da002_svm_sgC0.1alpha_1000n_shuf_exp[1]_mtrT0all_10000time_2000iter'
-    )
-    reg_1000n_avg_exp_logs, reg_1000n_avg_exp_setup = load_test_logs(
-        './test_log/bulk/r2002/test_r2002_reg2_1000n_exp[1]_mtrT0all_sgC0.0001alpha_1000samp_100feat_10000time_2000iter'
-    )
-    svm_1000n_avg_unif_logs, svm_1000n_avg_unif_setup = load_test_logs(
-        './test_log/bulk/da002/test_da002_svm_sgC0.1alpha_1000n_shuf_unif[0-2]_mtrT0all_10000time_2000iter'
-    )
-    reg_1000n_avg_unif_logs, reg_1000n_avg_unif_setup = load_test_logs(
-        './test_log/bulk/r2002/test_r2002_reg2_1000n_unif[0-2]_mtrT0all_sgC0.0001alpha_1000samp_100feat_10000time_2000iter'
-    )
-    """
-    plot_dataset_nodes_distr_iter_vs_time(
-        'svm', 1000, 'par', svm_1000n_avg_par_logs, svm_1000n_avg_par_setup, save=True
-    )
-    plot_dataset_nodes_distr_err_vs_iter(
-        'svm', 1000, 'par', 'avg', svm_1000n_avg_par_logs, svm_1000n_avg_par_setup, save=True
-    )
-    plot_dataset_nodes_distr_err_vs_time(
-        'svm', 1000, 'par', 'avg', svm_1000n_avg_par_logs, svm_1000n_avg_par_setup, save=True
-    )
-    plot_dataset_nodes_distr_err_slope_vs_iter_comparison(
-        'svm', 1000, 'par', 'avg', svm_1000n_avg_par_logs, svm_1000n_avg_par_setup, save=True
-    )
-    plot_dataset_nodes_distr_iter_vs_time(
-        'reg', 1000, 'par', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=True
-    )
-    plot_dataset_nodes_distr_err_vs_iter(
-        'reg', 1000, 'par', 'avg', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=True
-    )
-    plot_dataset_nodes_distr_err_vs_time(
-        'reg', 1000, 'par', 'avg', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=True
-    )
-    plot_dataset_nodes_distr_err_slope_vs_iter_comparison(
-        'reg', 1000, 'par', 'avg', reg_1000n_avg_par_logs, reg_1000n_avg_par_setup, save=True
-    )
-    """
+    logs = {
+        'synt_reg': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'synt_svm': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'real_reg': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'real_svm': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+    }
+    setup = {
+        'synt_reg': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'synt_svm': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'real_reg': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+        'real_svm': {
+            'par': None,
+            'unif': None,
+            'exp': None
+        },
+    }
 
-    reg_1000n_avg_par_logsAVG, reg_1000n_avg_par_setupAVG = load_test_logs(
-        './test_log/bulk/r2001/test_r2001_reg2_1000n_par3-2_mtrT0all_sgC0.001alpha_1000samp_100feat_10000time_2000iterAVG'
-    )
+    logs['synt_reg']['par'], setup['synt_reg']['par'] = load_test_logs(
+        './test_log/paper/fixedseed_synt_reg/test_r2100_reg2_1000n_par[3-2]_mtrT0all_sgC0.0001alpha_1000samp_100feat_50000time_3000iter')
+    logs['synt_reg']['exp'], setup['synt_reg']['exp'] = load_test_logs(
+        './test_log/paper/fixedseed_synt_reg/test_r2100_reg2_1000n_exp[1]_mtrT0all_sgC0.0001alpha_1000samp_100feat_50000time_3000iter')
+    logs['synt_reg']['unif'], setup['synt_reg']['unif'] = load_test_logs(
+        './test_log/paper/fixedseed_synt_reg/test_r2100_reg2_1000n_unif[0-2]_mtrT0all_sgC0.0001alpha_1000samp_100feat_50000time_3000iter')
 
-    reg_logs_dict = {
-        'par': reg_1000n_avg_par_logsAVG,
-        'exp': reg_1000n_avg_exp_logs,
-        'unif': reg_1000n_avg_unif_logs
-    }
-    reg_setup_dict = {
-        'par': reg_1000n_avg_par_setupAVG,
-        'exp': reg_1000n_avg_exp_setup,
-        'unif': reg_1000n_avg_unif_setup
-    }
-    plot_distr_iter_time_vs_degree('reg', 1000, 'avg', reg_logs_dict, reg_setup_dict, save=False)
+    logs['synt_svm']['par'], setup['synt_svm']['par'] = load_test_logs(
+        './test_log/paper/fixedseed_synt_svm/test_da100_svm_sgC0.1alpha_1000n_par[3-2]_mtrT0all_50000time_3000iter')
+    logs['synt_svm']['exp'], setup['synt_svm']['exp'] = load_test_logs(
+        './test_log/paper/fixedseed_synt_svm/test_da100_svm_sgC0.1alpha_1000n_exp[1]_mtrT0all_50000time_3000iter')
+    logs['synt_svm']['unif'], setup['synt_svm']['unif'] = load_test_logs(
+        './test_log/paper/fixedseed_synt_svm/test_da100_svm_sgC0.1alpha_1000n_unif[0-2]_mtrT0all_50000time_3000iter')
 
-    svm_logs_dict = {
-        'par': svm_1000n_avg_par_logs,
-        'exp': svm_1000n_avg_exp_logs,
-        'unif': svm_1000n_avg_unif_logs
-    }
-    svm_setup_dict = {
-        'par': svm_1000n_avg_par_setup,
-        'exp': svm_1000n_avg_exp_setup,
-        'unif': svm_1000n_avg_unif_setup
-    }
-    #plot_distr_iter_time_vs_degree('svm', 1000, 'avg', svm_logs_dict, svm_setup_dict, save=True)
+    logs['real_reg']['par'], setup['real_reg']['par'] = load_test_logs(
+        './test_log/paper/fixedseed_real_reg/test_rslo001_sloreg_1000n_par[3-2]_mtrT0all_sgC5e-06alpha_52000samp_12000time_2400iter')
+    logs['real_reg']['exp'], setup['real_reg']['exp'] = load_test_logs(
+        './test_log/paper/fixedseed_real_reg/test_rslo001_sloreg_1000n_exp[1]_mtrT0all_sgC5e-06alpha_52000samp_12000time_2400iter')
+    #logs['real_reg']['unif'], setup['real_reg']['unif'] = load_test_logs(
+    #    './test_log/paper/fixedseed_real_reg/test_rslo001_sloreg_1000n_unif[0-2]_mtrT0all_sgC5e-06alpha_52000samp_12000time_2400iter')
+
+    logs['real_svm']['par'], setup['real_svm']['par'] = load_test_logs(
+        './test_log/paper/fixedseed_real_svm/test_ss000_susysvm_1000n_par[3-2]_mtrT0all_sgC0.05alpha_500000samp_12000time_2400iter')
+    logs['real_svm']['exp'], setup['real_svm']['exp'] = load_test_logs(
+        './test_log/paper/fixedseed_real_svm/test_ss000_susysvm_1000n_exp[1]_mtrT0all_sgC0.05alpha_500000samp_12000time_2400iter')
+    logs['real_svm']['unif'], setup['real_svm']['unif'] = load_test_logs(
+        './test_log/paper/fixedseed_real_svm/test_ss000_susysvm_1000n_unif[0-2]_mtrT0all_sgC0.05alpha_500000samp_12000time_2400iter')
+
+    plot_dataset_nodes_distr_err_vs_iter('real_reg', 1000, 'exp', logs['real_reg']['exp'], setup['real_reg']['exp'], save=False)
+
+    for sim in logs:
+        continue
+        for distr in logs[sim]:
+            if not logs[sim][distr] is None:
+                plot_dataset_nodes_distr_iter_vs_time(sim, 1000, distr, logs[sim][distr], setup[sim][distr], save=True)
+                plot_dataset_nodes_distr_err_vs_iter(sim, 1000, distr, logs[sim][distr], setup[sim][distr], save=True)
+                plot_dataset_nodes_distr_err_vs_time(sim, 1000, distr, logs[sim][distr], setup[sim][distr], save=True)
 
 
 def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=False):
@@ -171,22 +182,24 @@ def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=F
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + '{}_{}n_{}_iter_vs_time.png'.format(
+        dest = root_folder_path + '{}_{}n_{}_iter_vs_time.png'.format(
             dataset,
             n,
             distr
-        ))
+        )
+        plt.savefig(dest)
+        print('Create file {}'.format(dest))
     else:
         plt.show()
     plt.close()
 
 
-def plot_dataset_nodes_distr_err_vs_iter(dataset, n, distr, error, logs, setup, save=False):
+def plot_dataset_nodes_distr_err_vs_iter(dataset, n, distr, logs, setup, error='avg', save=False):
     # plt.title('Error VS iterations', loc='left')
     plt.xlabel('Iterations')
-    if dataset == 'svm':
+    if 'svm' in dataset:
         plt.ylabel('Hinge loss')
-    elif dataset == 'reg':
+    elif 'reg' in dataset:
         plt.ylabel('Mean Squared Error')
 
     xlim = -math.inf
@@ -206,30 +219,36 @@ def plot_dataset_nodes_distr_err_vs_iter(dataset, n, distr, error, logs, setup, 
     new_labels = []
     for l in labels:
         l = l.get_text()
-        if int(l) > 10000:
-            l = "{:.2e}".format(int(l))
-        new_labels.append(l)
+        try:
+            if int(l) > 10000:
+                l = "{:.2e}".format(int(l))
+        except:
+            pass
+        new_labels.append(str(l))
     plt.yticks(locs, new_labels)
+    #plt.yticks([10000], ['mamma mia'])
 
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + '{}_{}n_{}_{}_err_vs_iter.png'.format(
+        dest = root_folder_path + '{}_{}n_{}_{}_err_vs_iter.png'.format(
             dataset,
             n,
             distr,
             error
-        ))
+        )
+        plt.savefig(dest)
+        print('Create file {}'.format(dest))
     else:
         plt.show()
     plt.close()
 
 
-def plot_dataset_nodes_distr_err_vs_time(dataset, n, distr, error, logs, setup, save=False):
+def plot_dataset_nodes_distr_err_vs_time(dataset, n, distr, logs, setup, error='avg', save=False):
     # plt.title('Error VS time', loc='left')
     plt.xlabel('Time')
-    if dataset == 'svm':
+    if 'svm' in dataset:
         plt.ylabel('Hinge loss')
-    elif dataset == 'reg':
+    elif 'reg' in dataset:
         plt.ylabel('Mean Squared Error')
 
     xlim = math.inf
@@ -253,12 +272,14 @@ def plot_dataset_nodes_distr_err_vs_time(dataset, n, distr, error, logs, setup, 
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + '{}_{}n_{}_{}_err_vs_time.png'.format(
+        dest = root_folder_path + '{}_{}n_{}_{}_err_vs_time.png'.format(
             dataset,
             n,
             distr,
             error
-        ))
+        )
+        plt.savefig(dest)
+        print('Create file {}'.format(dest))
     else:
         plt.show()
     plt.close()
@@ -342,12 +363,14 @@ def plot_dataset_nodes_distr_err_slope_vs_iter_comparison(dataset, n, distr, err
     plt.yscale('linear')
     plt.legend(title="", fontsize='small', fancybox=True)
     if save:
-        plt.savefig(root_folder_path + '{}_{}n_{}_{}_err_slope_vs_iter_comparison.png'.format(
+        dest = root_folder_path + '{}_{}n_{}_{}_err_slope_vs_iter_comparison.png'.format(
             dataset,
             n,
             distr,
             error
-        ))
+        )
+        plt.savefig(dest)
+        print('Create file {}'.format(dest))
     else:
         plt.show()
     plt.close()
