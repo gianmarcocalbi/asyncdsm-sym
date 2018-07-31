@@ -6,7 +6,8 @@ from src.plotter import plot_from_files
 import main, time, math, argparse
 from scripts import *
 from sklearn.preprocessing import normalize
-
+from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
 def run(core=-1):
     """
@@ -19,6 +20,46 @@ def run(core=-1):
     -------
     None
     """
+
+    lx = np.arange(1, 1000)
+    ly = [ 1000 / math.sqrt(math.sqrt(x)) for x in lx]
+
+    fig, ax = plt.subplots()  # create a new figure with a default 111 subplot
+
+    ax.plot(
+        lx,
+        ly
+    )
+
+    axins = zoomed_inset_axes(ax, 2.5, loc=1)
+    axins.plot(lx, ly)
+
+    axins.set_xlim(0, 250)  # apply the x-limits
+    axins.set_ylim(250, 500)  # apply the y-limits
+    plt.yticks(visible=False)
+    plt.xticks(visible=False)
+    mark_inset(ax, axins, loc1=2, loc2=4, fc="none", ec="0.5")
+
+
+
+
+
+    plt.show()
+    plt.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # merge_tests.main()
     # plot_of_over_c.main()
     # plot_topologies_obj_func_at_time_over_c_comparison.main()
@@ -196,7 +237,7 @@ def run(core=-1):
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
     """
 
-    test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+    # test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
     pass
 
 

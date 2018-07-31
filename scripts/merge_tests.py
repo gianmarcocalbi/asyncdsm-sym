@@ -18,8 +18,8 @@ def main():
     """
 
     test_suite_root = './test_log/paper/'
-    test_suite_code = 'conv_synt_svm'
-    test_suite_pattern = 'test_*n_unif*'
+    test_suite_code = 'conv_real_reg'
+    test_suite_pattern = 'test_*n_exp*'
     log_pattern = re.compile(r'.*')  # re.compile(r'.*mse_log\.gz$')
     excluded_graphs = []
 
