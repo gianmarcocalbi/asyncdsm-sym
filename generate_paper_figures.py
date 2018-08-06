@@ -6,6 +6,18 @@ from src.mltoolbox.metrics import METRICS
 from src import statistics
 import os, math
 
+SMALL_SIZE = 10
+MEDIUM_SIZE = 12
+BIGGER_SIZE = 14
+
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
 root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/figures/simulations/'
 # root_folder_path = './figures/'
 
@@ -791,11 +803,12 @@ def plot_distr_iter_time_vs_degree(dataset, n, logs_dict, setup_dict, error='avg
             # size='x-small'
         )
 
+    l = [x for x in ly['exp'].keys() if x not in [16,50]]
     plt.xticks(
-        [x for x in ly['exp'].keys()],
-        [x for x in ly['exp'].keys()],
+        l,
+        l,
         # rotation='vertical',
-        size='small'
+        #size='small'
     )
 
     plt.legend(title="", fontsize='small', fancybox=True)
