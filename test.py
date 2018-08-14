@@ -21,45 +21,6 @@ def run(core=-1):
     None
     """
 
-    lx = np.arange(1, 1000)
-    ly = [ 1000 / math.sqrt(math.sqrt(x)) for x in lx]
-
-    fig, ax = plt.subplots()  # create a new figure with a default 111 subplot
-
-    ax.plot(
-        lx,
-        ly
-    )
-
-    axins = zoomed_inset_axes(ax, 2.5, loc=1)
-    axins.plot(lx, ly)
-
-    axins.set_xlim(0, 250)  # apply the x-limits
-    axins.set_ylim(250, 500)  # apply the y-limits
-    plt.yticks(visible=False)
-    plt.xticks(visible=False)
-    mark_inset(ax, axins, loc1=2, loc2=4, fc="none", ec="0.5")
-
-
-
-
-
-    plt.show()
-    plt.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     # merge_tests.main()
     # plot_of_over_c.main()
     # plot_topologies_obj_func_at_time_over_c_comparison.main()
@@ -237,8 +198,76 @@ def run(core=-1):
         test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
     """
 
-    # test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+    #test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+    test_exp_on_newreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+
     pass
+
+def test_exp_on_newreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_reg_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander',
+            '40-expander', '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    main.main(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        n_features=100,
+        dataset='newreg',
+        method='subgradient',
+        dual_averaging_radius=5,
+        error_std_dev=1,
+        starting_weights_domain=[20, 30],
+        max_iter=200,
+        max_time=None,
+        alpha=1,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='mse',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            '',
+            'dataset',
+            'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
+    )
 
 
 def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
@@ -479,7 +508,7 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
         metrics_type=metrics_type,
         metrics_nodes=metrics_nodes,
         shuffle=True,
-        save_test_to_file=True,
+        save_test_to_file=False,
         test_folder_name_struct=[
             'rslo001',
             'dataset',

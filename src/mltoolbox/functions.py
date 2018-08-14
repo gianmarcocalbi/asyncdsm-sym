@@ -269,9 +269,15 @@ def generate_regression_training_set(n_samples, n_features, error_mean=0, error_
     w = np.ones(n_features + 1)
     X = np.c_[np.ones(n_samples), np.random.uniform(0, 1, (n_samples, n_features))]
     y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
-
     return X, y, w
 
+
+def generate_new_regression_training_set(n_samples, n_features, error_mean=0, error_std_dev=1):
+    w = np.random.uniform(-50, +50, n_features + 1)
+    # w = np.ones(n_features + 1)
+    X = np.c_[np.ones(n_samples), np.random.uniform(0, 1, (n_samples, n_features))]
+    y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
+    return X, y, w
 
 def generate_regression_training_set_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
         error_mean=0, error_std_dev=1):

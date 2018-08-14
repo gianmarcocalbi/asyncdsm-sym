@@ -145,6 +145,7 @@ def main(
         alpha: float = None,
         learning_rate: str = 'constant',
         spectrum_dependent_learning_rate: bool = False,
+        dual_averaging_radius=10,
         time_distr_class: object = statistics.ExponentialDistribution,
         time_distr_param: list = (1,),
         time_distr_param_rule: str = None,
@@ -239,6 +240,7 @@ def main(
         - "classic" : classic gradient descent, batch is equal to the whole dataset;
         - "stochastic" : stochastic gradient descent;
         - "batch" : batch gradient descent;
+        - "subgradient" : subgradient projected gradient descent;
         - "dual_averaging" : dual averaging method.
     alpha : float
         Learning rate constant coefficient.
@@ -247,6 +249,8 @@ def main(
         - 'root_decreasing' : learning rate is alpha * 1/math.sqrt(K) where K = #iter.
     spectrum_dependent_learning_rate : bool
         If True the learning rate is also multiplied by math.sqrt(spectral_gap), so it is different for each graph.
+    dual_averaging_radius : int
+        Radius of the projection on the feasible set.
     time_distr_class : object
         Class of the random time distribution.
     time_distr_param : list or list of list
@@ -367,7 +371,7 @@ def main(
     setup['max_iter'] = max_iter
     setup['max_time'] = max_time  # seconds
     setup['method'] = method
-    setup['dual_averaging_radius'] = 10
+    setup['dual_averaging_radius'] = dual_averaging_radius
 
     setup['alpha'] = alpha
     setup['learning_rate'] = learning_rate  # constant, root_decreasing
@@ -476,6 +480,12 @@ def main(
         )
     elif setup['dataset'] == 'reg2':
         X, y, w = functions.generate_regression_training_set(
+            setup['n_samples'], setup['n_features'],
+            error_mean=setup['error_mean'],
+            error_std_dev=setup['error_std_dev']
+        )
+    elif setup['dataset'] == 'newreg':
+        X, y, w = functions.generate_new_regression_training_set(
             setup['n_samples'], setup['n_features'],
             error_mean=setup['error_mean'],
             error_std_dev=setup['error_std_dev']

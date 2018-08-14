@@ -167,6 +167,22 @@ class GradientDescentTrainer(GradientDescentTrainerAbstract):
         self._compute_all_metrics()
 
 
+class SubgradientDescentTrainer(GradientDescentTrainerAbstract):
+    def __init__(self, r, *args):
+        super().__init__(*args)
+        self.r = r
+
+    def step(self, avg_w):
+        # update W following the steepest gradient descent
+        gradient = self.obj_function.compute_gradient(self.X, self.y, self.get_w())
+        dx = self.get_alpha() * gradient
+        dx_norm_2 = math.sqrt(np.inner(dx, dx))
+        if dx_norm_2 > self.r:
+            dx = (dx / dx_norm_2) * self.r
+        self.w.append(avg_w - dx)
+        self.iteration += 1
+        self._compute_all_metrics()
+
 class StochasticGradientDescentTrainer(GradientDescentTrainerAbstract):
     def __init__(self, *args):
         super().__init__(*args)

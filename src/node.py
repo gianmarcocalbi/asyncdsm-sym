@@ -84,6 +84,19 @@ class Node:
                 shuffle,
                 verbose_task
             )
+        elif method == "subgradient":
+            self.training_task = tasks.SubgradientDescentTrainer(
+                dual_averaging_radius,
+                X, y, real_w, obj_function,
+                starting_weights_domain,
+                alpha,
+                learning_rate,
+                metrics,
+                real_metrics,
+                real_metrics_toggle,
+                shuffle,
+                verbose_task
+            )
         else:
             #warnings.warn('Method "{}" does not exist, nodes will compute nothing!'.format(method))
 
@@ -171,7 +184,7 @@ class Node:
             self.dual_averaging_step()
         elif self.method == "linear_regression":
             self.linear_regression_step()
-        elif self.method == 'classic':
+        elif self.method in ['classic','subgradient']:
             self.gradient_step()
 
         # get the counter after the computation has ended
