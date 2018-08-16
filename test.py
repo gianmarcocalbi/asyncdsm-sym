@@ -137,20 +137,20 @@ def run(core=-1):
         test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
     """
 
-    """
+    #"""
     if core == 0:
-        test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
     elif core == 1:
-        test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
     elif core == 2:
-        test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
     elif core == 3:
-        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
     elif core == 4:
-        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
     elif core == 5:
-        test_exp_on_susysvm_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
-    """
+        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
+    #"""
 
     """
     if core == 0:
@@ -199,7 +199,7 @@ def run(core=-1):
     """
 
     #test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    test_exp_on_newreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+    #test_exp_on_newreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
 
     pass
 
@@ -300,11 +300,11 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
         dataset='reg2',
         error_std_dev=1,
         starting_weights_domain=[-10, 50],
-        max_iter=500,
+        max_iter=1000,
         max_time=None,
         alpha=1e-3,
         learning_rate='constant',
-        spectrum_dependent_learning_rate=True,
+        spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
         obj_function='mse',
@@ -314,8 +314,8 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'conv01',
-            'dataset',
+            'fixseed_synt_reg',
+            #'dataset',
             # 'w_domain',
             'nodes',
             'distr',
@@ -365,17 +365,17 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         dataset='svm',
         smv_label_flip_prob=0.05,
         starting_weights_domain=[-2, 2],
-        max_iter=500,
+        max_iter=2000,
         max_time=None,
         method='classic',
-        alpha=1e-0,
+        alpha=1,
         learning_rate='constant',
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
         time_distr_param_rule=None,
         time_const_weight=0,
         obj_function='hinge_loss',
-        spectrum_dependent_learning_rate=True,
+        spectrum_dependent_learning_rate=False,
         metrics=[],
         metrics_type=metrics_type,
         metrics_nodes=metrics_nodes,
@@ -383,8 +383,8 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'conv01',
-            'dataset',
+            'fixseed_synt_svm',
+            #'dataset',
             'alpha',
             'nodes',
             # 'shuffle',
