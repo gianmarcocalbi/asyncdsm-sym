@@ -156,12 +156,35 @@ def generate_n_cycle_d_regular_graph_by_degree(N, K):
     numpy multidimensional array of bit
     """
     edges = []
-    if N > 1 or K > 0:
+    if N > 1 and K > 0:
         for i in range(K):
             edges.append("i->i+{}".format(i + 1))
 
     return generate_graph_by_edges(N, edges)
 
+
+def generate_undirected_n_cycle_d_regular_graph_by_degree(N, K):
+    """
+    Generate an undirected d regular n cycle with N vertices and degree K.
+
+    Parameters
+    ----------
+    N : int
+        Amount of nodes in the graph.
+    K : int
+        Graph's degree.
+
+    Returns
+    -------
+    numpy multidimensional array of bit
+    """
+    edges = []
+    if N > 1 and K > 0:
+        for i in range(K):
+            edges.append("i->i+{}".format(i + 1))
+            edges.append("i+{}->i".format(i + 1))
+
+    return generate_graph_by_edges(N, edges)
 
 def generate_expander_graph(N, degree, matrix_type='mtm'):
     max_spectrum = 0
@@ -199,6 +222,8 @@ def G(N, gtype, d=0):
         A = generate_expander_graph(N, d)
     elif gtype == 'cycle':
         A = generate_n_cycle_d_regular_graph_by_degree(N, d)
+    elif gtype == 'undir_cycle':
+        A = generate_undirected_n_cycle_d_regular_graph_by_degree(N, d)
     elif gtype == 'uniform_edges':
         A = generate_uniform_edges_d_regular_graph_by_degree(N, d)
     elif gtype == 'root_expander':

@@ -1,5 +1,5 @@
 from src import statistics, graphs
-from src.mltoolbox import *
+from src.mltoolbox import functions as f
 from src.utils import *
 import numpy as np
 from src.plotter import plot_from_files
@@ -8,6 +8,23 @@ from scripts import *
 from sklearn.preprocessing import normalize
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
+
+
+def get_graphs(graph_type, nodes):
+    deg = {
+        100: [2, 3, 4, 8, 10, 20, 50, 80, 99],
+        400: [2, 3, 4, 6, 20, 50, 100, 200, 300, 399],
+        1000: [2, 3, 4, 8, 16, 20, 30, 40, 50, 100, 200, 500, 999]
+    }[nodes]
+
+    g = []
+
+    for d in deg[0:-1]:
+        g.append(str(d) + '-' + graph_type)
+    g.append(str(deg[-1]) + '-clique')
+
+    return g
+
 
 def run(core=-1):
     """
@@ -21,187 +38,87 @@ def run(core=-1):
     None
     """
 
-    # merge_tests.main()
-    # plot_of_over_c.main()
-    # plot_topologies_obj_func_at_time_over_c_comparison.main()
-    # envelop.main()
-    # test_different_nodes_timing()
-    # test_different_100nodes_timing_loop(0)
-    # test_different_1000nodes_timing_loop(2)
-    # test_classic_gd()
-    # test_spectral_ratios()
-    # plot_spectral_gap_ratio_real_vs_prediction.main()
-    # print_topologies_velocity.main()
-    # print_expanders_spectrum.main()
-    # test_unisvm2_dataset(2)
-    # test_unisvm_dataset(2)
+    """for g_name, A in graphs.generate_n_nodes_graphs(100, get_graphs('cycle', 100)).items():
+        M = A / sum(A[0])
+        eigenvals = np.linalg.eigvals(M)
+        np.sort(eigenvals)
+        print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
-    """
-    if core == 0:
-        test_exp_on_dual_average_svm(seed=22052010, n=100, distr='real', metrics_nodes='all', alert=False)
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='real', metrics_nodes='all', alert=False)
-    elif core == 1:
-        test_exp_on_reg2_dataset(seed=22052010, n=100, distr='real', metrics_nodes='all', alert=False)
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='real', metrics_nodes='all', alert=False)
-    """
+    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst', alert=False)
 
-    """
     if core == 0:
-        test_different_nodes_speed(seed=22052010, n=300, max_iter=1000, distr='exp', alert=False)
-        test_different_nodes_speed(seed=22052010, n=1000, max_iter=10000, distr='par', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='par', metrics_nodes='all', alert=False)
     elif core == 1:
-        test_different_nodes_speed(seed=22052010, n=300, max_iter=1000, distr='unif', alert=False)
-        test_different_nodes_speed(seed=22052010, n=1000, max_iter=1000, distr='exp', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='unif', metrics_nodes='all', alert=False)
     elif core == 2:
-        test_different_nodes_speed(seed=22052010, n=300, max_iter=10000, distr='par', alert=False)
-        test_different_nodes_speed(seed=22052010, n=1000, max_iter=1000, distr='unif', alert=False)
-    """
-
-    # test_exp_on_susysvm_dataset(seed=None, n=100, distr='exp', metrics_nodes='all', alert=False)
-    # test_exp_on_reg2_dataset(seed=None, n=100, distr='real', metrics_nodes='worst', alert=False)
-    # test_exp_on_sloreg_dataset(seed=22052010, n=100, distr='exp', metrics_nodes='all', alert=False)
-
-    """
-    if core == 0:
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='worst', alert=False)
-
-    elif core == 1:
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='unif', metrics_nodes='worst', alert=False)
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='worst', alert=False)
-
-    elif core == 2:
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='par', metrics_nodes='worst', alert=False)
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='exp', metrics_nodes='worst', alert=False)
-
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='exp', metrics_nodes='all', alert=False)
     elif core == 3:
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='worst', alert=False)
-    """
-
-    """
-    if core == 0:
-        test_different_nodes_speed(seed=None, n=300, max_iter=5000, distr='par', alert=False)
-    elif core == 1:
-        test_different_nodes_speed(seed=None, n=300, max_iter=5000, distr='unif', alert=False)
-    elif core == 2:
-        test_different_nodes_speed(seed=None, n=300, max_iter=5000, distr='exp', alert=False)
-    """
-
-    """
-    if core == 0:
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 1:
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-    elif core == 2:
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    elif core == 3:
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='par', metrics_nodes='all', alert=False)
     elif core == 4:
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='unif', metrics_nodes='all', alert=False)
     elif core == 5:
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_sloreg_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    """
-
-    #"""
-    if core == 0:
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 1:
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    elif core == 2:
-        test_exp_on_reg2_dataset(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
-    elif core == 3:
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 4:
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    elif core == 5:
-        test_exp_on_dual_average_svm(seed=22052010, n=1000, distr='exp', metrics_nodes='all', alert=False)
-    #"""
-
-    """
-    if core == 0:
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 1:
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 2:
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 3:
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 4:
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 5:
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='exp', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='unif', metrics_nodes='all', alert=False)
-        test_exp_on_susysvm_dataset(seed=None, n=1000, distr='par', metrics_nodes='all', alert=False)
-    """
-
-    #test_exp_on_sloreg_dataset(seed=22052010, n=1000, distr='unif', metrics_nodes='all', alert=False)
-    #test_exp_on_newreg_dataset(seed=22052010, n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='exp', metrics_nodes='all', alert=False)
 
     pass
+
+
+def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_unisvm_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    if metrics_nodes in ['worst', 'all']:
+        metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+    else:
+        metrics_type = 2
+
+    main.main(
+        seed=seed,
+        n=n,
+        graphs= get_graphs(graph_type, n),
+        dataset='eigvecsvm',
+        starting_weights_domain=[1, 1],
+        smv_label_flip_prob=0.00,
+        max_iter=400,
+        max_time=None,
+        alpha=1e-1,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='hinge_loss',
+        epsilon=-math.inf,
+        average_model_toggle=True,
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'cyc',
+            'dataset',
+            'alpha',
+            'nodes',
+            'shuffle',
+            'distr',
+            'metrics',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
 
 def test_exp_on_newreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
     if alert:
@@ -298,11 +215,13 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
         n_samples=1000,
         n_features=100,
         dataset='reg2',
+        method='subgradient',
+        dual_averaging_radius=300000,
         error_std_dev=1,
-        starting_weights_domain=[-10, 50],
-        max_iter=1000,
+        starting_weights_domain=[2, 3],
+        max_iter=200,
         max_time=None,
-        alpha=1e-3,
+        alpha=1e-1,
         learning_rate='constant',
         spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
@@ -312,10 +231,10 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
         metrics_type=metrics_type,
         metrics_nodes=metrics_nodes,
         shuffle=True,
-        save_test_to_file=True,
+        save_test_to_file=False,
         test_folder_name_struct=[
-            'fixseed_synt_reg',
-            #'dataset',
+            'conv_synt_reg',
+            # 'dataset',
             # 'w_domain',
             'nodes',
             'distr',
@@ -327,7 +246,7 @@ def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all',
             'iter'
         ],
         test_parent_folder="",
-        instant_plot=False,
+        instant_plot=True,
         plots=['mse_iter', 'mse_time'],
         save_plot_to_file=False,
         plot_global_w=False,
@@ -365,7 +284,7 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         dataset='svm',
         smv_label_flip_prob=0.05,
         starting_weights_domain=[-2, 2],
-        max_iter=2000,
+        max_iter=500,
         max_time=None,
         method='classic',
         alpha=1,
@@ -383,8 +302,8 @@ def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='a
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'fixseed_synt_svm',
-            #'dataset',
+            'conv_synt_svm',
+            # 'dataset',
             'alpha',
             'nodes',
             # 'shuffle',
@@ -496,11 +415,11 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
         n_samples=52000,
         dataset='sloreg',
         starting_weights_domain=[2, 3],
-        max_iter=2400,
-        max_time=12000,
+        max_iter=1000,
+        max_time=None,
         alpha=5e-6,
         learning_rate='constant',
-        spectrum_dependent_learning_rate=True,
+        spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
         obj_function='mse',
@@ -510,9 +429,9 @@ def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all
         shuffle=True,
         save_test_to_file=False,
         test_folder_name_struct=[
-            'rslo001',
-            'dataset',
-            #'w_domain',
+            'fixedseed_real_reg',
+            # 'dataset',
+            # 'w_domain',
             'nodes',
             'distr',
             'metrics',
@@ -559,11 +478,11 @@ def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='al
         n_samples=500000,
         dataset='susysvm',
         starting_weights_domain=[-0.5, 2],
-        max_iter=1000,
+        max_iter=2000,
         max_time=None,
         alpha=5e-2,
         learning_rate='constant',
-        spectrum_dependent_learning_rate=True,
+        spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
         obj_function='hinge_loss',
@@ -573,8 +492,8 @@ def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='al
         shuffle=True,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'ssC00',
-            'dataset',
+            'fixedseed_real_svm',
+            # 'dataset',
             # 'w_domain',
             'nodes',
             'distr',
@@ -589,67 +508,6 @@ def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='al
         instant_plot=False,
         plots=['hinge_loss_iter', 'hinge_loss_time'],
         save_plot_to_file=False,
-        plot_global_w=False,
-        plot_node_w=False
-    )
-
-
-def test_exp_on_unisvm_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
-    if alert:
-        print('test_exp_on_unisvm_dataset()')
-        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
-        input("click [ENTER] to continue or [CTRL]+[C] to abort")
-
-    time_distr_class = {
-        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
-        'par': statistics.Type2ParetoDistribution
-    }[distr]
-    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
-    graphs = {
-        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
-            '80-expander', '99-clique', ],
-        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
-            '200-expander', '300-expander', '399-clique', ],
-        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
-            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
-    }[n]
-    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
-
-    main.main(
-        seed=seed,
-        n=n,
-        graphs=graphs,
-        dataset='unisvm',
-        starting_weights_domain=[1, 1],
-        smv_label_flip_prob=0.00,
-        max_iter=1000,
-        max_time=None,
-        alpha=0.1,
-        learning_rate='constant',
-        spectrum_dependent_learning_rate=True,
-        time_distr_class=time_distr_class,
-        time_distr_param=time_distr_param,
-        obj_function='hinge_loss',
-        metrics=[],
-        metrics_type=metrics_type,
-        metrics_nodes=metrics_nodes,
-        shuffle=False,
-        save_test_to_file=True,
-        test_folder_name_struct=[
-            'us007',
-            'dataset',
-            'alpha',
-            'nodes',
-            'shuffle',
-            'distr',
-            'metrics',
-            'time',
-            'iter'
-        ],
-        test_parent_folder="",
-        instant_plot=False,
-        plots=['hinge_loss_iter', 'hinge_loss_time'],
-        save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
     )

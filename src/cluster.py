@@ -1,5 +1,5 @@
 import copy, types, warnings
-from src import mltoolbox, statistics
+from src import statistics
 from src.mltoolbox import functions
 from src.utils import *
 from src.node import Node
@@ -60,6 +60,7 @@ class Cluster:
     def setup(self, X, y, real_w,
             real_y_activation_function,
             obj_function=METRICS["mse"],
+            average_model_toggle=False,
             method="classic",
             max_iter=None,
             max_time=None,
@@ -199,6 +200,7 @@ class Cluster:
         self.method = method
         self.metrics_type = metrics_type
         self.real_metrics_toggle = real_metrics_toggle
+        self.average_model_toggle = average_model_toggle
 
         if not obj_function in METRICS:
             raise Exception("'{}' is not a viable objective function")
@@ -406,7 +408,7 @@ class Cluster:
     def _compute_avg_w(self):
         w = np.zeros(len(self.nodes[0].training_task.get_w()))
         for node in self.nodes:
-            w += node.training_task.get_w_at_iteration(self.iteration)
+            w += node.training_task.get_w_at_iteration(self.iteration, self.average_model_toggle)
         w /= len(self.nodes)
 
         if len(self.w) == self.iteration:
@@ -449,26 +451,26 @@ class Cluster:
                 worst_val = metrics[m].compute_value(
                     self.X,
                     y,
-                    self.nodes[0].training_task.get_w_at_iteration(self.iteration)
+                    self.nodes[0].training_task.get_w_at_iteration(self.iteration, self.average_model_toggle)
                 )
                 for i in range(1, len(self.nodes)):
                     worst_val = max(worst_val, metrics[m].compute_value(
                         self.X,
                         y,
-                        self.nodes[i].training_task.get_w_at_iteration(self.iteration)
+                        self.nodes[i].training_task.get_w_at_iteration(self.iteration, self.average_model_toggle)
                     ))
                 val = worst_val
             elif self.metrics_nodes == 'best':
                 best_val = metrics[m].compute_value(
                     self.X,
                     y,
-                    self.nodes[0].training_task.get_w_at_iteration(self.iteration)
+                    self.nodes[0].training_task.get_w_at_iteration(self.iteration, self.average_model_toggle)
                 )
                 for i in range(1, len(self.nodes)):
                     best_val = min(best_val, metrics[m].compute_value(
                         self.X,
                         y,
-                        self.nodes[i].training_task.get_w_at_iteration(self.iteration)
+                        self.nodes[i].training_task.get_w_at_iteration(self.iteration, self.average_model_toggle)
                     ))
                 val = best_val
             else:
@@ -476,7 +478,7 @@ class Cluster:
                     val += metrics[m].compute_value(
                         self.X,
                         y,
-                        node.training_task.get_w_at_iteration(self.iteration)
+                        node.training_task.get_w_at_iteration(self.iteration, self.average_model_toggle)
                     )
                 val /= len(self.metrics_nodes)
         else:

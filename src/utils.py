@@ -165,7 +165,11 @@ def mtm_spectral_gap_from_adjacency_matrix(adj_mat):
 
 def mtm_second_eigenvalue_from_adjacency_matrix(adj_mat):
     norm_adj_mat = adj_mat / sum(adj_mat[0])
-    return real_eigenvalues(norm_adj_mat)[1]
+    return abs_eigenvalues(norm_adj_mat)[1]
+
+
+def mtm_from_adjacency_matrix(adj_mat):
+    return adj_mat / sum(adj_mat[0])
 
 
 def Pn_from_adjacency_matrix(adj_mat):
@@ -176,14 +180,14 @@ def Pn_from_adjacency_matrix(adj_mat):
 
 
 def Pn_second_eigenvalue_from_adjacency_matrix(adj_mat):
-    return real_eigenvalues(Pn_from_adjacency_matrix(adj_mat))[1]
+    return abs_eigenvalues(Pn_from_adjacency_matrix(adj_mat))[1]
 
 
 def Pn_spectral_gap_from_adjacency_matrix(adj_mat):
     return 1 - Pn_second_eigenvalue_from_adjacency_matrix(adj_mat)
 
 
-def real_eigenvalues(matrix):
+def abs_eigenvalues(matrix):
     eigenvals = np.linalg.eigvals(matrix)
     real_eigenvals = [abs(e) for e in eigenvals]
     real_eigenvals.sort(reverse=True)

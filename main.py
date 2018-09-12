@@ -152,6 +152,7 @@ def main(
         time_const_weight: float = 0,
         real_y_activation_func: callable = None,
         obj_function: str = 'mse',
+        average_model_toggle: bool = False,
         metrics: list = (),
         real_metrics: list = (),
         real_metrics_toggle: bool = False,
@@ -388,6 +389,7 @@ def main(
     setup['time_const_weight'] = time_const_weight
     setup['real_y_activation_func'] = real_y_activation_func
     setup['obj_function'] = obj_function  # mse, hinge_loss, edgy_hinge_loss, score
+    setup['average_model_toggle'] = average_model_toggle
 
     setup['metrics'] = metrics
     setup['real_metrics'] = real_metrics
@@ -490,7 +492,7 @@ def main(
             error_mean=setup['error_mean'],
             error_std_dev=setup['error_std_dev']
         )
-    elif setup['dataset'] == 'unisvm':
+    elif setup['dataset'] == 'eigvecsvm':
         pass
     elif setup['dataset'] == 'unisvm2':
         X, y, w = functions.generate_unidimensional_svm_dual_averaging_training_set(
@@ -596,21 +598,26 @@ Summary:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
             # TODO: temp
-            if setup['dataset'] == 'unisvm':
+            if setup['dataset'] == 'eigvecsvm':
+                # if using the ones matrix with this dataset, something wrong happens
+                # so we use the last adj_mat also for the clique
                 if 'clique' in graph:
-                    max_xpDeg = 0
+                    max_deg = 0
                     clique_adjmat = adjmat
-                    for xpG, xpA in setup['graphs'].items():
-                        if 'expander' not in xpG:
+                    for G, A in setup['graphs'].items():
+                        if 'clique' in G:
                             continue
-                        xpDeg = int(xpG.split('-')[0])
-                        if xpDeg > max_xpDeg:
-                            clique_adjmat = xpA
-                            max_xpDeg = xpDeg
-                    X, y, w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(clique_adjmat)
+                        d = int(G.split('-')[0])
+                        if d > max_deg:
+                            clique_adjmat = A
+                            max_deg = d
+                    X, y, w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(clique_adjmat)
+                    print(max_deg)
                 else:
-                    X, y, w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(adjmat)
-            """X,y,w = functions.generate_unidimensional_svm_training_set_from_expander_adj_mat(
+                    X, y, w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(adjmat)
+
+
+            """X,y,w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(
                 setup['graphs']['50-expander']
             )"""
 
@@ -630,6 +637,7 @@ Summary:
                 X, y, w,
                 real_y_activation_function=setup['real_y_activation_func'],
                 obj_function=setup['obj_function'],
+                average_model_toggle=average_model_toggle,
                 method=setup['method'],
                 max_iter=setup['max_iter'],
                 max_time=setup['max_time'],

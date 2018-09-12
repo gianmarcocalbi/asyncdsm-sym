@@ -46,8 +46,11 @@ class Trainer(Task):
     def get_w(self):
         return np.copy(self.w[-1])
 
-    def get_w_at_iteration(self, iteration):
-        return np.copy(self.w[iteration])
+    def get_w_at_iteration(self, iteration, avg=False):
+        if avg:
+            return np.array(sum(self.w[0:iteration + 1])) / (iteration + 1)
+        else:
+            return np.copy(self.w[iteration])
 
     def set_w(self, new_w):
         self.w[-1] = new_w
@@ -175,11 +178,11 @@ class SubgradientDescentTrainer(GradientDescentTrainerAbstract):
     def step(self, avg_w):
         # update W following the steepest gradient descent
         gradient = self.obj_function.compute_gradient(self.X, self.y, self.get_w())
-        dx = self.get_alpha() * gradient
-        dx_norm_2 = math.sqrt(np.inner(dx, dx))
-        if dx_norm_2 > self.r:
-            dx = (dx / dx_norm_2) * self.r
-        self.w.append(avg_w - dx)
+        new_w = avg_w - self.get_alpha() * gradient
+        new_w_norm_2 = math.sqrt(np.inner(new_w, new_w))
+        if new_w_norm_2 > self.r:
+            new_w = (new_w / new_w_norm_2) * self.r
+        self.w.append(new_w)
         self.iteration += 1
         self._compute_all_metrics()
 

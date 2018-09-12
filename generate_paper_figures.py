@@ -1,10 +1,7 @@
 from matplotlib import pyplot as plt
-import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
+
 from src.utils import *
-from src.mltoolbox.metrics import METRICS
-from src import statistics
-import os, math
 
 SMALL_SIZE = 10
 MEDIUM_SIZE = 12
@@ -18,7 +15,7 @@ plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/figures/simulations/'
+root_folder_path = 'C:/Users/grimidev/Dropbox/Mine/Skull/Uni/Erasmus/Report and Thesis/report/figures/simulations/'
 # root_folder_path = './figures/'
 
 old_colors = {
@@ -316,10 +313,10 @@ def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=F
 
     for graph, iters in logs['iter_time'].items():
         deg = degree_from_label(graph)
-        if distr == 'par' and deg == 20:
+        if deg == 20:  # and distr == 'par':
             markersize = 8
             marker = 'x'
-        elif distr == 'par' and 'clique' in graph:
+        elif 'clique' in graph:
             markersize = 5
             marker = 'o'
         else:
@@ -376,11 +373,11 @@ def plot_dataset_nodes_distr_err_vs_iter(dataset, n, distr, logs, setup, error='
     for graph, loss in logs['metrics'][setup['obj_function']].items():
         deg = degree_from_label(graph)
         zorder = 1
-        if distr == 'par' and deg == 20:
+        if deg == 20:  # and distr == 'par':
             markersize = 8
             marker = 'x'
             zorder = 50
-        elif distr == 'par' and 'clique' in graph:
+        elif 'clique' in graph:
             markersize = 5
             marker = 'o'
         else:
@@ -539,11 +536,11 @@ def plot_dataset_nodes_distr_err_vs_time(dataset, n, distr, logs, setup, error='
     for graph in logs['metrics'][setup['obj_function']]:
         deg = degree_from_label(graph)
         zorder = 2
-        if distr == 'par' and deg == 20:
+        if deg == 20 : #and distr == 'par':
             markersize = 8
             marker = 'x'
             zorder = 10
-        elif distr == 'par' and 'clique' in graph:
+        elif 'clique' in graph:
             markersize = 5
             marker = 'o'
         else:

@@ -22,7 +22,7 @@ class LossFunctionAbstract:
 class ContinuousHingeLossFunction(LossFunctionAbstract):
     @staticmethod
     def compute_value(y, y_hat_f):
-        return -y * y_hat_f
+        return 1 - y * y_hat_f
 
     @staticmethod
     def compute_gradient(y, y_hat_f, y_hat_f_gradient):
@@ -155,9 +155,9 @@ def generate_unidimensional_svm_dual_averaging_training_set(n, label_flip_prob=0
     return X.reshape(-1, 1), y, w
 
 
-def generate_unidimensional_svm_training_set_from_expander_adj_mat(adj_mat, c=0.1):
-    Pn = utils.Pn_from_adjacency_matrix(adj_mat)
-    eigvals, eigvecs = np.linalg.eig(Pn)
+def generate_eigvecsvm_training_set_from_adjacency_matrix(adj_mat, c=0.1):
+    M = utils.mtm_from_adjacency_matrix(adj_mat)
+    eigvals, eigvecs = np.linalg.eig(M)
     lambda2nd_index = np.argsort(np.abs(eigvals))[-2]
 
     u = eigvecs[:, lambda2nd_index].real
@@ -278,6 +278,7 @@ def generate_new_regression_training_set(n_samples, n_features, error_mean=0, er
     X = np.c_[np.ones(n_samples), np.random.uniform(0, 1, (n_samples, n_features))]
     y = X.dot(w) + np.random.normal(error_mean, error_std_dev, n_samples)
     return X, y, w
+
 
 def generate_regression_training_set_from_function(n_samples, n_features, func, domain_radius=0.5, domain_center=0.5,
         error_mean=0, error_std_dev=1):
