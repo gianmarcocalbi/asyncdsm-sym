@@ -616,15 +616,14 @@ Summary:
                 else:
                     X, y, w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(adjmat)
 
-
             """X,y,w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(
                 setup['graphs']['50-expander']
             )"""
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:
-                #todo: temp
-                #if 'expander' in graph or 'clique' in graph:
+                # todo: temp
+                # if 'expander' in graph or 'clique' in graph:
                 #    sg = Pn_spectral_gap_from_adjacency_matrix(adjmat)
                 if 'cycle' in graph:
                     sg = n_cycle_spectral_gap_approx_from_adjacency_matrix(adjmat)
