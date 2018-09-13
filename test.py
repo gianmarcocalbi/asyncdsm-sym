@@ -12,7 +12,16 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
 def get_graphs(graph_type, nodes):
     deg = {
-        100: [2, 3, 4, 8, 10, 20, 50, 80, 99],
+        100: [
+            2,
+            3,
+            4,
+            8,
+            16,
+            32,
+            64,
+            99
+        ],
         400: [2, 3, 4, 6, 20, 50, 100, 200, 300, 399],
         1000: [2, 3, 4, 8, 16, 20, 30, 40, 50, 100, 200, 500, 999]
     }[nodes]
@@ -44,25 +53,29 @@ def run(core=-1):
         np.sort(eigenvals)
         print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
-    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst', alert=False)
-
     if core == 0:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['2-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
+            alert=False)
     elif core == 1:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['3-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
+            alert=False)
     elif core == 2:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['4-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
+            alert=False)
     elif core == 3:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='par', metrics_nodes='all', alert=False)
-    elif core == 4:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='unif', metrics_nodes='all', alert=False)
-    elif core == 5:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='exp', metrics_nodes='all', alert=False)
-
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['8-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
+            alert=False)
     pass
 
 
-def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='par', metrics_nodes='all', alert=True):
+def test_on_eigvecsvm_dataset(
+        seed=None,
+        graph_type='expander',
+        graphs_list = None,
+        n=100, distr='par',
+        metrics_nodes='all',
+        alert=True
+):
     if alert:
         print('test_exp_on_unisvm_dataset()')
         print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
@@ -78,21 +91,24 @@ def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='pa
     else:
         metrics_type = 2
 
+    if len(graphs_list) == 0:
+        graphs_list = get_graphs(graph_type, n)
+
     main.main(
         seed=seed,
         n=n,
-        graphs= get_graphs(graph_type, n),
+        graphs= graphs_list,
         dataset='eigvecsvm',
         starting_weights_domain=[1, 1],
         smv_label_flip_prob=0.00,
-        max_iter=400,
+        max_iter=200,
         max_time=None,
         alpha=1e-1,
         learning_rate='constant',
         spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
-        obj_function='hinge_loss',
+        obj_function='cont_hinge_loss',
         epsilon=-math.inf,
         average_model_toggle=True,
         metrics=[],
@@ -113,7 +129,7 @@ def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='pa
         ],
         test_parent_folder="",
         instant_plot=True,
-        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        plots=['cont_hinge_loss_iter', 'cont_hinge_loss_time'],
         save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False

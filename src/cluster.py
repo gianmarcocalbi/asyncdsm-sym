@@ -453,12 +453,16 @@ class Cluster:
                     y,
                     self.nodes[0].training_task.get_w_at_iteration(self.iteration, self.average_model_toggle)
                 )
+                worst_node = 0
                 for i in range(1, len(self.nodes)):
-                    worst_val = max(worst_val, metrics[m].compute_value(
+                    new_val = metrics[m].compute_value(
                         self.X,
                         y,
                         self.nodes[i].training_task.get_w_at_iteration(self.iteration, self.average_model_toggle)
-                    ))
+                    )
+                    if new_val > worst_val:
+                        worst_val = new_val
+                        worst_node = i
                 val = worst_val
             elif self.metrics_nodes == 'best':
                 best_val = metrics[m].compute_value(

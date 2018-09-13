@@ -2,6 +2,7 @@ import math, sys, random, cmath, pickle, os, warnings
 import numpy as np
 from termcolor import colored as col
 from src.mltoolbox.metrics import METRICS
+#from src import graphs
 import networkx as nx
 
 
@@ -189,9 +190,9 @@ def Pn_spectral_gap_from_adjacency_matrix(adj_mat):
 
 def abs_eigenvalues(matrix):
     eigenvals = np.linalg.eigvals(matrix)
-    real_eigenvals = [abs(e) for e in eigenvals]
-    real_eigenvals.sort(reverse=True)
-    return real_eigenvals
+    abs_eigenvals = [abs(e) for e in eigenvals]
+    abs_eigenvals.sort(reverse=True)
+    return abs_eigenvals
 
 
 def progress(current_progress, total_progress, bar_length=50, text_before='', text_after=''):
@@ -213,3 +214,9 @@ def print_verbose(level, msg, no_input=False):
         print(msg)
     elif level == 2:
         input(str(msg) + col(" [PRESS ENTER]", 'red'))
+
+"""def compute_expected_eigvecsvm_model(N, graph_type, d, k, alpha, avg=False, c=0.1):
+    lmbda = mtm_second_eigenvalue_from_adjacency_matrix(graphs.G(N, graph_type, d).A)
+    if avg:
+        return 1 + (alpha / (1-lmbda)) * (1-(1-math.pow(lmbda, k+1))/((1-lmbda)*(k+1))) - alpha * (k / 2) * c
+    return -1"""
