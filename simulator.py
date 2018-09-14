@@ -8,7 +8,7 @@ from sklearn.datasets.samples_generator import make_regression
 from src import statistics
 from src.cluster import Cluster
 from src.graphs import generate_n_nodes_graphs_list
-from src.mltoolbox import functions
+from src.mltoolbox import functions, datasets
 from src.plotter import Plotter, plot_from_files
 from src.utils import *
 
@@ -155,6 +155,8 @@ def run(
         Activation function applied on real_y calculation.
     obj_function : str
         Identifier of the objective function (one of those declared in metrics.py).
+    average_model_toggle : bool
+        If True then the average over time of parameter vector is used istead of just x(k).
     metrics : list of str
         List of additional metrics to compute (objective function is automatically added to this list).
     real_metrics : list of str
@@ -362,45 +364,29 @@ def run(
     # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
 
     if setup['dataset'] == 'reg':
-        [X, y, w] = functions.generate_regression_training_set_from_function(
-            setup['n_samples'], setup['n_features'], functions.LinearYHatFunction.compute_value,
-            domain_radius=setup['domain_radius'],
-            domain_center=setup['domain_center'],
-            error_mean=setup['error_mean'],
-            error_std_dev=setup['error_std_dev']
-        )
-    elif setup['dataset'] == 'reg2':
-        X, y, w = functions.generate_regression_training_set(
+        X, y, w = datasets.reg_dataset(
             setup['n_samples'], setup['n_features'],
             error_mean=setup['error_mean'],
             error_std_dev=setup['error_std_dev']
         )
-    elif setup['dataset'] == 'newreg':
-        X, y, w = functions.generate_new_regression_training_set(
+    elif setup['dataset'] == 'svm':
+        X, y, w = datasets.svm_dual_averaging_dataset(
             setup['n_samples'], setup['n_features'],
-            error_mean=setup['error_mean'],
-            error_std_dev=setup['error_std_dev']
-        )
-    elif setup['dataset'] == 'eigvecsvm':
-        pass
-    elif setup['dataset'] == 'unisvm2':
-        X, y, w = functions.generate_unidimensional_svm_dual_averaging_training_set(
-            setup['n'],
             label_flip_prob=setup['smv_label_flip_prob']
         )
     elif setup['dataset'] == 'unireg':
-        X, y, w = functions.generate_unidimensional_regression_training_set(setup['n'])
-    elif setup['dataset'] == 'svm':
-        X, y, w = functions.generate_svm_dual_averaging_training_set(
-            setup['n_samples'], setup['n_features'],
+        X, y, w = datasets.unireg_dataset(setup['n'])
+    elif setup['dataset'] == 'unisvm':
+        X, y, w = datasets.unisvm_dual_averaging_dataset(
+            setup['n'],
             label_flip_prob=setup['smv_label_flip_prob']
         )
     elif setup['dataset'] == 'enereg':
-        X, y, w = functions.load_appliances_energy_regression_dataset(setup['n_samples'])
+        X, y, w = datasets.load_appliances_energy_reg_dataset(setup['n_samples'])
     elif setup['dataset'] == 'sloreg':
-        X, y, w = functions.load_slice_localization_regression_dataset(setup['n_samples'])
+        X, y, w = datasets.load_slice_localization_reg_dataset(setup['n_samples'])
     elif setup['dataset'] == 'susysvm':
-        X, y, w = functions.load_susy_svm_dataset(setup['n_samples'])
+        X, y, w = datasets.load_susy_svm_dataset(setup['n_samples'])
     elif setup['dataset'] == 'skreg':
         X, y, w = make_regression(
             n_samples=setup['n_samples'],
@@ -415,6 +401,8 @@ def run(
             coef=True,
             random_state=None
         )
+    elif setup['dataset'] == 'eigvecsvm':
+        pass
     else:
         delete_test_dir()
         raise Exception("{} is not a good training set generator function".format(setup['dataset']))
@@ -460,11 +448,9 @@ Summary:
         random.seed(setup['seed'])
 
         cluster = None
-        sg = None
         try:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
-            # TODO: temp
             if setup['dataset'] == 'eigvecsvm':
                 # if using the ones matrix with this dataset, something wrong happens
                 # so we use the last adj_mat also for the clique
@@ -478,13 +464,9 @@ Summary:
                         if d > max_deg:
                             clique_adjmat = A
                             max_deg = d
-                    X, y, w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(clique_adjmat)
+                    X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(clique_adjmat)
                 else:
-                    X, y, w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(adjmat)
-
-            """X,y,w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(
-                setup['graphs']['50-expander']
-            )"""
+                    X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(adjmat)
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:
@@ -523,13 +505,6 @@ Summary:
                 cluster.run()
             else:
                 cluster.run()
-
-            """except ValueError:
-            print('Graph {} spectral gap sqrt raised ValueError exception (sg = {})'.format(
-                graph,
-                sg
-            ))
-            continue"""
 
         except:
             # if the cluster throws an exception then delete the folder created to host its output files
