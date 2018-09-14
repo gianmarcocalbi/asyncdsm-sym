@@ -1,9 +1,11 @@
-import copy, types, warnings
+import copy
+
+from termcolor import colored as col
+
 from src import statistics
 from src.mltoolbox import functions
-from src.utils import *
 from src.node import Node
-from termcolor import colored as col
+from src.utils import *
 
 
 class Cluster:
@@ -333,7 +335,7 @@ class Cluster:
             """
             # todo: embody this permanently somewhere
             node_self_weight = 1 / sum(self.adjacency_matrix[i])
-            #if 'expander' in self.graph_name or 'clique' in self.graph_name:
+            # if 'expander' in self.graph_name or 'clique' in self.graph_name:
             #    node_self_weight = 0.5
 
             # instantiate new node for the just-selected subsample
@@ -683,7 +685,7 @@ class Cluster:
                     # e.g. the simulation will end right after this loop
 
                     # todo performance boost:
-                    # rum max on last row of local clocks matrix
+                    # run max on last row of local clocks matrix
                     max_clock = -1
                     for _node in self.nodes:
                         if _node.local_clock > max_clock:
@@ -716,20 +718,11 @@ class Cluster:
                 # iteration is the actual local_clock of this node
 
                 min_iter = math.inf
-                max_iter = -1
-                avg_iter = 0
 
                 for _node in self.nodes:
-                    _node_iter = _node.get_iteration_at_local_clock(self.clock)
+                    _node_iter = _node.iteration
                     if _node_iter < min_iter:
                         min_iter = _node_iter
-                    if _node_iter > max_iter:
-                        max_iter = _node_iter
-                    avg_iter += _node_iter
-                avg_iter /= len(self.nodes)
-
-                if max_iter > self.logs["max_iter_time"][-1][1]:
-                    self.logs["max_iter_time"].append((self.clock, max_iter))
 
                 if min_iter == self.iteration + 1:
                     self.iteration += 1
@@ -741,17 +734,17 @@ class Cluster:
                             last_to_complete_iteration_clock = node_clock_at_iter
 
                     self.logs["iter_time"].append(last_to_complete_iteration_clock)
+                    self.logs["max_iter_time"].append((self.clock, min_iter))
+                    self.logs["avg_iter_time"].append((self.clock, min_iter))
+
+                    self._compute_all_metrics()
 
                     print_verbose(
                         self.verbose,
-                        "Cluster ITER++. min_iter={}, avg_iter={}, max_iter={}, clock={}".format(
-                            min_iter, avg_iter, max_iter, np.around(self.clock, 2)
+                        "Cluster ITER++. min_iter={}, clock={}".format(
+                            min_iter, np.around(self.clock, 2)
                         )
                     )
-
-                    self.logs["avg_iter_time"].append((self.clock, avg_iter))
-
-                    self._compute_all_metrics()
 
                     if self.verbose <= 0:
                         sys.stdout.write('\x1b[2K')
@@ -797,11 +790,37 @@ class Cluster:
 
             event = self.dequeue_event()
 
+        min_iter = math.inf
+        max_iter = -1
+        avg_iter = 0
+
+        if self.max_time is None or math.isinf(self.max_time):
+            last_time = self.clock
+        else:
+            last_time = self.max_time
+
+        for _node in self.nodes:
+            _node_iter = _node.get_iteration_at_local_clock(last_time)
+            if _node_iter < min_iter:
+                min_iter = _node_iter
+            if _node_iter > max_iter:
+                max_iter = _node_iter
+            avg_iter += _node_iter
+        avg_iter /= len(self.nodes)
+
+        self.logs["max_iter_time"][-1] = (last_time, max_iter)
+        self.logs["avg_iter_time"][-1] = (last_time, avg_iter)
+
+        # todo: temp
+        print("Cluster simulation run ended at iter={} and clock={}".format(
+            self.iteration, self.clock
+        ))
+
         print_verbose(self.verbose, "Cluster simulation run ended at iter={} and clock={}".format(
             self.iteration, self.clock
         ))
 
-    def run_void(self):
+    def run_stale(self):
         """
         Run the cluster (distributed computation simulation).
         :return: None
@@ -929,7 +948,7 @@ class Cluster:
                     # e.g. the simulation will end right after this loop
 
                     # todo performance boost:
-                    # run max on last row of local clocks matrix
+                    # rum max on last row of local clocks matrix
                     max_clock = -1
                     for _node in self.nodes:
                         if _node.local_clock > max_clock:
@@ -962,11 +981,20 @@ class Cluster:
                 # iteration is the actual local_clock of this node
 
                 min_iter = math.inf
+                max_iter = -1
+                avg_iter = 0
 
                 for _node in self.nodes:
-                    _node_iter = _node.iteration
+                    _node_iter = _node.get_iteration_at_local_clock(self.clock)
                     if _node_iter < min_iter:
                         min_iter = _node_iter
+                    if _node_iter > max_iter:
+                        max_iter = _node_iter
+                    avg_iter += _node_iter
+                avg_iter /= len(self.nodes)
+
+                if max_iter > self.logs["max_iter_time"][-1][1]:
+                    self.logs["max_iter_time"].append((self.clock, max_iter))
 
                 if min_iter == self.iteration + 1:
                     self.iteration += 1
@@ -978,17 +1006,17 @@ class Cluster:
                             last_to_complete_iteration_clock = node_clock_at_iter
 
                     self.logs["iter_time"].append(last_to_complete_iteration_clock)
-                    self.logs["max_iter_time"].append((self.clock, min_iter))
-                    self.logs["avg_iter_time"].append((self.clock, min_iter))
-
-                    self._compute_all_metrics()
 
                     print_verbose(
                         self.verbose,
-                        "Cluster ITER++. min_iter={}, clock={}".format(
-                            min_iter, np.around(self.clock, 2)
+                        "Cluster ITER++. min_iter={}, avg_iter={}, max_iter={}, clock={}".format(
+                            min_iter, avg_iter, max_iter, np.around(self.clock, 2)
                         )
                     )
+
+                    self.logs["avg_iter_time"].append((self.clock, avg_iter))
+
+                    self._compute_all_metrics()
 
                     if self.verbose <= 0:
                         sys.stdout.write('\x1b[2K')
@@ -1033,32 +1061,6 @@ class Cluster:
                 pass
 
             event = self.dequeue_event()
-
-        min_iter = math.inf
-        max_iter = -1
-        avg_iter = 0
-
-        if self.max_time is None or math.isinf(self.max_time):
-            last_time = self.clock
-        else:
-            last_time = self.max_time
-
-        for _node in self.nodes:
-            _node_iter = _node.get_iteration_at_local_clock(last_time)
-            if _node_iter < min_iter:
-                min_iter = _node_iter
-            if _node_iter > max_iter:
-                max_iter = _node_iter
-            avg_iter += _node_iter
-        avg_iter /= len(self.nodes)
-
-        self.logs["max_iter_time"][-1] = (last_time, max_iter)
-        self.logs["avg_iter_time"][-1] = (last_time, avg_iter)
-
-        #todo: temp
-        print("Cluster simulation run ended at iter={} and clock={}".format(
-            self.iteration, self.clock
-        ))
 
         print_verbose(self.verbose, "Cluster simulation run ended at iter={} and clock={}".format(
             self.iteration, self.clock

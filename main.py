@@ -1,826 +1,1393 @@
-import datetime
-import shutil
-import time
-
-import matplotlib.pyplot as plt
-from sklearn import linear_model, svm
-from sklearn.datasets.samples_generator import make_regression
-from src import statistics
-from src.cluster import Cluster
-from src.graphs import generate_n_nodes_graphs
-from src.mltoolbox import functions
-from src.plotter import Plotter, plot_from_files
+from src import statistics, graphs
+from src.mltoolbox import functions as f
 from src.utils import *
+import numpy as np
+from src.plotter import plot_from_files
+import simulator, time, math, argparse
+from scripts import *
+from sklearn.preprocessing import normalize
+from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
-from typing import *
+
+def get_graphs(graph_type, nodes):
+    deg = {
+        100: [2, 3, 4, 8, 10, 20, 50, 80, 99],
+        400: [2, 3, 4, 6, 20, 50, 100, 200, 300, 399],
+        1000: [2, 3, 4, 8, 16, 20, 30, 40, 50, 100, 200, 500, 999]
+    }[nodes]
+
+    g = []
+
+    for d in deg[0:-1]:
+        g.append(str(d) + '-' + graph_type)
+    g.append(str(deg[-1]) + '-clique')
+
+    return g
 
 
-def generate_test_subfolder_name(setup: dict, test_num: str, *argslist, parent_folder='') -> str:
+def run(core=-1):
     """
-    Generate test folder relative path and name inside test_log folder.
-
     Parameters
     ----------
-    setup : dict
-        Test setup dict.
-    test_num : str
-        Test number or any label, it will be prepended to the test folder.
-    argslist : unfolded list
-        Variables names that will be included in the path.
-    parent_folder : str
-
-    Returns
-    -------
-    Test folder relative path to be used inside test_log folder.
-    """
-
-    def join_name_parts(*args):
-        name = ""
-        for a in args:
-            name += str(a) + "_"
-        return name[:-1]
-
-    dataset = setup['dataset']
-    distr = setup['time_distr_class'].shortname + '[' + '-'.join([str(e) for e in setup['time_distr_param'][0]]) + ']'
-    distr_rule = str(setup['time_distr_param_rule']) + 'Rule'
-    if 'svm' in setup['dataset']:
-        error = str(setup['smv_label_flip_prob']) + 'flip'
-        nodeserror = ''
-    else:
-        error = str(setup['error_std_dev']) + 'err'
-        nodeserror = str(setup['node_error_std_dev']) + 'nodeErr'
-
-    alpha = str(setup['learning_rate'][0].upper()) + str(setup['alpha']) + 'alpha'
-    if setup['spectrum_dependent_learning_rate']:
-        alpha = "sg" + alpha
-    nodes = str(setup['n']) + 'n'
-    samp = str(setup['n_samples']) + 'samp'
-    feat = str(setup['n_features']) + 'feat'
-    time = ('INF' if setup['max_time'] is None else str(setup['max_time'])) + 'time'
-    iter = ('INF' if setup['max_iter'] is None else str(setup['max_iter'])) + 'iter'
-    c = str(setup['time_const_weight']) + 'c'
-    method = setup['method']
-    shuffle = 'shuf' if setup['shuffle'] else 'noshuf'
-    w_domain = 'Win[{},{}]'.format(setup['starting_weights_domain'][0], setup['starting_weights_domain'][1])
-    metrics = 'mtrT{}{}'.format(setup['metrics_type'], setup['metrics_nodes'])
-
-    name = "test_" + str(test_num)
-
-    for a in argslist:
-        try:
-            name = join_name_parts(name, eval(a))
-        except NameError:
-            pass
-
-    return os.path.normpath(os.path.join(parent_folder, name))
-
-
-def generate_time_distr_param_list(N: int, params: list, rule: str) -> list:
-    """
-    Assign time distribution parameters to each node.
-    Create a list with length equal to N (so one element for each node) so that to node i will be assigned parameters
-    in position i of the list.
-    NB: any time random distribution takes exactly on list of parameters!
-
-    Parameters
-    ----------
-    N : int
-        Total amount of nodes in the cluster.
-    params : list or list of list
-        If just a list of simple objects (float, int) then such list will be assigned to all nodes.
-        If params is a list of list then each node will have on list assigned following the rule below.
-    rule : str
-        'split' : if there are K lists inside params list then N nodes are divided into K set, i-th set will
-            take i-th list as parameter.
-        'random' : each node has probability 1/K to take one list as parameter.
-        'alternate' : node i takes parameter list (i mod K).
-
-    Returns
-    -------
-    List of list like explained in this function's description.
-    """
-
-    if len(params) == 0:
-        return [[None] for _ in range(N)]
-
-    if not isinstance(params[0], list) and not isinstance(params[0], tuple):
-        params = [params]
-
-    k = len(params)
-    time_distr_param_list = []
-
-    if rule == 'split':
-        time_distr_param_list = [params[0] for _ in range(int(math.ceil(N / k)))]
-        for i in range(1, len(params)):
-            time_distr_param_list += [params[i] for _ in range(int(math.floor(N / k)))]
-    elif rule == 'random':
-        for i in range(N):
-            time_distr_param_list.append(np.random.choice(params))
-    elif rule == 'alternate':
-        for i in range(N):
-            time_distr_param_list.append(params[i % k])
-    else:
-        for i in range(N):
-            time_distr_param_list.append(params[0])
-
-    return time_distr_param_list
-
-
-def main(
-        seed: int = None,
-        n: int = 100,
-        graphs: Iterable[str] = (),
-        n_samples: int = None,
-        n_features: int = 100,
-        dataset: str = None,
-        smv_label_flip_prob: float = 0.0,
-        error_mean: float = 0.0,
-        error_std_dev: float = 0.0,
-        node_error_mean: float = 0.0,
-        node_error_std_dev: float = 0.0,
-        starting_weights_domain: Union[List[float], Tuple[float]] = None,
-        max_iter: int = None,
-        max_time: float = None,
-        method: Union[str, None] = 'classic',
-        alpha: float = None,
-        learning_rate: str = 'constant',
-        spectrum_dependent_learning_rate: bool = False,
-        dual_averaging_radius=10,
-        time_distr_class: object = statistics.ExponentialDistribution,
-        time_distr_param: list = (1,),
-        time_distr_param_rule: str = None,
-        time_const_weight: float = 0,
-        real_y_activation_func: callable = None,
-        obj_function: str = 'mse',
-        average_model_toggle: bool = False,
-        metrics: list = (),
-        real_metrics: list = (),
-        real_metrics_toggle: bool = False,
-        metrics_type: int = 0,
-        metrics_nodes: str = 'all',
-        shuffle: bool = True,
-        batch_size: int = 20,
-        epsilon: float = None,
-        save_test_to_file: bool = False,
-        test_folder_name_struct: list = (
-                'u040',
-                'shuffle',
-                'w_domain',
-                'metrics',
-                'dataset',
-                'distr',
-                'error',
-                'nodeserror',
-                'alpha',
-                'nodes',
-                'samp',
-                'feat',
-                'time',
-                'iter',
-                'c',
-                'method'
-        ),
-        test_parent_folder: str = "",
-        instant_plot: bool = False,
-        plots: list = ('mse_iter',),
-        save_plot_to_file: bool = False,
-        plot_global_w: bool = False,
-        plot_node_w: Union[bool, int, List[int]] = False,
-        verbose_main: int = 0,
-        verbose_cluster: int = 0,
-        verbose_node: int = 0,
-        verbose_task: int = 0,
-        verbose_plotter: int = 0
-):
-    """
-    Main method.
-
-    Parameters
-    ----------
-    seed : int or None:
-        Random simulation seed. If None will be taken from current time.
-    n : int
-        Amount of nodes in the cluster.
-    graphs: List[str]
-        List of topologies to run the simulation with.
-    n_samples : int
-        Total number of samples in the generated dataset.
-    n_features : int
-        Number of feature each sample will have.
-    dataset : str
-        Dataset label:
-        - "reg": general customizable linear regression dataset;
-        - "reg2": ready linear regression dataset;
-        - "unireg": unidimensional regression;
-        - "svm": multidimensional classification problem;
-        - "unisvm": unidimensional dataset that changes with topology spectral gap;
-        - "unisvm2": unidimensional classification dataset;
-        - "skreg" : regression dataset from sklearn library.
-    smv_label_flip_prob : float
-        Probability that a label is flipped in svm dataset generation.
-        Kind of noise added in the dataset.
-    error_mean : float
-        Mean of noise to introduce in regression datasets.
-    error_std_dev : float
-        Standard deviation of noise introduced in regression datasets.
-    node_error_mean : float
-        Mean of the per-node noise introduced in each node's sample.
-        Be careful because if used with SVM this can change values of labels.
-    node_error_std_dev : float
-        Standard deviation of the per-node noise introduced in each node's sample.
-        Be careful because if used with SVM this can change values of labels.
-    starting_weights_domain : List[float]
-        In the form of [a,b]. Domain of each node's w is uniformly randomly picked within a and b.
-    max_iter : int
-        Maximum iteration after which the simulation is stopped.
-    max_time : float
-        Maximum time value after which the simulation is stopped.
-    epsilon : float
-        Accuracy threshold for objective function below which the simulation is stopped.
-    method : str
-        - "classic" : classic gradient descent, batch is equal to the whole dataset;
-        - "stochastic" : stochastic gradient descent;
-        - "batch" : batch gradient descent;
-        - "subgradient" : subgradient projected gradient descent;
-        - "dual_averaging" : dual averaging method.
-    alpha : float
-        Learning rate constant coefficient.
-    learning_rate : str
-        - 'constant' : the learning rate never changes during the simulation (it is euqual to alpha);
-        - 'root_decreasing' : learning rate is alpha * 1/math.sqrt(K) where K = #iter.
-    spectrum_dependent_learning_rate : bool
-        If True the learning rate is also multiplied by math.sqrt(spectral_gap), so it is different for each graph.
-    dual_averaging_radius : int
-        Radius of the projection on the feasible set.
-    time_distr_class : object
-        Class of the random time distribution.
-    time_distr_param : list or list of list
-        Parameters list.
-        See Also generate_time_distr_param_list.
-    time_distr_param_rule : str
-        Parameters distribution rule.
-        See Also generate_time_distr_param_list.
-    time_const_weight : float
-        Weight assigned to constant part of the computation time.
-        It is calculated as T_u(t) = E[X_u] * c + (1-c) * X_u(t).
-    real_y_activation_func : function
-        Activation function applied on real_y calculation.
-    obj_function : str
-        Identifier of the objective function (one of those declared in metrics.py).
-    metrics : list of str
-        List of additional metrics to compute (objective function is automatically added to this list).
-    real_metrics : list of str
-        List of real metrics to compute (with regards to the real noiseless model).
-    real_metrics_toggle : bool
-        If False real metrics are not computed (useful to speed up the computation).
-    metrics_type : int
-        - 0 : metrics are computed over the whole dataset using model W equal to the avg of nodes' locla models;
-        - 1 : metrics are computed as AVG of local nodes' metrics;
-        - 2 : metrics are computed over the whole dataset using the model only from metrics_nodes (see below).
-    metrics_nodes : int or list of int
-        If type is int then it will be put into a list and treated as [int].
-        Depends on the value of metrics_type:
-        - metrics_type == 0 : no effects;
-        - metrics_type == 1 : metrics are computed as avg of local metrics of nodes inside metrics_nodes list;
-        - metrics_type == 2 : metrics are computed over the whole dataset using the model obtained as mean of
-            nodes inside metrics_nodes.
-    shuffle : bool
-        If True the dataset is shuffled before being split into nodes, otherwise the dataset is untouched.
-    batch_size : int
-        Useful only for batch gradient descent, is the size of the batch.
-    save_test_to_file : bool
-        If True the test is saved to specified folder, otherwise it is stored into tempo folder.
-    test_folder_name_struct : list
-        See generate_test_subfolder_name.
-    test_parent_folder : str
-        Parent test folder: the test will be located in ./test_log/{$PARENT_FOLDER}/{$TEST_NAME_FOLDER}.
-        Can be more than one-folder-deep!
-    instant_plot : bool
-        If True plots will be prompted upon finishing simulation. Be careful since it will pause the thread!
-    plots : list of str
-        List of plots' names to create / prompt upon finishing simulation.
-        See plotter.py.
-    save_plot_to_file : bool
-        If True plots will be saved into .../{$TEST_FOLDER_NAME}/plots/ folder.
-    plot_global_w : bool
-        If True global W will be prompted after finishing simulation.
-        This plot is never automatically saved, save it by yourself if you need to keep it.
-    plot_node_w : list or False
-        List of nodes to plot w which. If False nothing will be prompted.
-    verbose_main : int
-        Verbose policy in main.py script.
-        - <0 : no print at all except from errors (unsafe).
-        -  0 : default messages;
-        -  1 : verbose + default messages
-        -  2 : verbose + default messages + input required to continue after each message (simulation will be paused
-            after each message and will require to press ENTER to go on, useful for debugging).
-    verbose_cluster : int
-        Verbose policy in cluster.py script.
-        See verbose_main.
-    verbose_node : int
-        Verbose policy in node.py script.
-        See verbose_main.
-    verbose_task : int
-        Verbose policy in tasks.py script.
-        See verbose_main.
-    verbose_plotter : int
-        Verbose policy in plotter.py script.
-        See verbose_main.
+    core: int
+        Integer from argparse module to be used as switcher.
 
     Returns
     -------
     None
     """
 
-    ### BEGIN SETUP ###
+    """for g_name, A in graphs.generate_n_nodes_graphs(100, get_graphs('cycle', 100)).items():
+        M = A / sum(A[0])
+        eigenvals = np.linalg.eigvals(M)
+        np.sort(eigenvals)
+        print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
-    begin_time = time.time()
-    # descriptor text placed at the beginning of _descriptor.txt file within the test folder
+    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst', alert=False)
 
-    setup_from_file = False
-    setup_folder_path = Plotter.get_temp_test_folder_path_by_index()
-    setup_file_path = os.path.join(setup_folder_path, ".setup.pkl")
+    if core == 0:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='par', metrics_nodes='all', alert=False)
+    elif core == 1:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='unif', metrics_nodes='all', alert=False)
+    elif core == 2:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='exp', metrics_nodes='all', alert=False)
+    elif core == 3:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='par', metrics_nodes='all', alert=False)
+    elif core == 4:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='unif', metrics_nodes='all', alert=False)
+    elif core == 5:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='exp', metrics_nodes='all', alert=False)
 
-    setup = dict()
+    pass
 
-    setup['seed'] = int(time.time()) if seed is None else seed
-    setup['n'] = n
 
-    setup['graphs'] = generate_n_nodes_graphs(setup['n'], graphs)
+def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_unisvm_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
 
-    # TRAINING SET SETUP
-
-    setup['n_samples'] = n_samples
-    setup['n_features'] = n_features
-    setup['dataset'] = dataset  # svm, unireg, reg, reg2, skreg
-    setup['smv_label_flip_prob'] = smv_label_flip_prob
-    setup['error_mean'] = error_mean
-    setup['error_std_dev'] = error_std_dev
-    setup['node_error_mean'] = node_error_mean
-    setup['node_error_std_dev'] = node_error_std_dev
-
-    r = np.random.uniform(4, 10)
-    c = np.random.uniform(1.1, 7.8) * np.random.choice([-1, 1, 1, 1])
-    setup['starting_weights_domain'] = starting_weights_domain  # [c - r, c + r]
-
-    # TRAINING SET ALMOST FIXED SETUP
-    # SETUP USED ONLY BY REGRESSION 'reg':
-    setup['domain_radius'] = 8
-    setup['domain_center'] = 0
-
-    # CLUSTER SETUP 1
-    setup['max_iter'] = max_iter
-    setup['max_time'] = max_time  # seconds
-    setup['method'] = method
-    setup['dual_averaging_radius'] = dual_averaging_radius
-
-    setup['alpha'] = alpha
-    setup['learning_rate'] = learning_rate  # constant, root_decreasing
-    setup['spectrum_dependent_learning_rate'] = spectrum_dependent_learning_rate
-
-    setup['time_distr_class'] = time_distr_class
-    setup['time_distr_param'] = generate_time_distr_param_list(
-        setup['n'],
-        time_distr_param,
-        time_distr_param_rule
-
-    )  # exp[rate], par[a,s], U[a,b]
-    setup['time_distr_param_rule'] = time_distr_param_rule
-    setup['time_const_weight'] = time_const_weight
-    setup['real_y_activation_func'] = real_y_activation_func
-    setup['obj_function'] = obj_function  # mse, hinge_loss, edgy_hinge_loss, score
-    setup['average_model_toggle'] = average_model_toggle
-
-    setup['metrics'] = metrics
-    setup['real_metrics'] = real_metrics
-    setup['real_metrics_toggle'] = real_metrics_toggle  # False to disable real_metrics computation (for better perf.)
-    setup['metrics_type'] = metrics_type  # 0: avg w on whole TS, 1: avg errors in nodes, 2: node's on whole TS
-    setup['metrics_nodes'] = metrics_nodes  # single node ID, list of IDs, 'all', 'worst', 'best'
-    setup['shuffle'] = shuffle  # <--
-
-    # CLUSTER ALMOST FIXED SETUP
-    setup['batch_size'] = batch_size
-    setup['epsilon'] = epsilon
-
-    # VERBOSE FLAGS
-    # verbose <  0: no print at all except from errors
-    # verbose == 0: default messages
-    # verbose == 1: verbose + default messages
-    # verbose == 2: verbose + default messages + input required to continue after each message
-    verbose = verbose_main
-
-    if setup_from_file:
-        with open(setup_file_path, 'rb') as setup_file:
-            setup = pickle.load(setup_file)
-
-    # OUTPUT SETUP
-    test_subfolder = generate_test_subfolder_name(setup,
-        *test_folder_name_struct,
-        parent_folder=test_parent_folder
-    )
-
-    test_title = test_subfolder
-
-    # OUTPUT ALMOST FIXED SETUP
-    test_root = "test_log"  # don't touch this
-    temp_test_subfolder = datetime.datetime.now().strftime('%y-%m-%d_%H.%M.%S.%f')
-    compress = True
-    overwrite_if_already_exists = False  # overwrite the folder if it already exists or create a different one otherwise
-    delete_folder_on_errors = True
-    save_descriptor = True  # create _descriptor.txt file
-    ### END SETUP ###
-
-    np.random.seed(setup['seed'])
-    random.seed(setup['seed'])
-
-    if setup['n'] % 2 != 0 and setup['n'] > 1:
-        warnings.warn("Amount of nodes is odd (N={}), keep in mind graph generator "
-                      "can misbehave in undirected graphs generation with odd nodes amount (it can "
-                      "generate directed graphs instead)".format(setup['n']))
-
-    if not save_test_to_file:
-        # if you don't want to store the file permanently they are however placed inside temp folder
-        # in order to use them for a short and limited period of time (temp folder may be deleted manually)
-        test_subfolder = os.path.join("temp", temp_test_subfolder)
-        overwrite_if_already_exists = False
-
-    test_path = os.path.normpath(os.path.join(test_root, test_subfolder))
-
-    if not overwrite_if_already_exists:
-        # determine a name for the new folder such that it doesn't coincide with any other folder
-        c = 0
-        tmp_test_path = test_path
-        while os.path.exists(tmp_test_path):
-            tmp_test_path = test_path + ".conflict." + str(c)
-            c += 1
-        test_path = tmp_test_path
-
-    test_path = os.path.normpath(test_path)
-
-    # create dir
-    if not os.path.exists(test_path):
-        os.makedirs(test_path)
-
-    # define function to delete test folder (in case of errors)
-    def delete_test_dir():
-        if delete_folder_on_errors:
-            shutil.rmtree(test_path)
-
-    # markov_matrix = normalize(__adjacency_matrix, axis=1, norm='l1')
-
-    ### BEGIN TRAINING SET GEN ###
-    X, y, w = None, None, None
-    # X, y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-
-    if setup['dataset'] == 'reg':
-        [X, y, w] = functions.generate_regression_training_set_from_function(
-            setup['n_samples'], setup['n_features'], functions.LinearYHatFunction.compute_value,
-            domain_radius=setup['domain_radius'],
-            domain_center=setup['domain_center'],
-            error_mean=setup['error_mean'],
-            error_std_dev=setup['error_std_dev']
-        )
-    elif setup['dataset'] == 'reg2':
-        X, y, w = functions.generate_regression_training_set(
-            setup['n_samples'], setup['n_features'],
-            error_mean=setup['error_mean'],
-            error_std_dev=setup['error_std_dev']
-        )
-    elif setup['dataset'] == 'newreg':
-        X, y, w = functions.generate_new_regression_training_set(
-            setup['n_samples'], setup['n_features'],
-            error_mean=setup['error_mean'],
-            error_std_dev=setup['error_std_dev']
-        )
-    elif setup['dataset'] == 'eigvecsvm':
-        pass
-    elif setup['dataset'] == 'unisvm2':
-        X, y, w = functions.generate_unidimensional_svm_dual_averaging_training_set(
-            setup['n'],
-            label_flip_prob=setup['smv_label_flip_prob']
-        )
-    elif setup['dataset'] == 'unireg':
-        X, y, w = functions.generate_unidimensional_regression_training_set(setup['n'])
-    elif setup['dataset'] == 'svm':
-        X, y, w = functions.generate_svm_dual_averaging_training_set(
-            setup['n_samples'], setup['n_features'],
-            label_flip_prob=setup['smv_label_flip_prob']
-        )
-    elif setup['dataset'] == 'enereg':
-        X, y, w = functions.load_appliances_energy_regression_dataset(setup['n_samples'])
-    elif setup['dataset'] == 'sloreg':
-        X, y, w = functions.load_slice_localization_regression_dataset(setup['n_samples'])
-    elif setup['dataset'] == 'susysvm':
-        X, y, w = functions.load_susy_svm_dataset(setup['n_samples'])
-    elif setup['dataset'] == 'skreg':
-        X, y, w = make_regression(
-            n_samples=setup['n_samples'],
-            n_features=setup['n_features'],
-            n_informative=setup['n_features'],
-            n_targets=1,
-            bias=1,
-            effective_rank=None,
-            tail_strength=1.0,
-            noise=setup['error_std_dev'],
-            shuffle=True,
-            coef=True,
-            random_state=None
-        )
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    if metrics_nodes in ['worst', 'all']:
+        metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
     else:
-        delete_test_dir()
-        raise Exception("{} is not a good training set generator function".format(setup['dataset']))
+        metrics_type = 2
 
-    """
-    X, y = mltoolbox.sample_from_function_old(
-        10000, 100, mltoolbox.LinearYHatFunction.f,
-        domain_radius=10,
-        domain_center=0,
-        subdomains_radius=2,
-        error_mean=0, 
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs= get_graphs(graph_type, n),
+        dataset='eigvecsvm',
+        starting_weights_domain=[1, 1],
+        smv_label_flip_prob=0.00,
+        max_iter=400,
+        max_time=None,
+        alpha=1e-1,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='hinge_loss',
+        epsilon=-math.inf,
+        average_model_toggle=True,
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'cyc',
+            'dataset',
+            'alpha',
+            'nodes',
+            'shuffle',
+            'distr',
+            'metrics',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_newreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_reg_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander',
+            '40-expander', '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        n_features=100,
+        dataset='newreg',
+        method='subgradient',
+        dual_averaging_radius=5,
         error_std_dev=1,
-        error_coeff=1
+        starting_weights_domain=[20, 30],
+        max_iter=200,
+        max_time=None,
+        alpha=1,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='mse',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            '',
+            'dataset',
+            'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
     )
-    """
 
-    """
-    X = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.dat")
-    y = np.loadtxt("./dataset/largescale_challenge/alpha/alpha_train.lab")
-    """
 
-    # X, y = np.array([np.arange(5)]).T, np.arange(5) * 2
+def test_exp_on_reg2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_reg_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
 
-    """
-    X = np.array([[1, 12, 14, -2, -25, -27, -9, -10, 24, -17]]).T
-    y = np.array([2, 24, 28, -4, -50, -54, -18, -20, 48, -34])
-    """
-    ### END TRAINING SET GEN ###
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander',
+            '40-expander', '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
-    ### BEGIN MAIN STUFFS ###
-
-    # save setup object dump
-    with open(os.path.join(test_path, '.setup.pkl'), "wb") as f:
-        pickle.dump(setup, f, pickle.HIGHEST_PROTOCOL)
-
-    # setup['string_graphs'] = pprint.PrettyPrinter(indent=4).pformat(setup['graphs']).replace('array([', 'np.array([')
-
-    # Fill descriptor with setup dictionary
-    descriptor = """>>> Test Descriptor File
-Title: {}
-Date: {}
-Summary: 
-
-""".format(
-        test_title if save_test_to_file else '',
-        str(datetime.datetime.fromtimestamp(begin_time))
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        n_features=100,
+        dataset='reg2',
+        method='subgradient',
+        dual_averaging_radius=300000,
+        error_std_dev=1,
+        starting_weights_domain=[2, 3],
+        max_iter=200,
+        max_time=None,
+        alpha=1e-1,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='mse',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=False,
+        test_folder_name_struct=[
+            'conv_synt_reg',
+            # 'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
     )
 
-    for k, v in setup.items():
-        descriptor += "{} = {}\n".format(k, v)
-    descriptor += "\n"
 
-    # save descriptor file
-    if save_descriptor:
-        with open(os.path.join(test_path, '.descriptor.txt'), "w") as f:
-            f.write(descriptor)
+def test_exp_on_dual_average_svm(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_dual_average_svm()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
 
-    w_logs = {}
-    node_w_logs = {}
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander',
+            '40-expander', '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
-    # simulation for each adjacency matrix in setup['graphs'] dict
-    for graph, adjmat in setup['graphs'].items():
-        # set the seed again (each simulation must perform on the same cluster setup)
-        np.random.seed(setup['seed'])
-        random.seed(setup['seed'])
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        n_features=100,
+        dataset='svm',
+        smv_label_flip_prob=0.05,
+        starting_weights_domain=[-2, 2],
+        max_iter=500,
+        max_time=None,
+        method='classic',
+        alpha=1,
+        learning_rate='constant',
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='hinge_loss',
+        spectrum_dependent_learning_rate=False,
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        real_metrics_toggle=False,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'conv_synt_svm',
+            # 'dataset',
+            'alpha',
+            'nodes',
+            # 'shuffle',
+            'distr',
+            'metrics',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
+    )
 
-        cluster = None
-        sg = None
-        try:
-            cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
-            # TODO: temp
-            if setup['dataset'] == 'eigvecsvm':
-                # if using the ones matrix with this dataset, something wrong happens
-                # so we use the last adj_mat also for the clique
-                if 'clique' in graph:
-                    max_deg = 0
-                    clique_adjmat = adjmat
-                    for G, A in setup['graphs'].items():
-                        if 'clique' in G:
-                            continue
-                        d = int(G.split('-')[0])
-                        if d > max_deg:
-                            clique_adjmat = A
-                            max_deg = d
-                    X, y, w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(clique_adjmat)
-                    print(max_deg)
-                else:
-                    X, y, w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(adjmat)
+def test_exp_on_enereg_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_enereg_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
 
-            """X,y,w = functions.generate_eigvecsvm_training_set_from_adjacency_matrix(
-                setup['graphs']['50-expander']
-            )"""
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
-            alpha = setup['alpha']
-            if spectrum_dependent_learning_rate:
-                # todo: temp
-                # if 'expander' in graph or 'clique' in graph:
-                #    sg = Pn_spectral_gap_from_adjacency_matrix(adjmat)
-                if 'cycle' in graph:
-                    sg = n_cycle_spectral_gap_approx_from_adjacency_matrix(adjmat)
-                else:
-                    sg = mtm_spectral_gap_from_adjacency_matrix(adjmat)
+    # linear_regression result = 8658.025636439765
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=14000,
+        dataset='enereg',
+        starting_weights_domain=[0, 0],
+        max_iter=1000,
+        max_time=None,
+        alpha=1e-6,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=True,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='mse',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            're100',
+            'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            # 'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
 
-                alpha *= math.sqrt(sg)
 
-            cluster.setup(
-                X, y, w,
-                real_y_activation_function=setup['real_y_activation_func'],
-                obj_function=setup['obj_function'],
-                average_model_toggle=average_model_toggle,
-                method=setup['method'],
-                max_iter=setup['max_iter'],
-                max_time=setup['max_time'],
-                batch_size=setup['batch_size'],
-                dual_averaging_radius=setup['dual_averaging_radius'],
-                epsilon=setup['epsilon'],
-                alpha=alpha,
-                learning_rate=setup['learning_rate'],
-                metrics=setup['metrics'],
-                real_metrics=setup["real_metrics"],
-                real_metrics_toggle=setup['real_metrics_toggle'],
-                metrics_type=setup['metrics_type'],
-                metrics_nodes=setup['metrics_nodes'],
-                shuffle=setup['shuffle'],
-                time_distr_class=setup['time_distr_class'],
-                time_distr_param=setup['time_distr_param'],
-                time_const_weight=setup['time_const_weight'],
-                node_error_mean=setup['node_error_mean'],
-                node_error_std_dev=setup['node_error_std_dev'],
-                starting_weights_domain=setup['starting_weights_domain'],
-                verbose_node=verbose_node,
-                verbose_task=verbose_task
-            )
+def test_exp_on_sloreg_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_enereg_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
 
-            if setup['method'] is None:
-                cluster.run_void()
-            else:
-                cluster.run_void()
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander',
+            '40-expander', '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
-            """except ValueError:
-            print('Graph {} spectral gap sqrt raised ValueError exception (sg = {})'.format(
-                graph,
-                sg
-            ))
-            continue"""
+    # linear_regression result = 67.30972320004327
 
-        except:
-            # if the cluster throws an exception then delete the folder created to host its output files
-            # the most common exception in cluster.run() is thrown when the SGD computation diverges
-            delete_test_dir()
-            print(
-                "Exception in cluster object\n",
-                "cluster.iteration=" + str(cluster.iteration)
-            )
-            raise
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=52000,
+        dataset='sloreg',
+        starting_weights_domain=[2, 3],
+        max_iter=1000,
+        max_time=None,
+        alpha=5e-6,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='mse',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=False,
+        test_folder_name_struct=[
+            'fixedseed_real_reg',
+            # 'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            # 'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
+    )
 
-        extension = '.txt'
-        if compress:
-            extension += '.gz'
 
-        np.savetxt(
-            os.path.join(test_path, "{}_iter_time_log{}".format(graph, extension)),
-            cluster.logs["iter_time"],
-            delimiter=','
-        )
+def test_exp_on_susysvm_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_susysvm_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
 
-        np.savetxt(
-            os.path.join(test_path, "{}_avg_iter_time_log{}".format(graph, extension)),
-            cluster.logs["avg_iter_time"],
-            delimiter=','
-        )
-        np.savetxt(
-            os.path.join(test_path, "{}_max_iter_time_log{}".format(graph, extension)),
-            cluster.logs["max_iter_time"],
-            delimiter=','
-        )
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution, 'real': statistics.SparkRealTimings
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], 'real': []}[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '16-expander', '20-expander', '30-expander',
+            '40-expander', '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
 
-        # Save metrics logs
-        if not setup['method'] is None:
-            for metrics_id, metrics_log in cluster.logs["metrics"].items():
-                np.savetxt(
-                    os.path.join(test_path, "{}_{}_log{}".format(graph, metrics_id, extension)),
-                    metrics_log,
-                    delimiter=','
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=500000,
+        dataset='susysvm',
+        starting_weights_domain=[-0.5, 2],
+        max_iter=2000,
+        max_time=None,
+        alpha=5e-2,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='hinge_loss',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'fixedseed_real_svm',
+            # 'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            # 'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_exp_on_unisvm2_dataset(seed=None, n=100, distr='par', metrics_nodes='all', alert=True):
+    if alert:
+        print('test_exp_on_unisvm2_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    graphs = {
+        100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+            '80-expander', '99-clique', ],
+        400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+            '200-expander', '300-expander', '399-clique', ],
+        1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+            '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    }[n]
+    metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        dataset='unisvm2',
+        starting_weights_domain=[1, 1],
+        max_iter=1000,
+        max_time=None,
+        alpha=0.05,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=True,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='hinge_loss',
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'us2000',
+            'dataset',
+            'alpha',
+            'nodes',
+            'shuffle',
+            'distr',
+            'metrics',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_different_nodes_speed(seed=None, n=100, max_iter=1000, distr='exp', alert=True):
+    if alert:
+        print('test_different_nodes_timing()')
+        print('seed={}, n={}, distr={}'.format(seed, n, distr))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+
+    """100: ['2-expander', '3-expander', '4-expander', '8-expander', '10-expander', '20-expander', '50-expander',
+        '80-expander', '99-clique', ],
+    400: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '50-expander', '100-expander',
+        '200-expander', '300-expander', '399-clique', ],
+    1000: ['2-expander', '3-expander', '4-expander', '8-expander', '20-expander', '30-expander', '40-expander',
+        '50-expander', '100-expander', '200-expander', '500-expander', '999-clique', ]
+    """
+    graphs = {
+        # 10: ['2-cycle', '3-cycle', '5-cycle'],
+        100: [
+            '4-expander',
+            '10-expander',
+            '50-expander'
+        ],
+        300: [
+            '5-expander',
+            '17-expander',
+            '150-expander'
+        ],
+        1000: [
+            '6-expander',
+            '32-expander',
+            '500-expander'
+        ]
+    }[n]
+
+    simulator.run(
+        seed=seed,
+        n=n,
+        graphs=graphs,
+        n_samples=1000,
+        dataset='unireg',
+        starting_weights_domain=[0, 0],
+        max_iter=max_iter,
+        max_time=None,
+        method=None,
+        alpha=0,
+        learning_rate='constant',
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='mse',
+        real_metrics_toggle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'speed_003',
+            # 'shuffle',
+            # 'w_domain',
+            # 'metrics',
+            # 'dataset',
+            'nodes',
+            'distr',
+            # 'distr_rule',
+            # 'error',
+            # 'nodeserror',
+            # 'alpha',
+            # 'samp',
+            # 'feat',
+            'time',
+            'iter',
+            'c',
+            # 'method',
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=[],
+        save_plot_to_file=False
+    )
+
+
+def test_classic_gd():
+    input("sim_spectral_ratios()... click [ENTER] to continue or [CTRL]+[C] to abort")
+    simulator.run(
+        seed=22052010,
+        n=100,
+        graphs=[
+            # "0-diagonal",
+            # "1-cycle",
+            # "2-uniform_edges",
+            # "2-cycle",
+            '2-expander',
+            # "3-uniform_edges",
+            # "3-cycle",
+            # '3-expander',
+            # "4-uniform_edges",
+            # "4-cycle",
+            '4-expander',
+            # "5-uniform_edges",
+            # "5-cycle",
+            # '5-expander',
+            # "8-uniform_edges",
+            # "8-cycle",
+            '8-expander',
+            # "10-uniform_edges",
+            # "10-cycle",
+            # '10-expander',
+            # "20-uniform_edges",
+            # "20-cycle",
+            # '18-expander',
+            '20-expander',
+            # '30-expander',
+            # '40-expander',
+            # "50-uniform_edges",
+            # "50-cycle",
+            # '50-expander',
+            # "80-uniform_edges",
+            # "80-cycle",
+            # '80-expander',
+            # '100-expander',
+            # '200-expander',
+            # '300-expander',
+            # '500-expander',
+            # '80-expander',
+            "99-clique",
+        ],
+        n_samples=1000,
+        n_features=100,
+        dataset='reg2',
+        error_std_dev=1.0,
+        node_error_std_dev=0.0,
+        starting_weights_domain=[-10, 50],
+        max_iter=500,
+        max_time=None,
+        method='classic',
+        alpha=1e-3,
+        learning_rate='constant',
+        time_distr_class=statistics.Type2ParetoDistribution,
+        time_distr_param=[[3, 2]],
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='mse',
+        spectrum_dependent_learning_rate=True,
+        metrics=[],
+        metrics_type=2,
+        metrics_nodes='worst',
+        real_metrics_toggle=False,
+        shuffle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'n006',
+            'dataset',
+            'w_domain',
+            'alpha',
+            'shuffle',
+            'metrics',
+            'distr',
+            'error',
+            'nodeserror',
+            'nodes',
+            'samp',
+            'feat',
+            'time',
+            'iter',
+            'c',
+            'method',
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=('mse_iter', 'mse_time'),
+        save_plot_to_file=True,
+        plot_global_w=True,
+        plot_node_w=False
+    )
+
+
+def test_unisvm2_dataset(distr):
+    time_distr_class = [
+        statistics.ExponentialDistribution,
+        statistics.UniformDistribution,
+        statistics.Type2ParetoDistribution
+    ][distr]
+    time_distr_param = [
+        [[1]],
+        [[0, 2]],
+        [[3, 2]],
+    ][distr]
+
+    input("test_unisvm_dataset()... click [ENTER] to continue or [CTRL]+[C] to abort")
+    simulator.run(
+        seed=22052010,
+        n=100,
+        graphs=[
+            # "0-diagonal",
+            # "1-cycle",
+            # "2-uniform_edges",
+            # "2-cycle",
+            '2-expander',
+            # "3-uniform_edges",
+            # "3-cycle",
+            '3-expander',
+            # "4-uniform_edges",
+            # "4-cycle",
+            '4-expander',
+            # "5-uniform_edges",
+            # "5-cycle",
+            # '5-expander',
+            # "8-uniform_edges",
+            # "8-cycle",
+            '8-expander',
+            # "10-uniform_edges",
+            # "10-cycle",
+            '10-expander',
+            # "20-uniform_edges",
+            # "20-cycle",
+            # '18-expander',
+            '20-expander',
+            # '30-expander',
+            # '40-expander',
+            # "50-uniform_edges",
+            # "50-cycle",
+            '50-expander',
+            # "80-uniform_edges",
+            # "80-cycle",
+            # '80-expander',
+            # '100-expander',
+            # '200-expander',
+            # '300-expander',
+            # '500-expander',
+            # '80-expander',
+            "99-clique",
+        ],
+        dataset='unisvm2',
+        smv_label_flip_prob=0.05,
+        starting_weights_domain=[1, 1],
+        max_time=None,
+        max_iter=1000,
+        alpha=0.05,
+        learning_rate='constant',
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='cont_hinge_loss',
+        spectrum_dependent_learning_rate=False,
+        metrics=[],
+        metrics_type=2,
+        metrics_nodes='worst',
+        real_metrics_toggle=False,
+        method='classic',
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'us2003',
+            'dataset',
+            # 'w_domain',
+            'alpha',
+            'shuffle',
+            'metrics',
+            'distr',
+            # 'error',
+            # 'nodeserror',
+            'nodes',
+            # 'samp',
+            # 'feat',
+            'time',
+            'iter',
+            # 'c',
+            # 'method',
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=('cont_hinge_loss_iter', 'hinge_loss_time'),
+        save_plot_to_file=True,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+
+def test_unisvm_dataset(distr):
+    time_distr_class = [
+        statistics.ExponentialDistribution,
+        statistics.UniformDistribution,
+        statistics.Type2ParetoDistribution
+    ][distr]
+    time_distr_param = [
+        [[1]],
+        [[0, 2]],
+        [[3, 2]],
+    ][distr]
+
+    input("test_unisvm_dataset()... click [ENTER] to continue or [CTRL]+[C] to abort")
+    simulator.run(
+        seed=22052010,
+        n=100,
+        graphs=[
+            # "0-diagonal",
+            # "1-cycle",
+            # "2-uniform_edges",
+            # "2-cycle",
+            '2-expander',
+            # "3-uniform_edges",
+            # "3-cycle",
+            '3-expander',
+            # "4-uniform_edges",
+            # "4-cycle",
+            '4-expander',
+            # "5-uniform_edges",
+            # "5-cycle",
+            # '5-expander',
+            # "8-uniform_edges",
+            # "8-cycle",
+            '8-expander',
+            # "10-uniform_edges",
+            # "10-cycle",
+            '10-expander',
+            # "20-uniform_edges",
+            # "20-cycle",
+            # '18-expander',
+            '20-expander',
+            # '30-expander',
+            # '40-expander',
+            # "50-uniform_edges",
+            # "50-cycle",
+            '50-expander',
+            # "80-uniform_edges",
+            # "80-cycle",
+            '80-expander',
+            # '100-expander',
+            # '200-expander',
+            # '300-expander',
+            # '500-expander',
+            # '80-expander',
+            "99-clique",
+        ],
+        dataset='unisvm',
+        starting_weights_domain=[1, 1],
+        max_time=None,
+        max_iter=800,
+        alpha=0.1,  # * math.sqrt(2),
+        learning_rate='constant',
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        obj_function='cont_hinge_loss',
+        spectrum_dependent_learning_rate=False,
+        metrics=[],
+        metrics_type=2,
+        metrics_nodes='worst',
+        epsilon=-math.inf,
+        real_metrics_toggle=False,
+        method='classic',
+        shuffle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'us006',
+            'dataset',
+            # 'w_domain',
+            'alpha',
+            'shuffle',
+            'metrics',
+            'distr',
+            # 'error',
+            # 'nodeserror',
+            'nodes',
+            # 'samp',
+            # 'feat',
+            'time',
+            'iter',
+            # 'c',
+            # 'method',
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=('cont_hinge_loss_iter', 'cont_hinge_loss_time'),
+        save_plot_to_file=True,
+        plot_global_w=True,
+        plot_node_w=False
+    )
+
+
+def test_over_c():
+    for s in range(16):
+        for c in [1, 0.999, 0.997, 0.995, 0.992, 0.985, 0.950, 0.9, 0.75, 0.5, 0.3, 0.1, 0]:
+            try:
+                simulator.run(
+                    seed=s * 77,
+                    n=100,
+                    graphs=[
+                        # "0-diagonal",
+                        "1-cycle",
+                        "2-uniform_edges",
+                        "2-cycle",
+                        "3-uniform_edges",
+                        "3-cycle",
+                        "4-uniform_edges",
+                        "4-cycle",
+                        # "5-uniform_edges",
+                        # "5-cycle",
+                        "8-uniform_edges",
+                        "8-cycle",
+                        # "10-uniform_edges",
+                        # "10-cycle",
+                        "20-uniform_edges",
+                        "20-cycle",
+                        "50-uniform_edges",
+                        "50-cycle",
+                        "80-uniform_edges",
+                        "80-cycle",
+                        "99-clique"
+                    ],
+                    n_samples=1000,
+                    n_features=100,
+                    dataset='reg',
+                    error_std_dev=1.0,
+                    starting_weights_domain=[-2.5, 10.60],
+                    max_iter=None,
+                    max_time=100,
+                    method='classic',
+                    alpha=1e-4,
+                    learning_rate='root-decreasing',
+                    time_distr_class=statistics.ExponentialDistribution,
+                    time_distr_param=(1,),
+                    time_const_weight=c,
+                    save_test_to_file=True,
+                    test_folder_name_struct=(
+                        'y03',
+                        'w_domain',
+                        'dataset',
+                        'distr',
+                        'error',
+                        'nodeserror',
+                        'alpha',
+                        'nodes',
+                        'samp',
+                        'feat',
+                        'time',
+                        'iter',
+                        'c'
+                    ),
+                    test_parent_folder="y03",
+                    instant_plot=False,
+                    save_plot_to_file=False,
+                    plot_global_w=False,
+                    plot_node_w=False
                 )
-
-            # Save real metrics logs
-            for real_metrics_id, real_metrics_log in cluster.logs["real_metrics"].items():
-                np.savetxt(
-                    os.path.join(test_path, "{}_real_{}_log{}".format(graph, real_metrics_id, extension)),
-                    real_metrics_log,
-                    delimiter=','
-                )
-
-        if plot_global_w:
-            w_logs[graph] = cluster.w
-
-        if not plot_node_w is False:
-            try:
-                node_w_logs[graph] = np.array(cluster.nodes[plot_node_w[0]].training_task.w)
-                for i in range(1, len(plot_node_w)):
-                    node_w_logs[graph] += np.array(cluster.nodes[plot_node_w[i]].training_task.w)
-                node_w_logs[graph] /= len(plot_node_w)
             except:
-                plot_node_w = False
+                continue
 
-        print("Logs of {} simulation created at {}".format(graph, test_path))
 
-    if save_descriptor:
-        with open(os.path.join(test_path, '.descriptor.txt'), 'a') as f:
-            f.write('\n\n# duration (hh:mm:ss): ' + time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
-
-    colors = Plotter.generate_rainbow_color_dict_from_graph_keys(
-        list(w_logs.keys()), setup['n']
+def test_spectral_ratios():
+    input("test_spectral_ratios()... click [ENTER] to continue or [CTRL]+[C] to abort")
+    simulator.run(
+        seed=1531934976,
+        n=100,
+        graphs=[
+            "0-diagonal",
+            "1-cycle",
+            # "2-uniform_edges",
+            "2-cycle",
+            '2-expander',
+            # "3-uniform_edges",
+            # "3-cycle",
+            # '3-expander',
+            # "4-uniform_edges",
+            "4-cycle",
+            '4-expander',
+            # "5-uniform_edges",
+            # "5-cycle",
+            # '5-expander',
+            # "8-uniform_edges",
+            "8-cycle",
+            '8-expander',
+            # "10-uniform_edges",
+            # "10-cycle",
+            # '10-expander',
+            # "20-uniform_edges",
+            "20-cycle",
+            '20-expander',
+            # "50-uniform_edges",
+            "50-cycle",
+            '50-expander',
+            # "80-uniform_edges",
+            # "80-cycle",
+            # '80-expander',
+            "99-clique",
+        ],
+        n_samples=100,
+        dataset='unireg',
+        starting_weights_domain=[-70, -50],
+        max_iter=100,
+        alpha=0.01,
+        learning_rate='constant',
+        time_distr_class=statistics.ExponentialDistribution,
+        time_distr_param=[[1]],
+        time_distr_param_rule=None,
+        time_const_weight=0,
+        spectrum_dependent_learning_rate=False,
+        metrics_type=0,
+        metrics_nodes='all',
+        method='classic',
+        shuffle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'ux004',
+            'w_domain',
+            'alpha',
+            'shuffle',
+            'dataset',
+            'metrics',
+            'distr',
+            # 'error',
+            # 'nodeserror',
+            'nodes',
+            # 'samp',
+            # 'feat',
+            # 'time',
+            'iter',
+            # 'c',
+            # 'method',
+        ],
+        test_parent_folder="",
+        instant_plot=True,
+        plots=('mse_iter',),
+        save_plot_to_file=True,
+        plot_global_w=True,
+        plot_node_w=[0, 5, 10, 20, 50, 55, 60, 70]
     )
 
-    if plot_global_w:
-        plt.suptitle(test_subfolder)
-        plt.title("W(it)")
-        plt.xlabel("iter")
-        plt.ylabel("Global W at iteration")
-        plt.yscale('linear')
-        for graph in w_logs:
-            try:
-                color = colors[graph]
-            except:
-                color = 'r'
-            plt.plot(
-                list(range(len(w_logs[graph]))),
-                w_logs[graph],
-                label=graph,
-                color= color,
-                marker='o',
-                markersize=2
-                # **kwargs
-            )
-        plt.legend()
-        plt.show()
-        plt.close()
 
-    if not plot_node_w is False:
-        plt.suptitle(test_subfolder)
-        plt.title("W_{0}(it) (W of Node {0} at iteration)".format(plot_node_w))
-        plt.xlabel("iter")
-        plt.ylabel("W_{}(iter)".format(plot_node_w))
-        plt.yscale('linear')
-        for graph in node_w_logs:
-            try:
-                color = colors[graph]
-            except:
-                color = 'r'
-            plt.plot(
-                list(range(len(node_w_logs[graph]))),
-                [p[0] for p in node_w_logs[graph]],
-                label=graph,
-                color=color,
-                marker='o',
-                markersize=2
-            )
-        plt.legend()
-        plt.show()
-        plt.close()
-
-    if save_plot_to_file or instant_plot:
-        plot_from_files(
-            test_folder_path=test_path,
-            save_plots_to_test_folder=save_plot_to_file,
-            instant_plot=instant_plot,
-            plots=plots,
-            verbose=verbose_plotter,
-            test_tag=test_subfolder
+def test_different_100nodes_timing_loop(index):
+    S = [
+        # [1, None],
+        # [2, None],
+        # [10, None],
+        # [2, 'alternate'],
+        # [10, 'alternate'],
+        # [2, 'split'],
+        # [10, 'split'],
+        [3, 'alternate'],
+        [4, 'alternate'],
+        [8, 'alternate'],
+        [15, 'alternate'],
+        [20, 'alternate'],
+        [3, 'split'],
+        [4, 'split'],
+        [8, 'split'],
+        [15, 'split'],
+        [20, 'split'],
+    ]
+    for mu_slow, rule in S:
+        time_distr_class = [
+            statistics.ExponentialDistribution,
+            statistics.UniformDistribution,
+            statistics.Type2ParetoDistribution
+        ][index]
+        time_distr_param = [
+            [[1 / mu_slow], [1]],
+            [[0, 2 * mu_slow], [0, 2]],
+            [[3, 2 * mu_slow], [3, 2]],
+        ][index]
+        simulator.run(
+            seed=18062018,
+            n=100,
+            graphs=[
+                "0-diagonal",
+                "1-cycle",
+                "2-cycle",
+                # '2-expander',
+                "3-cycle",
+                # '3-expander',
+                "4-cycle",
+                # '4-expander',
+                "8-cycle",
+                # '8-expander',
+                "10-cycle",
+                # '10-expander',
+                "20-cycle",
+                # '20-expander',
+                "50-cycle",
+                # '50-expander',
+                "99-clique",
+            ],
+            n_samples=1000,
+            dataset='unireg',
+            starting_weights_domain=[0, 0],
+            max_iter=None,
+            max_time=10000,
+            method=None,
+            alpha=0,
+            learning_rate='constant',
+            time_distr_class=time_distr_class,
+            time_distr_param=time_distr_param,
+            time_distr_param_rule=rule,
+            time_const_weight=0,
+            obj_function='mse',
+            real_metrics_toggle=False,
+            save_test_to_file=True,
+            test_folder_name_struct=[
+                'hxx01_hetertime',
+                # 'shuffle',
+                # 'w_domain',
+                # 'metrics',
+                # 'dataset',
+                'distr',
+                'distr_rule',
+                # 'error',
+                # 'nodeserror',
+                # 'alpha',
+                'nodes',
+                # 'samp',
+                # 'feat',
+                'time',
+                'iter',
+                'c',
+                # 'method',
+            ],
+            test_parent_folder="",
+            instant_plot=False,
+            plots=(
+                'iter_time',
+                'avg_iter_time'
+            ),
+            save_plot_to_file=True
         )
 
 
-# old and no more used
-def main1():
-    # __X, __y = make_blobs(n_samples=10000, n_features=100, centers=3, cluster_std=2, random_state=20)
-    X, y = functions.generate_regression_training_set_from_function(100000, 10, functions.linear_function, 1,
-        error_std_dev=1)
-    cls = linear_model.SGDClassifier(loss="squared_loss", max_iter=100000)
-    cls.fit(X, y)
-    print(cls.score(X, y))
+def test_different_1000nodes_timing_loop(index):
+    S = [
+        [1, None],
+        [2, None],
+        [10, None],
+        [2, 'alternate'],
+        [10, 'alternate'],
+        [2, 'split'],
+        [10, 'split'],
+    ]
+    for mu_slow, rule in S:
+        time_distr_class = [
+            statistics.ExponentialDistribution,
+            statistics.UniformDistribution,
+            statistics.Type2ParetoDistribution
+        ][index]
+        time_distr_param = [
+            [[1 / mu_slow], [1]],
+            [[0, 2 * mu_slow], [0, 2]],
+            [[3, 2 * mu_slow], [3, 2]],
+        ][index]
+        simulator.run(
+            seed=18062018,
+            n=1000,
+            graphs=[
+                "0-diagonal",
+                "1-cycle",
+                "2-cycle",
+                '2-expander',
+                "4-cycle",
+                '4-expander',
+                "20-cycle",
+                '20-expander',
+                "50-cycle",
+                '50-expander',
+                "100-cycle",
+                '100-expander',
+                "200-cycle",
+                '200-expander',
+                "500-cycle",
+                '500-expander',
+                "999-clique",
+            ],
+            n_samples=1000,
+            dataset='unireg',
+            starting_weights_domain=[0, 0],
+            max_iter=None,
+            max_time=10000,
+            method=None,
+            alpha=0,
+            learning_rate='constant',
+            time_distr_class=time_distr_class,
+            time_distr_param=time_distr_param,
+            time_distr_param_rule=rule,
+            time_const_weight=0,
+            obj_function='mse',
+            real_metrics_toggle=False,
+            save_test_to_file=True,
+            test_folder_name_struct=[
+                'hxx01_hetertime',
+                # 'shuffle',
+                # 'w_domain',
+                # 'metrics',
+                # 'dataset',
+                'distr',
+                'distr_rule',
+                # 'error',
+                # 'nodeserror',
+                # 'alpha',
+                'nodes',
+                # 'samp',
+                # 'feat',
+                'time',
+                'iter',
+                'c',
+                # 'method',
+            ],
+            test_parent_folder="",
+            instant_plot=False,
+            plots=(
+                'iter_time',
+                'avg_iter_time'
+            ),
+            save_plot_to_file=True
+        )
 
 
-# old and no more used
-def main2():
-    X, y, w = functions.generate_svm_dual_averaging_training_set(
-        100000, 100
-    )
-    cls = svm.LinearSVC(max_iter=1000, verbose=True)
-    cls.fit(X, y)
-    print(cls.score(X, y))
+def test_eigenvalue_computation_suite():
+    for n in [1000, 500, 200, 100, 50, 10]:
+        for d in [1, 2, 3, 4, 5, 8, 10, 20, 40, 50, 80, 99]:
+            [v1, v2] = test_eigenvalue_computation(n, d)
+            print("n={}, d={}, ({}, {}) diff={}".format(n, d, v1, v2, abs(v1 - v2)))
 
+
+def test_eigenvalue_computation(N, d):
+    A = graphs.generate_n_cycle_d_regular_graph_by_degree(N, d)
+    NA = normalize(A, axis=1, norm='l1')
+    v1 = mtm_second_eigenvalue_from_adjacency_matrix(A)
+    v2 = (math.sin(math.pi * (d + 1) / N) / math.sin(math.pi / N)) / (d + 1)
+    return [v1, v2]
+
+
+def compute_velocities():
+    test_folder_path = "./test_log/test_h002_hetertime_exp0.5_100n_1000time_INFiter_0c"
+    logs, setup = load_test_logs(test_folder_path, return_setup=True)
+
+    for graph in setup['graphs']:
+        speed = statistics.single_iter_velocity_from_logs(
+            logs['avg_iter_time'][graph],
+            logs['avg_iter_time']['0-diagonal'],
+            setup['max_time'],
+            setup['n']
+        )
+        print("{} speed = {}".format(graph, speed))
+
+
+"""
+y = np.array([-1, 1, 1, 1, -1, 1])
+y_hat_f = np.array([-1, -1, -1, 1, -1, 1])
+X = np.array([[0, 1, 2, 3],
+              [0, 1, 2, 3],
+              [0, 1, 2, 3],
+              [0, 1, 2, 3],
+              [0, 1, 2, 3],
+              [0, 1, 2, 3]])
+
+print(mltoolbox.HingeLossFunction.f_gradient(y, y_hat_f, X))
+print(mltoolbox.HingeLossFunction.f_gradient2(y, y_hat_f, X))
+"""
+
+"""
+Ks = [0,1,2,3,4,8,20,50,99]
+exp_str = "------------------------------\nExponential (lambda=1)\n------------------------------\n"
+par_str = "------------------------------\nPareto Type 2 (alpha=3, sigma=2)\n------------------------------\n"
+uni_str = "------------------------------\nUniform (a=0, b=2)\n------------------------------\n"
+bounds = [
+    ("memoryless lb", statistics.single_iteration_velocity_memoryless_lower_bound),
+    ("residual time lb", statistics.single_iteration_velocity_residual_lifetime_lower_bound),
+    ("don bound", statistics.single_iteration_velocity_don_bound),
+    ("upper bound", statistics.single_iteration_velocity_upper_bound),
+]
+
+for bound in bounds:
+    exp_str+="{}\n".format(bound[0])
+    par_str+="{}\n".format(bound[0])
+    uni_str+="{}\n".format(bound[0])
+    for k in Ks:
+        exp_str += "(k={}, {})\n".format(k, bound[1](
+            k,
+            statistics.ExponentialDistribution,
+            [1]
+        ))
+        par_str += "(k={}, {})\n".format(k, bound[1](
+            k,
+            statistics.Type2ParetoDistribution,
+            [3,2]
+        ))
+        uni_str += "(k={}, {})\n".format(k, bound[1](
+            k,
+            statistics.UniformDistribution,
+            [0,2]
+        ))
+    exp_str+="\n"
+    par_str+="\n"
+    uni_str+="\n"
+
+print(exp_str)
+print(par_str)
+print(uni_str)
+"""
 
 if __name__ == "__main__":
-    pass
-    # this module's functions are called from inside test.py script
+    parser = argparse.ArgumentParser(
+        description='Run test simulations'
+    )
+
+    parser.add_argument(
+        '-c', '--core',
+        action='store',
+        default=-1,
+        required=False,
+        help='Specify core test suite',
+        dest='core'
+    )
+
+    args = parser.parse_args()
+
+    run(int(args.core))

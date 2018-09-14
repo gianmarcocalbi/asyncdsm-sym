@@ -2,7 +2,6 @@ import math, sys, random, cmath, pickle, os, warnings
 import numpy as np
 from termcolor import colored as col
 from src.mltoolbox.metrics import METRICS
-#from src import graphs
 import networkx as nx
 
 
@@ -130,8 +129,10 @@ def iteration_speed_lower_bound(l, k, time_arr):
         lb.append(t * l / (1 + sum(1 / i for i in range(1, k + 1))))
     return lb
 
+
 def degree_from_label(label):
     return int(label.split('-')[0])
+
 
 def degree_from_adjacency_matrix(adj_mat):
     degree = 0
@@ -190,9 +191,9 @@ def Pn_spectral_gap_from_adjacency_matrix(adj_mat):
 
 def abs_eigenvalues(matrix):
     eigenvals = np.linalg.eigvals(matrix)
-    abs_eigenvals = [abs(e) for e in eigenvals]
-    abs_eigenvals.sort(reverse=True)
-    return abs_eigenvals
+    real_eigenvals = [abs(e) for e in eigenvals]
+    real_eigenvals.sort(reverse=True)
+    return real_eigenvals
 
 
 def progress(current_progress, total_progress, bar_length=50, text_before='', text_after=''):
@@ -215,8 +216,113 @@ def print_verbose(level, msg, no_input=False):
     elif level == 2:
         input(str(msg) + col(" [PRESS ENTER]", 'red'))
 
-"""def compute_expected_eigvecsvm_model(N, graph_type, d, k, alpha, avg=False, c=0.1):
-    lmbda = mtm_second_eigenvalue_from_adjacency_matrix(graphs.G(N, graph_type, d).A)
-    if avg:
-        return 1 + (alpha / (1-lmbda)) * (1-(1-math.pow(lmbda, k+1))/((1-lmbda)*(k+1))) - alpha * (k / 2) * c
-    return -1"""
+
+def generate_test_subfolder_name(setup: dict, test_num: str, *argslist, parent_folder='') -> str:
+    """
+    Generate test folder relative path and name inside test_log folder.
+
+    Parameters
+    ----------
+    setup : dict
+        Test setup dict.
+    test_num : str
+        Test number or any label, it will be prepended to the test folder.
+    argslist : unfolded list
+        Variables names that will be included in the path.
+    parent_folder : str
+
+    Returns
+    -------
+    Test folder relative path to be used inside test_log folder.
+    """
+
+    def join_name_parts(*args):
+        name = ""
+        for a in args:
+            name += str(a) + "_"
+        return name[:-1]
+
+    dataset = setup['dataset']
+    distr = setup['time_distr_class'].shortname + '[' + '-'.join([str(e) for e in setup['time_distr_param'][0]]) + ']'
+    distr_rule = str(setup['time_distr_param_rule']) + 'Rule'
+    if 'svm' in setup['dataset']:
+        error = str(setup['smv_label_flip_prob']) + 'flip'
+        nodeserror = ''
+    else:
+        error = str(setup['error_std_dev']) + 'err'
+        nodeserror = str(setup['node_error_std_dev']) + 'nodeErr'
+
+    alpha = str(setup['learning_rate'][0].upper()) + str(setup['alpha']) + 'alpha'
+    if setup['spectrum_dependent_learning_rate']:
+        alpha = "sg" + alpha
+    nodes = str(setup['n']) + 'n'
+    samp = str(setup['n_samples']) + 'samp'
+    feat = str(setup['n_features']) + 'feat'
+    time = ('INF' if setup['max_time'] is None else str(setup['max_time'])) + 'time'
+    iter = ('INF' if setup['max_iter'] is None else str(setup['max_iter'])) + 'iter'
+    c = str(setup['time_const_weight']) + 'c'
+    method = setup['method']
+    shuffle = 'shuf' if setup['shuffle'] else 'noshuf'
+    w_domain = 'Win[{},{}]'.format(setup['starting_weights_domain'][0], setup['starting_weights_domain'][1])
+    metrics = 'mtrT{}{}'.format(setup['metrics_type'], setup['metrics_nodes'])
+
+    name = "test_" + str(test_num)
+
+    for a in argslist:
+        try:
+            name = join_name_parts(name, eval(a))
+        except NameError:
+            pass
+
+    return os.path.normpath(os.path.join(parent_folder, name))
+
+
+def generate_time_distr_param_list(N: int, params: list, rule: str) -> list:
+    """
+    Assign time distribution parameters to each node.
+    Create a list with length equal to N (so one element for each node) so that to node i will be assigned parameters
+    in position i of the list.
+    NB: any time random distribution takes exactly on list of parameters!
+
+    Parameters
+    ----------
+    N : int
+        Total amount of nodes in the cluster.
+    params : list or list of list
+        If just a list of simple objects (float, int) then such list will be assigned to all nodes.
+        If params is a list of list then each node will have on list assigned following the rule below.
+    rule : str
+        'split' : if there are K lists inside params list then N nodes are divided into K set, i-th set will
+            take i-th list as parameter.
+        'random' : each node has probability 1/K to take one list as parameter.
+        'alternate' : node i takes parameter list (i mod K).
+
+    Returns
+    -------
+    List of list like explained in this function's description.
+    """
+
+    if len(params) == 0:
+        return [[None] for _ in range(N)]
+
+    if not isinstance(params[0], list) and not isinstance(params[0], tuple):
+        params = [params]
+
+    k = len(params)
+    time_distr_param_list = []
+
+    if rule == 'split':
+        time_distr_param_list = [params[0] for _ in range(int(math.ceil(N / k)))]
+        for i in range(1, len(params)):
+            time_distr_param_list += [params[i] for _ in range(int(math.floor(N / k)))]
+    elif rule == 'random':
+        for i in range(N):
+            time_distr_param_list.append(np.random.choice(params))
+    elif rule == 'alternate':
+        for i in range(N):
+            time_distr_param_list.append(params[i % k])
+    else:
+        for i in range(N):
+            time_distr_param_list.append(params[0])
+
+    return time_distr_param_list

@@ -141,7 +141,7 @@ def main():
         if graph in list(new_setup_graphs_names):
             new_ordered_setup_graphs_names.append(graph)
 
-    setup['graphs'] = graphs.generate_n_nodes_graphs(setup['n'], new_ordered_setup_graphs_names)
+    setup['graphs'] = graphs.generate_n_nodes_graphs_list(setup['n'], new_ordered_setup_graphs_names)
     setup['metrics'] = list(setup_metrics)
     setup['real_metrics'] = list(setup_real_metrics)
 

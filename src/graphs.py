@@ -238,7 +238,7 @@ def G(N, gtype, d=0):
     return Graph(N, A, "{}-{}".format(d, gtype))
 
 
-def generate_n_nodes_graphs(n, graphs_list):
+def generate_n_nodes_graphs_list(n, graphs_list):
     graphs = {}
 
     for gstr in graphs_list:
@@ -258,3 +258,18 @@ def generate_n_nodes_graphs(n, graphs_list):
         graphs[g.name] = g.A
 
     return graphs
+
+def generate_n_nodes_graph(n, graph_name):
+    if graph_name[0:3] == 'n-1':
+        deg = 'n-1'
+        gtype = graph_name.split("-", 2)[2]
+    else:
+        if len(graph_name.split("_")[0]) < len(graph_name.split("-")[0]):
+            sep = '_'
+        else:
+            sep = '-'
+        deg, gtype = graph_name.split(sep, 1)
+
+    if 'n' in deg:
+        deg = eval(deg)
+    return G(n, gtype, int(deg))
