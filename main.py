@@ -751,11 +751,15 @@ Summary:
         plt.ylabel("Global W at iteration")
         plt.yscale('linear')
         for graph in w_logs:
+            try:
+                color = colors[graph]
+            except:
+                color = 'r'
             plt.plot(
                 list(range(len(w_logs[graph]))),
                 w_logs[graph],
                 label=graph,
-                color=colors[graph],
+                color= color,
                 marker='o',
                 markersize=2
                 # **kwargs
@@ -771,11 +775,15 @@ Summary:
         plt.ylabel("W_{}(iter)".format(plot_node_w))
         plt.yscale('linear')
         for graph in node_w_logs:
+            try:
+                color = colors[graph]
+            except:
+                color = 'r'
             plt.plot(
                 list(range(len(node_w_logs[graph]))),
                 [p[0] for p in node_w_logs[graph]],
                 label=graph,
-                color=colors[graph],
+                color=color,
                 marker='o',
                 markersize=2
             )

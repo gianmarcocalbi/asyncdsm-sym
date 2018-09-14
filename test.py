@@ -1,26 +1,24 @@
-from src import statistics, graphs
-from src.mltoolbox import functions as f
-from src.utils import *
 import numpy as np
-from src.plotter import plot_from_files
-import main, time, math, argparse
-from scripts import *
 from sklearn.preprocessing import normalize
-from matplotlib import pyplot as plt
-from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
+
+import argparse
+import main
+import math
+from src import statistics, graphs
+from src.utils import *
 
 
 def get_graphs(graph_type, nodes):
     deg = {
         100: [
             2,
-            3,
-            4,
-            8,
-            16,
-            32,
-            64,
-            99
+            # 3,
+            # 4,
+            # 8,
+            # 16,
+            # 32,
+            # 64,
+            # 99
         ],
         400: [2, 3, 4, 6, 20, 50, 100, 200, 300, 399],
         1000: [2, 3, 4, 8, 16, 20, 30, 40, 50, 100, 200, 500, 999]
@@ -28,9 +26,11 @@ def get_graphs(graph_type, nodes):
 
     g = []
 
-    for d in deg[0:-1]:
-        g.append(str(d) + '-' + graph_type)
-    g.append(str(deg[-1]) + '-clique')
+    for d in deg:
+        if d == nodes - 1:
+            g.append(str(d) + '-clique')
+        else:
+            g.append(str(d) + '-' + graph_type)
 
     return g
 
@@ -51,22 +51,27 @@ def run(core=-1):
         M = A / sum(A[0])
         eigenvals = np.linalg.eigvals(M)
         np.sort(eigenvals)
-        print(g_name + ' ' + str(abs(eigenvals[1])))"""
+        print("{} : abs(l2)={}, l2={}, lN={}".format(g_name, np.round(abs(eigenvals[1]),3), np.round(eigenvals[1],3), np.round(eigenvals[99],3)))
+    """
 
-    test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=100, distr='exp', metrics_nodes='worst',
+    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst',
         alert=False)
 
     if core == 0:
-        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['2-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['2-undir_cycle'], n=100, distr='exp',
+            metrics_nodes='worst',
             alert=False)
     elif core == 1:
-        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['3-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['3-undir_cycle'], n=100, distr='exp',
+            metrics_nodes='worst',
             alert=False)
     elif core == 2:
-        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['4-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['4-undir_cycle'], n=100, distr='exp',
+            metrics_nodes='worst',
             alert=False)
     elif core == 3:
-        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['8-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['8-undir_cycle'], n=100, distr='exp',
+            metrics_nodes='worst',
             alert=False)
     pass
 
@@ -74,7 +79,7 @@ def run(core=-1):
 def test_on_eigvecsvm_dataset(
         seed=None,
         graph_type='expander',
-        graphs_list = None,
+        graphs_list=None,
         n=100, distr='par',
         metrics_nodes='all',
         alert=True
@@ -90,7 +95,7 @@ def test_on_eigvecsvm_dataset(
     }[distr]
     time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
     if metrics_nodes in ['worst', 'all']:
-        metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+        metrics_type = {'worst': 2, 'all': 0, 'best': 2}[metrics_nodes]
     else:
         metrics_type = 2
 
@@ -100,11 +105,11 @@ def test_on_eigvecsvm_dataset(
     main.main(
         seed=seed,
         n=n,
-        graphs= graphs_list,
+        graphs=graphs_list,
         dataset='eigvecsvm',
-        starting_weights_domain=[10, 10],
+        starting_weights_domain=[3, 3],
         smv_label_flip_prob=0.00,
-        max_iter=500,
+        max_iter=1000,
         max_time=None,
         alpha=1e-1,
         learning_rate='constant',
