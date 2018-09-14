@@ -53,6 +53,9 @@ def run(core=-1):
         np.sort(eigenvals)
         print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
+    test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=100, distr='exp', metrics_nodes='worst',
+        alert=False)
+
     if core == 0:
         test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['2-undir_cycle'], n=100, distr='exp', metrics_nodes='worst',
             alert=False)
@@ -91,7 +94,7 @@ def test_on_eigvecsvm_dataset(
     else:
         metrics_type = 2
 
-    if len(graphs_list) == 0:
+    if graphs_list is None or len(graphs_list) == 0:
         graphs_list = get_graphs(graph_type, n)
 
     main.main(
@@ -99,16 +102,16 @@ def test_on_eigvecsvm_dataset(
         n=n,
         graphs= graphs_list,
         dataset='eigvecsvm',
-        starting_weights_domain=[1, 1],
+        starting_weights_domain=[10, 10],
         smv_label_flip_prob=0.00,
-        max_iter=200,
+        max_iter=500,
         max_time=None,
         alpha=1e-1,
         learning_rate='constant',
         spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
-        obj_function='cont_hinge_loss',
+        obj_function='hinge_loss',
         epsilon=-math.inf,
         average_model_toggle=True,
         metrics=[],
@@ -129,7 +132,7 @@ def test_on_eigvecsvm_dataset(
         ],
         test_parent_folder="",
         instant_plot=True,
-        plots=['cont_hinge_loss_iter', 'cont_hinge_loss_time'],
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
         save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
