@@ -12,13 +12,13 @@ def get_graphs(graph_type, nodes):
     deg = {
         100: [
             2,
-            # 3,
-            # 4,
-            # 8,
-            # 16,
-            # 32,
-            # 64,
-            # 99
+            3,
+            4,
+            8,
+            16,
+            32,
+            64,
+            99
         ],
         400: [2, 3, 4, 6, 20, 50, 100, 200, 300, 399],
         1000: [2, 3, 4, 8, 16, 20, 30, 40, 50, 100, 200, 500, 999]
@@ -54,7 +54,7 @@ def run(core=-1):
         print("{} : abs(l2)={}, l2={}, lN={}".format(g_name, np.round(abs(eigenvals[1]),3), np.round(eigenvals[1],3), np.round(eigenvals[99],3)))
     """
 
-    test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['2-undir_cycle'], n=100, distr='exp',
+    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp',
         metrics_nodes='worst', alert=False)
 
     if core == 0:
@@ -98,7 +98,7 @@ def test_on_eigvecsvm_dataset(
         dataset='eigvecsvm',
         starting_weights_domain=[3, 3],
         smv_label_flip_prob=0.00,
-        max_iter=1000,
+        max_iter=500,
         max_time=None,
         alpha=1e-1,
         learning_rate='constant',
@@ -114,7 +114,7 @@ def test_on_eigvecsvm_dataset(
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'cyc2',
+            'ucyc',
             'dataset',
             'alpha',
             'nodes',
