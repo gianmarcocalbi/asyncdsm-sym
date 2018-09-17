@@ -161,32 +161,32 @@ def n_cycle_second_eigenvalue_approx_from_adjacency_matrix(adj_mat):
     return abs(max_val)
 
 
-def mtm_spectral_gap_from_adjacency_matrix(adj_mat):
-    return 1 - mtm_second_eigenvalue_from_adjacency_matrix(adj_mat)
+def uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(adj_mat):
+    return 1 - uniform_weighted_Pn_second_eigenvalue_from_adjacency_matrix(adj_mat)
 
 
-def mtm_second_eigenvalue_from_adjacency_matrix(adj_mat):
+def uniform_weighted_Pn_second_eigenvalue_from_adjacency_matrix(adj_mat):
     norm_adj_mat = adj_mat / sum(adj_mat[0])
     return abs_eigenvalues(norm_adj_mat)[1]
 
 
-def mtm_from_adjacency_matrix(adj_mat):
+def uniform_weighted_Pn_from_adjacency_matrix(adj_mat):
     return adj_mat / sum(adj_mat[0])
 
 
-def Pn_from_adjacency_matrix(adj_mat):
+def one_half_diagonal_Pn_from_adjacency_matrix(adj_mat):
     d = sum(adj_mat[0]) - 1
     A = adj_mat / (2 * d)
     np.fill_diagonal(A, 0.5)
     return A
 
 
-def Pn_second_eigenvalue_from_adjacency_matrix(adj_mat):
-    return abs_eigenvalues(Pn_from_adjacency_matrix(adj_mat))[1]
+def one_half_diagonal_Pn_second_eigenvalue_from_adjacency_matrix(adj_mat):
+    return abs_eigenvalues(one_half_diagonal_Pn_from_adjacency_matrix(adj_mat))[1]
 
 
-def Pn_spectral_gap_from_adjacency_matrix(adj_mat):
-    return 1 - Pn_second_eigenvalue_from_adjacency_matrix(adj_mat)
+def one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix(adj_mat):
+    return 1 - one_half_diagonal_Pn_second_eigenvalue_from_adjacency_matrix(adj_mat)
 
 
 def abs_eigenvalues(matrix):

@@ -1,7 +1,5 @@
 import copy
 
-from termcolor import colored as col
-
 from src import statistics
 from src.mltoolbox import functions
 from src.node import Node
@@ -38,6 +36,7 @@ class Cluster:
         self.w = []  # log 'iteration i-th' => value of weight vector at iteration i-th
         self.method = None
         self.obj_function = None
+        self.average_model_toggle = None
         self.metrics = {}
         self.real_metrics = {}
         self.real_metrics_toggle = True
@@ -93,14 +92,20 @@ class Cluster:
         X : ndarray of float
             Training set samples.
 
-        y : array of float
+        y : array of floats
             Training set sample target function values.
 
-        real_w : array of float
+        real_w : array of floats
             Real weight vector used to generate the training set.
+
+        real_y_activation_function : function
+            Activation function to call over the output of the prediction model (no more used).
 
         obj_function : class
             Class of the objective function to minimize.
+
+        average_model_toggle : bool
+            If True then the average model over time is used rather than just x(k) to compute metrics.
 
         method : 'classic', 'stochastic', 'batch' or 'linear_regression', optional
             Method used to minimize error function.
@@ -138,6 +143,9 @@ class Cluster:
             Choose any in ['all', 'score', 'mse', 'mae', rmse']
             or 'all'.
 
+        real_metrics_toggle : bool
+
+
         metrics_type : int, optional
             0 : normal metric, 1 : alt metric, 2 : new alt metric.
 
@@ -169,10 +177,20 @@ class Cluster:
         starting_weights_domain : tuple of two floats
             Domain extremes of nodes' starting weights.
 
+        verbose_node : bool or int
+            Verbose policy in node class.
+            - <0 : no print at all except from errors (unsafe).
+            -  0 or False : default messages;
+            -  1 : verbose + default messages
+            -  2 : verbose + default messages + input required to continue after each message (simulation will be paused
+                after each message and will require to press ENTER to go on, useful for debugging).
+
+        verbose_task : bool or int
+            Verbose policy in task class.
+
         Returns
         -------
         None
-
         """
 
         self.verbose_node = verbose_node
@@ -295,7 +313,7 @@ class Cluster:
             self.y = np.take(Xy, -1, 1)
             del Xy
 
-        self.real_y = self.obj_function.y_hat_func.compute_value(self.X, self.real_w)
+        self.real_y = self.X.dot(self.real_w)
 
         if not real_y_activation_function is None:
             self.real_y = real_y_activation_function(self.real_y)
@@ -610,7 +628,7 @@ class Cluster:
                         ))
                     else:
                         # node cannot run computation because it lacks some
-                        # dependencies' informations or it is in the endstep event
+                        # dependencies' information or it is in the end-step event
                         # so it is not supposed to do anything else
                         max_local_clock = node.local_clock
 

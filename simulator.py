@@ -1,18 +1,19 @@
 import datetime
 import shutil
 import time
+from typing import *
 
 import matplotlib.pyplot as plt
-from sklearn import linear_model, svm
+# from sklearn import linear_model, svm
 from sklearn.datasets.samples_generator import make_regression
+
 from src import statistics
 from src.cluster import Cluster
 from src.graphs import generate_n_nodes_graphs_list
-from src.mltoolbox import functions, datasets
+from src.mltoolbox import datasets
 from src.plotter import Plotter, plot_from_files
 from src.utils import *
 
-from typing import *
 
 def run(
         seed: int = None,
@@ -98,12 +99,11 @@ def run(
     dataset : str
         Dataset label:
         - "reg": general customizable linear regression dataset;
-        - "reg2": ready linear regression dataset;
         - "unireg": unidimensional regression;
         - "svm": multidimensional classification problem;
         - "unisvm": unidimensional dataset that changes with topology spectral gap;
-        - "unisvm2": unidimensional classification dataset;
-        - "skreg" : regression dataset from sklearn library.
+        - "skreg" : regression dataset from sklearn library,
+        - "sloreg" and "susysvm" from UCI's repository.
     smv_label_flip_prob : float
         Probability that a label is flipped in svm dataset generation.
         Kind of noise added in the dataset.
@@ -470,7 +470,7 @@ Summary:
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:
-                alpha *= math.sqrt(mtm_spectral_gap_from_adjacency_matrix(adjmat))
+                alpha *= math.sqrt(uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(adjmat))
 
             cluster.setup(
                 X, y, w,

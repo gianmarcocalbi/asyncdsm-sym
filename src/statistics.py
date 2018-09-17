@@ -1,9 +1,14 @@
-import math, sys, random, abc, decimal, os
-from scipy import integrate
+import abc
+import decimal
+import math
+import os
+
 import numpy as np
+from scipy import integrate
 
 D = decimal.Decimal
 decimal.getcontext().prec = 256
+
 
 def single_iter_velocity_from_logs(graph_avg_iter_log, diag_avg_iter_log, max_time, nodes_amount=-math.inf):
     diag_avg_iter_time = float(diag_avg_iter_log[-1][0])
@@ -16,6 +21,7 @@ def single_iter_velocity_from_logs(graph_avg_iter_log, diag_avg_iter_log, max_ti
                         "doesn't allow to compute values for this function")
 
     return graph_avg_iter_iter / max_time
+
 
 def single_iter_velocity_from_path(test_folder_path, graph, nodes_amount, max_time):
     graph_avg_iter_log_path = "{}/{}_avg_iter_time_log".format(test_folder_path, graph)

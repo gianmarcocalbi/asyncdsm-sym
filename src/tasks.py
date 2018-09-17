@@ -23,7 +23,7 @@ class Trainer(Task):
         self.X = X
         self.y = y
         self.real_w = real_w
-        self.real_y = self.obj_function.y_hat_func.compute_value(self.X, self.real_w)
+        self.real_y = self.X.dot(self.real_w)
         self.N = self.X.shape[0]
         self.iteration = 0
 

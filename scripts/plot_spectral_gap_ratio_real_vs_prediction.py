@@ -45,11 +45,11 @@ def main():
         print(slope)
 
         real_slopes.append(slope)
-        pred_ratios.append(1 / math.sqrt(mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
+        pred_ratios.append(1 / math.sqrt(uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
 
         if 'clique' in graph:
             clique_slope = slope
-            clique_spectral_gap = mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])
+            clique_spectral_gap = uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])
 
     real_ratios = clique_slope / np.array(real_slopes)
     pred_ratios = np.array(pred_ratios)

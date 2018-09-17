@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 import warnings, math, glob
-from src.utils import Pn_spectral_gap_from_adjacency_matrix, mtm_spectral_gap_from_adjacency_matrix
+from src.utils import one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix, uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
 
 
 def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
@@ -186,16 +186,17 @@ def generate_undirected_n_cycle_d_regular_graph_by_degree(N, K):
 
     return generate_graph_by_edges(N, edges)
 
-def generate_expander_graph(N, degree, matrix_type='mtm'):
+
+def generate_expander_graph(N, degree, matrix_type='uniform-weighted'):
     max_spectrum = 0
     max_exp = None
 
-    if matrix_type == 'mtm':
-        graphs_root = './graphs/exp_mtm'
-        spectral_gap_function = mtm_spectral_gap_from_adjacency_matrix
+    if matrix_type == 'one-half-diagonal':
+        graphs_root = './graphs/exp_one_half_diagonal'
+        spectral_gap_function = one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix
     else:
-        graphs_root = './graphs/exp_half_weighted'
-        spectral_gap_function = Pn_spectral_gap_from_adjacency_matrix
+        graphs_root = './graphs/exp_uniform_weighted'
+        spectral_gap_function = uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
 
     exp_path_list = list(glob.iglob('{}/exp_{}n_{}d*'.format(graphs_root, N, degree)))
     for exp_path in exp_path_list:
@@ -206,6 +207,7 @@ def generate_expander_graph(N, degree, matrix_type='mtm'):
             max_exp = adj
 
     return max_exp
+
 
 class Graph:
     def __init__(self, N, A, name):
@@ -231,7 +233,7 @@ def G(N, gtype, d=0):
         d = 2
     elif 'clique' in gtype:
         A = generate_complete_graph(N)
-        d = N-1
+        d = N - 1
     else:
         raise Exception("Graph gtype {} doesn't exist".format(gtype))
 
@@ -258,6 +260,7 @@ def generate_n_nodes_graphs_list(n, graphs_list):
         graphs[g.name] = g.A
 
     return graphs
+
 
 def generate_n_nodes_graph(n, graph_name):
     if graph_name[0:3] == 'n-1':

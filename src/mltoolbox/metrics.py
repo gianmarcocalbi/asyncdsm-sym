@@ -116,13 +116,11 @@ class Metrics:
     __metaclass__ = abc.ABCMeta
     loss_func = None
 
-    @staticmethod
-    def compute_value(X, y, w):
-        return np.sum(Metrics.loss_func.compute_value(X, y, w) / len(y))
+    def compute_value(self, X, y, w):
+        return np.sum(self.loss_func.compute_value(X, y, w) / len(y))
 
-    @staticmethod
-    def compute_gradient(X, y, w):
-        return Metrics.loss_func.compute_gradient(X, y, w) / len(y)
+    def compute_gradient(self, X, y, w):
+        return self.loss_func.compute_gradient(X, y, w) / len(y)
 
 
 class MeanSquaredError(Metrics):

@@ -16,7 +16,7 @@ def unisvm_dual_averaging_dataset(n, label_flip_prob=0.05):
 
 
 def eigvecsvm_dataset_from_adjacency_matrix(adj_mat, c=0.1):
-    M = utils.mtm_from_adjacency_matrix(adj_mat)
+    M = utils.uniform_weighted_Pn_from_adjacency_matrix(adj_mat)
     eigvals, eigvecs = np.linalg.eig(M)
     lambda2nd_index = np.argsort(np.abs(eigvals))[-2]
 

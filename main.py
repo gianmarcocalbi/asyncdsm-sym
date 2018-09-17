@@ -1,13 +1,10 @@
-from src import statistics, graphs
-from src.mltoolbox import functions as f
-from src.utils import *
-import numpy as np
-from src.plotter import plot_from_files
-import simulator, time, math, argparse
-from scripts import *
+import argparse
+
 from sklearn.preprocessing import normalize
-from matplotlib import pyplot as plt
-from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
+
+import simulator
+from src import statistics, graphs
+from src.utils import *
 
 
 def get_graphs(graph_type, nodes):
@@ -83,16 +80,16 @@ def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='pa
         n=n,
         graphs= get_graphs(graph_type, n),
         dataset='eigvecsvm',
-        starting_weights_domain=[1, 1],
+        starting_weights_domain=[3, 3],
         smv_label_flip_prob=0.00,
-        max_iter=400,
+        max_iter=500,
         max_time=None,
         alpha=1e-1,
         learning_rate='constant',
         spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
-        obj_function='hinge_loss',
+        obj_function='cont_hinge_loss',
         epsilon=-math.inf,
         average_model_toggle=True,
         metrics=[],
@@ -101,7 +98,7 @@ def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='pa
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'cyc',
+            'ucycNEW',
             'dataset',
             'alpha',
             'nodes',
@@ -113,7 +110,7 @@ def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='pa
         ],
         test_parent_folder="",
         instant_plot=True,
-        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        plots=['cont_hinge_loss_iter', 'cont_hinge_loss_time'],
         save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
@@ -1195,10 +1192,10 @@ def test_different_100nodes_timing_loop(index):
             ],
             test_parent_folder="",
             instant_plot=False,
-            plots=(
+            plots=[
                 'iter_time',
                 'avg_iter_time'
-            ),
+            ],
             save_plot_to_file=True
         )
 
@@ -1282,10 +1279,10 @@ def test_different_1000nodes_timing_loop(index):
             ],
             test_parent_folder="",
             instant_plot=False,
-            plots=(
+            plots=[
                 'iter_time',
                 'avg_iter_time'
-            ),
+            ],
             save_plot_to_file=True
         )
 
@@ -1300,7 +1297,7 @@ def test_eigenvalue_computation_suite():
 def test_eigenvalue_computation(N, d):
     A = graphs.generate_n_cycle_d_regular_graph_by_degree(N, d)
     NA = normalize(A, axis=1, norm='l1')
-    v1 = mtm_second_eigenvalue_from_adjacency_matrix(A)
+    v1 = uniform_weighted_Pn_second_eigenvalue_from_adjacency_matrix(A)
     v2 = (math.sin(math.pi * (d + 1) / N) / math.sin(math.pi / N)) / (d + 1)
     return [v1, v2]
 

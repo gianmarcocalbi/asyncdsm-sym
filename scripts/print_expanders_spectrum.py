@@ -7,7 +7,7 @@ from src.utils import *
 def main(compute=True):
     # SETUP BEGIN
 
-    spectral_gap_function = mtm_spectral_gap_from_adjacency_matrix
+    spectral_gap_function = uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
 
     exp_path_list_pattern = os.path.normpath("./graphs/exp_*")
     exp_path_list = list(glob.iglob(exp_path_list_pattern))

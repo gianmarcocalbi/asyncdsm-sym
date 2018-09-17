@@ -1,7 +1,5 @@
-import warnings
 from src import tasks
 from src.utils import *
-from termcolor import colored as col
 
 
 class Node:
@@ -98,7 +96,7 @@ class Node:
                 verbose_task
             )
         else:
-            #warnings.warn('Method "{}" does not exist, nodes will compute nothing!'.format(method))
+            # warnings.warn('Method "{}" does not exist, nodes will compute nothing!'.format(method))
 
             self.training_task = tasks.GradientDescentTrainer(
                 X, y, real_w, obj_function,
@@ -184,7 +182,7 @@ class Node:
             self.dual_averaging_step()
         elif self.method == "linear_regression":
             self.linear_regression_step()
-        elif self.method in ['classic','subgradient']:
+        elif self.method in ['classic', 'subgradient']:
             self.gradient_step()
 
         # get the counter after the computation has ended
@@ -248,7 +246,7 @@ class Node:
             for dep in self.dependencies:
                 dep_w_sum += self.dequeue_incoming_data(dep.get_id())
             dep_w = dep_w_sum / len(self.dependencies)
-            avg_w = self.self_weight * w + dep_w * (1-self.self_weight)
+            avg_w = self.self_weight * w + dep_w * (1 - self.self_weight)
         else:
             avg_w = w
 

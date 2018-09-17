@@ -57,7 +57,7 @@ def main():
         ratio = max(ratio)
 
         real_ratios.append(ratio)
-        pred_ratios.append(1 / math.sqrt(mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
+        pred_ratios.append(1 / math.sqrt(uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])))
 
         # y = np.max(mse_log)
         # x = np.argmax(mse_log)

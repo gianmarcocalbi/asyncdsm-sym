@@ -663,11 +663,11 @@ def plot_dataset_nodes_distr_err_slope_vs_iter_comparison(dataset, n, distr, err
         # print(slope)
 
         real_slopes[graph] = slope
-        pred_ratios[graph] = 1 / math.sqrt(mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph]))
+        pred_ratios[graph] = 1 / math.sqrt(uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph]))
 
         if 'clique' in graph:
             clique_slope = slope
-            clique_spectral_gap = mtm_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])
+            clique_spectral_gap = uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph])
 
     for graph in real_slopes:
         real_ratios[graph] = clique_slope / real_slopes[graph]

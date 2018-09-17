@@ -1,15 +1,15 @@
 import networkx as nx
 import numpy as np
-from src.utils import Pn_spectral_gap_from_adjacency_matrix, mtm_spectral_gap_from_adjacency_matrix
+from src.utils import one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix, uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
 import os, argparse, glob, datetime, time
 
 
 def main(matrix_type='mtm', n=None, d=None):
     if matrix_type == 'mtm':
-        spectral_gap_func = mtm_spectral_gap_from_adjacency_matrix
+        spectral_gap_func = uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
         root_path = './graphs/exp_mtm'
     else:
-        spectral_gap_func = Pn_spectral_gap_from_adjacency_matrix
+        spectral_gap_func = one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix
         root_path = './graphs/exp_half_weighted'
 
     title = 'Seek {} random expander for N={} and d={}'.format(matrix_type, n, d)
