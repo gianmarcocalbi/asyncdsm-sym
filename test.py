@@ -54,26 +54,15 @@ def run(core=-1):
         print("{} : abs(l2)={}, l2={}, lN={}".format(g_name, np.round(abs(eigenvals[1]),3), np.round(eigenvals[1],3), np.round(eigenvals[99],3)))
     """
 
-    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst',
-        alert=False)
+    test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['2-undir_cycle'], n=100, distr='exp',
+        metrics_nodes='worst', alert=False)
 
     if core == 0:
         test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['2-undir_cycle'], n=100, distr='exp',
-            metrics_nodes='worst',
-            alert=False)
+            metrics_nodes='worst', alert=False)
     elif core == 1:
-        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['3-undir_cycle'], n=100, distr='exp',
-            metrics_nodes='worst',
-            alert=False)
-    elif core == 2:
-        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['4-undir_cycle'], n=100, distr='exp',
-            metrics_nodes='worst',
-            alert=False)
-    elif core == 3:
-        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['8-undir_cycle'], n=100, distr='exp',
-            metrics_nodes='worst',
-            alert=False)
-    pass
+        test_on_eigvecsvm_dataset(seed=22052010, graphs_list=['2-undir_cycle'], n=100, distr='exp',
+            metrics_nodes='worst', alert=False)
 
 
 def test_on_eigvecsvm_dataset(
@@ -116,7 +105,7 @@ def test_on_eigvecsvm_dataset(
         spectrum_dependent_learning_rate=False,
         time_distr_class=time_distr_class,
         time_distr_param=time_distr_param,
-        obj_function='hinge_loss',
+        obj_function='cont_hinge_loss',
         epsilon=-math.inf,
         average_model_toggle=True,
         metrics=[],
@@ -125,7 +114,7 @@ def test_on_eigvecsvm_dataset(
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'cyc',
+            'cyc2',
             'dataset',
             'alpha',
             'nodes',
@@ -137,7 +126,7 @@ def test_on_eigvecsvm_dataset(
         ],
         test_parent_folder="",
         instant_plot=True,
-        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        plots=['cont_hinge_loss_iter', 'cont_hinge_loss_time'],
         save_plot_to_file=True,
         plot_global_w=False,
         plot_node_w=False
