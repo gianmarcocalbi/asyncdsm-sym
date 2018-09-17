@@ -9,16 +9,27 @@ from src.utils import *
 
 def get_graphs(graph_type, nodes):
     deg = {
-        100: [2, 3, 4, 8, 10, 20, 50, 80, 99],
+        100: [
+            2,
+            3,
+            4,
+            8,
+            16,
+            32,
+            64,
+            99
+        ],
         400: [2, 3, 4, 6, 20, 50, 100, 200, 300, 399],
         1000: [2, 3, 4, 8, 16, 20, 30, 40, 50, 100, 200, 500, 999]
     }[nodes]
 
     g = []
 
-    for d in deg[0:-1]:
-        g.append(str(d) + '-' + graph_type)
-    g.append(str(deg[-1]) + '-clique')
+    for d in deg:
+        if d == nodes - 1:
+            g.append(str(d) + '-clique')
+        else:
+            g.append(str(d) + '-' + graph_type)
 
     return g
 
@@ -41,20 +52,27 @@ def run(core=-1):
         np.sort(eigenvals)
         print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
-    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst', alert=False)
+    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst',
+        alert=False)
 
     if core == 0:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='par', metrics_nodes='all',
+            alert=False)
     elif core == 1:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='unif', metrics_nodes='all',
+            alert=False)
     elif core == 2:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='exp', metrics_nodes='all',
+            alert=False)
     elif core == 3:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='par', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='par', metrics_nodes='all',
+            alert=False)
     elif core == 4:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='unif', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='unif', metrics_nodes='all',
+            alert=False)
     elif core == 5:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='exp', metrics_nodes='all', alert=False)
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='exp', metrics_nodes='all',
+            alert=False)
 
     pass
 
@@ -78,7 +96,7 @@ def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='pa
     simulator.run(
         seed=seed,
         n=n,
-        graphs= get_graphs(graph_type, n),
+        graphs=get_graphs(graph_type, n),
         dataset='eigvecsvm',
         starting_weights_domain=[3, 3],
         smv_label_flip_prob=0.00,
