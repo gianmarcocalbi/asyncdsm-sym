@@ -52,32 +52,34 @@ def run(core=-1):
         np.sort(eigenvals)
         print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
-    test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst',
-        alert=False)
-
     if core == 0:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='par', metrics_nodes='all',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='par', metrics_nodes='worst',
             alert=False)
     elif core == 1:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='unif', metrics_nodes='all',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='unif', metrics_nodes='worst',
             alert=False)
     elif core == 2:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=1000, distr='exp', metrics_nodes='all',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='exp', metrics_nodes='worst',
             alert=False)
     elif core == 3:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='par', metrics_nodes='all',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='par', metrics_nodes='worst',
             alert=False)
     elif core == 4:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='unif', metrics_nodes='all',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='unif', metrics_nodes='worst',
             alert=False)
     elif core == 5:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='cycle', n=1000, distr='exp', metrics_nodes='all',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst',
             alert=False)
 
-    pass
 
-
-def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='par', metrics_nodes='all', alert=True):
+def test_on_eigvecsvm_dataset(
+        seed=None,
+        graph_type='expander',
+        graphs_list=None,
+        n=100, distr='par',
+        metrics_nodes='all',
+        alert=True
+):
     if alert:
         print('test_exp_on_unisvm_dataset()')
         print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
@@ -89,18 +91,21 @@ def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='pa
     }[distr]
     time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
     if metrics_nodes in ['worst', 'all']:
-        metrics_type = {'worst': 2, 'all': 0}[metrics_nodes]
+        metrics_type = {'worst': 2, 'all': 0, 'best': 2}[metrics_nodes]
     else:
         metrics_type = 2
+
+    if graphs_list is None or len(graphs_list) == 0:
+        graphs_list = get_graphs(graph_type, n)
 
     simulator.run(
         seed=seed,
         n=n,
-        graphs=get_graphs(graph_type, n),
+        graphs=graphs_list,
         dataset='eigvecsvm',
-        starting_weights_domain=[3, 3],
+        starting_weights_domain=[1, 1],
         smv_label_flip_prob=0.00,
-        max_iter=500,
+        max_iter=5000,
         max_time=None,
         alpha=1e-1,
         learning_rate='constant',
@@ -116,15 +121,16 @@ def test_on_eigvecsvm_dataset(seed=None, graph_type='expander', n=100, distr='pa
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=[
-            'ucycNEW',
+            '1'+graph_type,
             'dataset',
             'alpha',
             'nodes',
             'shuffle',
+            'w_domain',
             'distr',
-            'metrics',
             'time',
-            'iter'
+            'iter',
+            'metrics'
         ],
         test_parent_folder="",
         instant_plot=True,
