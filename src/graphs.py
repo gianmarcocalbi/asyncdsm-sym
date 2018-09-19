@@ -1,7 +1,8 @@
 import numpy as np
 import networkx as nx
 import warnings, math, glob
-from src.utils import one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix, uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
+from src.utils import one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix, \
+    uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
 
 
 def generate_d_regular_graph_by_adjacency(adj_matrix_first_row):
@@ -179,10 +180,34 @@ def generate_undirected_n_cycle_d_regular_graph_by_degree(N, K):
     numpy multidimensional array of bit
     """
     edges = []
-    if N > 1 and K > 0:
-        for i in range(K):
-            edges.append("i->i+{}".format(i + 1))
-            edges.append("i+{}->i".format(i + 1))
+    if N > 1 and K > 1:
+        edges.append("i->i+1")
+        edges.append("i+1->i")
+        if K % 2 == 0 and K > 2:
+            for i in range(1, int(K / 2)):
+                edges.append("i->i+{}".format(i + 1))
+                edges.append("i+{}->i".format(i + 1))
+
+        elif K % 2 == 1:
+            if N % (K + 1) == 0:
+                if K == 3:
+                    for h in range(N // (2 * (K - 1))):
+                        i = h * (K - 1) * 2
+                        for j in range(K - 1):
+                            u = i + j
+                            v = i + j + 2
+                            edges.append('{}->{}'.format(u, v))
+                            edges.append('{}->{}'.format(v, u))
+                else:
+                    raise NotImplementedError("Undirected cycle with even degree (d={}) !=3 not implemented yet".format(
+                        K
+                    ))
+            else:
+                raise Exception(
+                    "Cannot generate undirected cycle with N={} and d={}. N should have been divisible by d+1".format(
+                        N, K
+                    )
+                )
 
     return generate_graph_by_edges(N, edges)
 
