@@ -52,9 +52,6 @@ def run(core=-1):
         np.sort(eigenvals)
         print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
-    test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='par', metrics_nodes='worst',
-        alt_exp=True, alert=False)
-
     if core == 0:
         test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='par', metrics_nodes='worst',
             alert=False)
@@ -74,13 +71,13 @@ def run(core=-1):
         test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst',
             alert=False)
     elif core == 6:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='par', metrics_nodes='worst',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='alt_expander', n=100, distr='par', metrics_nodes='worst',
             alt_exp=True, alert=False)
     elif core == 7:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='unif', metrics_nodes='worst',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='alt_expander', n=100, distr='unif', metrics_nodes='worst',
             alt_exp=True, alert=False)
     elif core == 8:
-        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='exp', metrics_nodes='worst',
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='alt_expander', n=100, distr='exp', metrics_nodes='worst',
             alt_exp=True, alert=False)
 
 

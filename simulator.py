@@ -468,13 +468,21 @@ Summary:
                     if setup['dataset'] == 'eigvecsvm':
                         X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(max_deg_adjmat)
                     elif setup['dataset'] == 'alteigvecsvm':
-                        X, y, w = datasets.eigvecsvm_dataset_from_alt_expander(max_deg_adjmat, max_deg)
+                        X, y, w = datasets.eigvecsvm_dataset_from_expander(
+                            setup['n'],
+                            max_deg,
+                            matrix_type='uniform-weighted'
+                        )
                 else:
                     if setup['dataset'] == 'eigvecsvm':
                         X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(adjmat)
                     elif setup['dataset'] == 'alteigvecsvm':
                         deg = int(graph.split('-')[0])
-                        X, y, w = datasets.eigvecsvm_dataset_from_alt_expander(adjmat, deg)
+                        X, y, w = datasets.eigvecsvm_dataset_from_expander(
+                            setup['n'],
+                            deg,
+                            matrix_type='uniform-weighted'
+                        )
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:

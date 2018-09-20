@@ -255,6 +255,8 @@ def G(N, gtype, d=0):
         A = np.diag(np.ones(N))
     elif gtype == 'expander':
         A = generate_expander_graph(N, d)
+    elif gtype == 'alt_expander':
+        A = generate_expander_graph(N, d, matrix_type='uniform-weighted-alt')
     elif gtype == 'cycle':
         A = generate_n_cycle_d_regular_graph_by_degree(N, d)
     elif gtype == 'undir_cycle':

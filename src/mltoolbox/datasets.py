@@ -29,9 +29,8 @@ def eigvecsvm_dataset_from_adjacency_matrix(adj_mat, c=0.1):
     w = np.zeros(1)
     return X.reshape(-1, 1), y, w
 
-def eigvecsvm_dataset_from_alt_expander(adj_mat, d, c=0.1):
-    N = len(adj_mat[0])
-    A = graphs.generate_expander_graph(N, d, 'uniform-weighted-alt')
+def eigvecsvm_dataset_from_expander(N, d, matrix_type='uniform-weighted', c=0.1):
+    A = graphs.generate_expander_graph(N, d, matrix_type)
     M = utils.uniform_weighted_Pn_from_adjacency_matrix(A)
     eigvals, eigvecs = np.linalg.eig(M)
     lambda2nd_index = np.argsort(np.abs(eigvals))[-2]
