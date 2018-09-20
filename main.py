@@ -148,9 +148,9 @@ def test_on_eigvecsvm_dataset(
             'metrics'
         ],
         test_parent_folder="",
-        instant_plot=True,
+        instant_plot=False,
         plots=['cont_hinge_loss_iter', 'cont_hinge_loss_time'],
-        save_plot_to_file=True,
+        save_plot_to_file=False,
         plot_global_w=False,
         plot_node_w=False
     )
