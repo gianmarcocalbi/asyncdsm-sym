@@ -70,6 +70,15 @@ def run(core=-1):
     elif core == 5:
         test_on_eigvecsvm_dataset(seed=22052010, graph_type='undir_cycle', n=100, distr='exp', metrics_nodes='worst',
             alert=False)
+    elif core == 6:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='par', metrics_nodes='worst',
+            alt_exp=True, alert=False)
+    elif core == 7:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='unif', metrics_nodes='worst',
+            alt_exp=True, alert=False)
+    elif core == 8:
+        test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='exp', metrics_nodes='worst',
+            alt_exp=True, alert=False)
 
 
 def test_on_eigvecsvm_dataset(
@@ -78,6 +87,7 @@ def test_on_eigvecsvm_dataset(
         graphs_list=None,
         n=100, distr='par',
         metrics_nodes='all',
+        alt_exp=False,
         alert=True
 ):
     if alert:
@@ -98,11 +108,16 @@ def test_on_eigvecsvm_dataset(
     if graphs_list is None or len(graphs_list) == 0:
         graphs_list = get_graphs(graph_type, n)
 
+    if alt_exp:
+        dataset = 'alteigvecsvm'
+    else:
+        dataset = 'eigvecsvm'
+
     simulator.run(
         seed=seed,
         n=n,
         graphs=graphs_list,
-        dataset='eigvecsvm',
+        dataset=dataset,
         starting_weights_domain=[1, 1],
         smv_label_flip_prob=0.00,
         max_iter=5000,
@@ -121,7 +136,7 @@ def test_on_eigvecsvm_dataset(
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=[
-            '1'+graph_type,
+            '3'+graph_type,
             'dataset',
             'alpha',
             'nodes',

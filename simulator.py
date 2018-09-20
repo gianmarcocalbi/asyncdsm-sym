@@ -401,7 +401,7 @@ def run(
             coef=True,
             random_state=None
         )
-    elif setup['dataset'] == 'eigvecsvm':
+    elif setup['dataset'] == 'eigvecsvm' or setup['dataset'] == 'alteigvecsvm':
         pass
     else:
         delete_test_dir()
@@ -456,17 +456,24 @@ Summary:
                 # so we use the last adj_mat also for the clique
                 if 'clique' in graph:
                     max_deg = 0
-                    clique_adjmat = adjmat
+                    max_deg_adjmat = adjmat
                     for G, A in setup['graphs'].items():
                         if 'clique' in G:
                             continue
                         d = int(G.split('-')[0])
                         if d > max_deg:
-                            clique_adjmat = A
+                            max_deg_adjmat = A
                             max_deg = d
-                    X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(clique_adjmat)
+                    if setup['dataset'] == 'eigvecsvm':
+                        X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(max_deg_adjmat)
+                    elif setup['dataset'] == 'alteigvecsvm':
+                        X, y, w = datasets.eigvecsvm_dataset_from_alt_expander(max_deg_adjmat, max_deg)
                 else:
-                    X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(adjmat)
+                    if setup['dataset'] == 'eigvecsvm':
+                        X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(adjmat)
+                    elif setup['dataset'] == 'alteigvecsvm':
+                        deg = int(graph.split('-')[0])
+                        X, y, w = datasets.eigvecsvm_dataset_from_alt_expander(adjmat, deg)
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:

@@ -1,8 +1,14 @@
-import math, sys, random, cmath, pickle, os, warnings
+import cmath
+import math
+import os
+import pickle
+import sys
+import warnings
+
 import numpy as np
 from termcolor import colored as col
+
 from src.mltoolbox.metrics import METRICS
-import networkx as nx
 
 
 def load_test_logs(test_folder_path, return_setup=True):

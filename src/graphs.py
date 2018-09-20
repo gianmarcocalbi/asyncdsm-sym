@@ -1,6 +1,9 @@
+import glob
+import math
+import warnings
+
 import numpy as np
-import networkx as nx
-import warnings, math, glob
+
 from src.utils import one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix, \
     uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
 
@@ -215,12 +218,17 @@ def generate_undirected_n_cycle_d_regular_graph_by_degree(N, K):
 def generate_expander_graph(N, degree, matrix_type='uniform-weighted'):
     max_spectrum = 0
     max_exp = None
+    graphs_root = ''
+    spectral_gap_function = None
 
     if matrix_type == 'one-half-diagonal':
         graphs_root = './graphs/exp_one_half_diagonal'
         spectral_gap_function = one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix
-    else:
+    elif matrix_type == 'uniform-weighted':
         graphs_root = './graphs/exp_uniform_weighted'
+        spectral_gap_function = uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
+    elif matrix_type == 'uniform-weighted-alt':
+        graphs_root = './graphs/exp_uniform_weighted_alt'
         spectral_gap_function = uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
 
     exp_path_list = list(glob.iglob('{}/exp_{}n_{}d*'.format(graphs_root, N, degree)))

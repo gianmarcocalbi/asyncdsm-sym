@@ -3,7 +3,7 @@ import math
 
 import numpy as np
 
-from src import utils
+from src import utils, graphs
 
 def unisvm_dual_averaging_dataset(n, label_flip_prob=0.05):
     X = np.random.uniform(-1, 1, n)
@@ -29,6 +29,21 @@ def eigvecsvm_dataset_from_adjacency_matrix(adj_mat, c=0.1):
     w = np.zeros(1)
     return X.reshape(-1, 1), y, w
 
+def eigvecsvm_dataset_from_alt_expander(adj_mat, d, c=0.1):
+    N = len(adj_mat[0])
+    A = graphs.generate_expander_graph(N, d, 'uniform-weighted-alt')
+    M = utils.uniform_weighted_Pn_from_adjacency_matrix(A)
+    eigvals, eigvecs = np.linalg.eig(M)
+    lambda2nd_index = np.argsort(np.abs(eigvals))[-2]
+
+    u = eigvecs[:, lambda2nd_index].real
+    u_abs_max_index = np.argmax(np.abs(u))
+    u /= -u[u_abs_max_index]
+
+    X = np.abs(u + c)
+    y = -np.sign(u + c)
+    w = np.zeros(1)
+    return X.reshape(-1, 1), y, w
 
 def unireg_dataset(n_samples):
     X = np.ones((n_samples, 1))

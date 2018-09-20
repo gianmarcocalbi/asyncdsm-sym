@@ -4,13 +4,13 @@ from src.utils import one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix, u
 import os, argparse, glob, datetime, time
 
 
-def main(matrix_type='mtm', n=None, d=None):
-    if matrix_type == 'mtm':
+def main(matrix_type='uniform', n=None, d=None):
+    if matrix_type == 'uniform':
         spectral_gap_func = uniform_weighted_Pn_spectral_gap_from_adjacency_matrix
-        root_path = './graphs/exp_mtm'
+        root_path = './graphs/exp_uniform_weighted'
     else:
         spectral_gap_func = one_half_diagonal_Pn_spectral_gap_from_adjacency_matrix
-        root_path = './graphs/exp_half_weighted'
+        root_path = './graphs/exp_one_half_diagonal'
 
     title = 'Seek {} random expander for N={} and d={}'.format(matrix_type, n, d)
     print(''.join(['#' for _ in range(len(title))]))
@@ -73,9 +73,9 @@ if __name__ == "__main__":
     parser.add_argument(
         '-m', '--matrix',
         action='store',
-        default='mtm',
+        default='uniform',
         required=True,
-        help='Specify matrix type (mtm or else)',
+        help='Specify matrix type (uniform or else)',
         dest='matrix_type'
     )
 
