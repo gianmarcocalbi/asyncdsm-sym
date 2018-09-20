@@ -31,18 +31,7 @@ def eigvecsvm_dataset_from_adjacency_matrix(adj_mat, c=0.1):
 
 def eigvecsvm_dataset_from_expander(N, d, matrix_type='uniform-weighted', c=0.1):
     A = graphs.generate_expander_graph(N, d, matrix_type)
-    M = utils.uniform_weighted_Pn_from_adjacency_matrix(A)
-    eigvals, eigvecs = np.linalg.eig(M)
-    lambda2nd_index = np.argsort(np.abs(eigvals))[-2]
-
-    u = eigvecs[:, lambda2nd_index].real
-    u_abs_max_index = np.argmax(np.abs(u))
-    u /= -u[u_abs_max_index]
-
-    X = np.abs(u + c)
-    y = -np.sign(u + c)
-    w = np.zeros(1)
-    return X.reshape(-1, 1), y, w
+    return eigvecsvm_dataset_from_adjacency_matrix(A, c=c)
 
 def unireg_dataset(n_samples):
     X = np.ones((n_samples, 1))
