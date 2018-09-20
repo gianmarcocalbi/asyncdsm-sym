@@ -52,6 +52,9 @@ def run(core=-1):
         np.sort(eigenvals)
         print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
+    test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='par', metrics_nodes='worst',
+        alt_exp=True, alert=False)
+
     if core == 0:
         test_on_eigvecsvm_dataset(seed=22052010, graph_type='expander', n=100, distr='par', metrics_nodes='worst',
             alert=False)
