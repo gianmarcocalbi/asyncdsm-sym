@@ -402,7 +402,7 @@ def run(
             coef=True,
             random_state=None
         )
-    elif setup['dataset'] == 'eigvecsvm' or setup['dataset'] == 'alteigvecsvm':
+    elif setup['dataset'] in ['eigvecsvm', 'alteigvecsvm', 'multieigvecsvm']:
         pass
     else:
         delete_test_dir()
@@ -473,6 +473,9 @@ Summary:
                             max_deg,
                             matrix_type='uniform-weighted'
                         )
+                    elif setup['dataset'] == 'multieigvecsvm':
+                        X, y, w = datasets.multieigvecsvm_dataset_from_expander(
+                            setup['n_samples'], setup['n'], max_deg_adjmat)
                 else:
                     if setup['dataset'] == 'eigvecsvm':
                         X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(adjmat)
@@ -483,6 +486,10 @@ Summary:
                             deg,
                             matrix_type='uniform-weighted'
                         )
+                    elif setup['dataset'] == 'multieigvecsvm':
+                        deg = int(graph.split('-')[0])
+                        X, y, w = datasets.multieigvecsvm_dataset_from_expander(
+                            setup['n_samples'], setup['n'], deg)
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:

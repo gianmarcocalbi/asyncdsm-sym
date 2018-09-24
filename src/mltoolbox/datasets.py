@@ -1,9 +1,10 @@
 import csv
-import math
+import math, glob
 
 import numpy as np
 
 from src import utils, graphs
+
 
 def unisvm_dual_averaging_dataset(n, label_flip_prob=0.05):
     X = np.random.uniform(-1, 1, n)
@@ -29,9 +30,36 @@ def eigvecsvm_dataset_from_adjacency_matrix(adj_mat, c=0.1):
     w = np.zeros(1)
     return X.reshape(-1, 1), y, w
 
+
 def eigvecsvm_dataset_from_expander(N, d, matrix_type='uniform-weighted', c=0.1):
     A = graphs.generate_expander_graph(N, d, matrix_type)
     return eigvecsvm_dataset_from_adjacency_matrix(A, c=c)
+
+
+def multieigvecsvm_dataset_from_expander(n_samples, N, d, c=0.1):
+    graphs_root = './graphs/exp_uniform_weighted_pool/{}n_{}d'.format(N, d)
+
+    exp_path_list = list(glob.iglob('{}/exp_{}n_{}d*'.format(graphs_root, N, d)))
+    exp_list = []
+    for i in range(n_samples):
+        exp_list.append(np.loadtxt(exp_path_list[i]))
+
+    _X, _y, _w = [], [], []
+
+    for i in range(n_samples):
+        __X, __y, _ = eigvecsvm_dataset_from_adjacency_matrix(exp_list[i], c=c)
+        _X.append(__X)
+        _y.append(__y)
+
+    X, y, w = [], [], []
+
+    for i in range(N):
+        for j in range(n_samples):
+            X.append(_X[j][i])
+            y.append(_y[j][i])
+
+    return np.array(X).reshape(-1,1), np.array(y), np.zeros(1)
+
 
 def unireg_dataset(n_samples):
     X = np.ones((n_samples, 1))

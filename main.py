@@ -79,7 +79,84 @@ def run(core=-1):
     elif core == 8:
         test_on_eigvecsvm_dataset(seed=22052010, graph_type='alt_expander', n=100, distr='exp', metrics_nodes='worst',
             alt_exp=True, alert=False)
+    elif core == 9:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=2, distr='par', metrics_nodes='all')
+    elif core == 10:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=2, distr='exp', metrics_nodes='all')
+    elif core == 11:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=2, distr='unif', metrics_nodes='all')
+    elif core == 12:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=10, distr='par', metrics_nodes='all')
+    elif core == 13:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=10, distr='exp', metrics_nodes='all')
+    elif core == 14:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=10, distr='unif', metrics_nodes='all')
+    elif core == 15:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=100, distr='par', metrics_nodes='all')
+    elif core == 16:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=100, distr='exp', metrics_nodes='all')
+    elif core == 17:
+        test_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=100, distr='unif', metrics_nodes='all')
 
+def test_on_multieigvecsvm_dataset(seed=None, n=100, n_samples=2, distr='par', metrics_nodes='all', alert=False):
+    if alert:
+        print('test_exp_on_unisvm_dataset()')
+        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        input("click [ENTER] to continue or [CTRL]+[C] to abort")
+
+    time_distr_class = {
+        'exp': statistics.ExponentialDistribution, 'unif': statistics.UniformDistribution,
+        'par': statistics.Type2ParetoDistribution
+    }[distr]
+    time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
+    if metrics_nodes in ['worst', 'all']:
+        metrics_type = {'worst': 2, 'all': 0, 'best': 2}[metrics_nodes]
+    else:
+        metrics_type = 2
+
+    simulator.run(
+        seed=seed,
+        n=n,
+        n_samples=n_samples,
+        graphs=get_graphs('expander', n),
+        dataset='multieigvecsvm',
+        starting_weights_domain=[1, 1],
+        smv_label_flip_prob=0.00,
+        max_iter=5000,
+        max_time=None,
+        alpha=1e-1,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=time_distr_class,
+        time_distr_param=time_distr_param,
+        obj_function='cont_hinge_loss',
+        epsilon=-math.inf,
+        average_model_toggle=True,
+        metrics=[],
+        metrics_type=metrics_type,
+        metrics_nodes=metrics_nodes,
+        shuffle=False,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'test4',
+            'dataset',
+            'samp',
+            'alpha',
+            'nodes',
+            #'shuffle',
+            'w_domain',
+            'distr',
+            #'time',
+            'iter',
+            #'metrics'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['cont_hinge_loss_iter', 'cont_hinge_loss_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
+    )
 
 def test_on_eigvecsvm_dataset(
         seed=None,
