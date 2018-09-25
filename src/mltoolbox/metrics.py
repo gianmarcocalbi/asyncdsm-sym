@@ -16,6 +16,18 @@ class LossFunctionAbstract:
         raise NotImplementedError('f_gradient method not implemented in LossFunctionAbstract child class')
 
 
+class SquaredLossFunction(LossFunctionAbstract):
+    @staticmethod
+    def compute_value(X, y, w):
+        return np.power(y - X.dot(w), 2)
+
+    @staticmethod
+    def compute_gradient(X, y, w):
+        # the minus sign from the derivative of "- X.dot(w)" is represented as follows:
+        #   - (y - X.dot(w)) = X.dot(w) - y
+        return (X.T * (X.dot(w) - y) / 2).T
+
+
 class ContinuousHingeLossFunction(LossFunctionAbstract):
     @staticmethod
     def compute_value(X, y, w):
@@ -23,7 +35,7 @@ class ContinuousHingeLossFunction(LossFunctionAbstract):
 
     @staticmethod
     def compute_gradient(X, y, w):
-        return np.sum(-y * X, axis=0)
+        return (-y * X.T).T
 
 
 class HingeLossFunction(LossFunctionAbstract):
@@ -86,18 +98,6 @@ class EdgyHingeLossFunction(LossFunctionAbstract):
         return G
 
 
-class SquaredLossFunction(LossFunctionAbstract):
-    @staticmethod
-    def compute_value(X, y, w):
-        return np.power(y - X.dot(w), 2)
-
-    @staticmethod
-    def compute_gradient(X, y, w):
-        # the minus sign from the derivative of "- X.dot(w)" is represented as follows:
-        #   - (y - X.dot(w)) = X.dot(w) - y
-        return X.T.dot(X.dot(w) - y) / 2
-
-
 # no more used
 class LinearYHatFunction:
     @staticmethod
@@ -120,7 +120,7 @@ class Metrics:
         return np.sum(self.loss_func.compute_value(X, y, w) / len(y))
 
     def compute_gradient(self, X, y, w):
-        return self.loss_func.compute_gradient(X, y, w) / len(y)
+        return np.sum(self.loss_func.compute_gradient(X, y, w) / len(y), axis=0)
 
 
 class MeanSquaredError(Metrics):

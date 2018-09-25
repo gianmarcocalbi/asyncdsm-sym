@@ -452,7 +452,7 @@ Summary:
         try:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
-            if setup['dataset'] == 'eigvecsvm' or setup['dataset'] == 'alteigvecsvm':
+            if setup['dataset'] in ['eigvecsvm', 'alteigvecsvm', 'multieigvecsvm']:
                 # if using the ones matrix with this dataset, something wrong happens
                 # so we use the last adj_mat also for the clique
                 if 'clique' in graph:

@@ -58,7 +58,7 @@ def multieigvecsvm_dataset_from_expander(n_samples, N, d, c=0.1):
             X.append(_X[j][i])
             y.append(_y[j][i])
 
-    return np.array(X).reshape(-1,1), np.array(y), np.zeros(1)
+    return np.array(X), np.array(y), np.zeros(1)
 
 
 def unireg_dataset(n_samples):
