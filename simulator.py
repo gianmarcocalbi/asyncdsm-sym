@@ -475,7 +475,7 @@ Summary:
                         )
                     elif setup['dataset'] == 'multieigvecsvm':
                         X, y, w = datasets.multieigvecsvm_dataset_from_expander(
-                            setup['n_samples'], setup['n'], max_deg_adjmat)
+                            setup['n_samples'], setup['n'], max_deg)
                 else:
                     if setup['dataset'] == 'eigvecsvm':
                         X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(adjmat)

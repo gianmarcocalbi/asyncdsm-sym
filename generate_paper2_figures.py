@@ -4,6 +4,22 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
 from src.utils import *
 
+"""
+Location Legend:
+'best'	        0
+'upper right'	1
+'upper left'	2
+'lower left'	3
+'lower right'	4
+'right'	        5
+'center left'	6
+'center right'	7
+'lower center'	8
+'upper center'	9
+'center'	    10
+"""
+
+
 SMALL_SIZE = 10
 MEDIUM_SIZE = 12
 BIGGER_SIZE = 14
@@ -242,6 +258,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, save=Fal
     zoom_scale = 3
     legend_loc = 0
     markevery = 0.05
+    bbox_to_anchor = False
     if dataset == 'eigvecsvm':
         if test == 'test2':
             x1, x2 = 990, 1010
@@ -255,17 +272,32 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, save=Fal
             x1, x2 = 990, 1010
             y1, y2 = 0.606, 0.641
             legend_loc = 1
-            zoom_loc = 8
+            zoom_loc = 3
             zoom_region = True
             zoom_scale = 42
             markevery = 0.05
             loc1=1
-            loc2=3
+            loc2=2
+            bbox_to_anchor = (0.1,0.1)
+
 
 
     axins = None
     if zoom_region:
-        axins = zoomed_inset_axes(ax, zoom_scale, loc=zoom_loc)
+        if bbox_to_anchor is False:
+            axins = zoomed_inset_axes(
+                ax,
+                zoom_scale,
+                loc=zoom_loc
+            )
+        else:
+            axins = zoomed_inset_axes(
+                ax,
+                zoom_scale,
+                loc=zoom_loc,
+                bbox_to_anchor=bbox_to_anchor,
+                bbox_transform=ax.transAxes
+            )
 
     for graph, loss in logs['metrics'][setup['obj_function']].items():
         deg = degree_from_label(graph)

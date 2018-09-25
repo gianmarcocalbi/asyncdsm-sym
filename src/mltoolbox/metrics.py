@@ -46,7 +46,7 @@ class HingeLossFunction(LossFunctionAbstract):
     @staticmethod
     def compute_gradient(X, y, w):
         h = HingeLossFunction.compute_value(X, y, w)
-        return np.sum(((-y * X.T) * np.sign(h)).T, axis=0)
+        return ((-y * X.T) * np.sign(h)).T
 
     @staticmethod
     def compute_gradient2(X, y, w):
