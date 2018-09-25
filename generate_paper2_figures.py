@@ -19,22 +19,21 @@ Location Legend:
 'center'	    10
 """
 
-
 SMALL_SIZE = 10
 MEDIUM_SIZE = 12
 BIGGER_SIZE = 14
 
-plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-#root_folder_path = 'C:/Users/grimidev/Dropbox/Mine/Skull/Uni/Erasmus/Report and Thesis/report/figures/simulations/'
-# C:\Users\grimidev\Dropbox\Share\asynchronous_computing\followup\figures\simulations
-root_folder_path = './figures/paper2/'
+# root_folder_path = 'C:/Users/grimidev/Dropbox/Mine/Skull/Uni/Erasmus/Report and Thesis/report/figures/simulations/'
+root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/followup/figures/simulations/'
+#root_folder_path = './figures/paper2/'
 
 old_colors = {
     'black': [0x00, 0x00, 0x00, 0xff],
@@ -157,88 +156,72 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 
 def run():
-    log, setup = load()
-    #plot_dataset_nodes_distr_err_vs_iter('test2', 'eigvecsvm', 100, log['test2']['exp'], setup['test2']['exp'], save=True)
-    plot_dataset_nodes_distr_err_vs_iter('test3', 'eigvecsvm', 100, log['test3']['exp'], setup['test3']['exp'], save=True)
+    active_tests = [
+        'test1',
+        'test2',
+        'test3',
+        # 'test4',
+        # 'test5'
+    ]
+    log, setup = load(active_tests)
+    #plot_dataset_nodes_distr_err_vs_iter(
+    #    'test3', 'eigvecsvm', 100, log['test3']['exp'], setup['test3']['exp'], save=False)
+    plot_all(log, setup, active_tests)
 
 
-def load():
+def plot_all(log, setup, active_tests):
+    distributions = ['exp', 'unif', 'par']
+
+    for test in active_tests:
+        plot_dataset_nodes_distr_err_vs_iter(test, 'eigvecsvm', 100, log[test]['exp'], setup[test]['exp'], save=True)
+        if test in ['test1', 'test2']:
+            for distr in distributions:
+                #plot_dataset_nodes_distr_err_vs_time(
+                #    test, 'eigvecsvm', 100, distr, log[test][distr], setup[test][distr], save=True)
+                pass
+
+
+def load(active_tests):
     log = {
-        'test1': { 'par': None, 'unif': None, 'exp': None },
-        'test2': { 'par': None, 'unif': None, 'exp': None },
-        'test3': { 'par': None, 'unif': None, 'exp': None },
-        'test4': { 'par': None, 'unif': None, 'exp': None },
-        'test5': { 'par': None, 'unif': None, 'exp': None }
+        'test1': {'par': None, 'unif': None, 'exp': None},
+        'test2': {'par': None, 'unif': None, 'exp': None},
+        'test3': {'par': None, 'unif': None, 'exp': None},
+        'test4': {'par': None, 'unif': None, 'exp': None},
+        'test5': {'par': None, 'unif': None, 'exp': None}
     }
     setup = {
-        'test1': { 'par': None, 'unif': None, 'exp': None },
-        'test2': { 'par': None, 'unif': None, 'exp': None },
-        'test3': { 'par': None, 'unif': None, 'exp': None },
-        'test4': { 'par': None, 'unif': None, 'exp': None },
-        'test5': { 'par': None, 'unif': None, 'exp': None }
+        'test1': {'par': None, 'unif': None, 'exp': None},
+        'test2': {'par': None, 'unif': None, 'exp': None},
+        'test3': {'par': None, 'unif': None, 'exp': None},
+        'test4': {'par': None, 'unif': None, 'exp': None},
+        'test5': {'par': None, 'unif': None, 'exp': None}
     }
 
-    log['test2']['exp'], setup['test2']['exp'] = load_test_logs(
-        './test_log/paper2/test2/test_2expander_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_exp[1]_INFtime_5000iter_mtrT2worst')
-    log['test2']['par'], setup['test2']['par'] = load_test_logs(
-        './test_log/paper2/test2/test_2expander_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_par[3-2]_INFtime_5000iter_mtrT2worst')
-    log['test2']['unif'], setup['test2']['unif'] = load_test_logs(
-        './test_log/paper2/test2/test_2expander_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_unif[0-2]_INFtime_5000iter_mtrT2worst')
+    if 'test1' in active_tests:
+        log['test1']['exp'], setup['test1']['exp'] = load_test_logs(
+            './test_log/paper2/test1/test_1undir_cycle_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_exp[1]_INFtime_5000iter_mtrT2worst')
+        log['test1']['par'], setup['test1']['par'] = load_test_logs(
+            './test_log/paper2/test1/test_1undir_cycle_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_par[3-2]_INFtime_5000iter_mtrT2worst')
+        log['test1']['unif'], setup['test1']['unif'] = load_test_logs(
+            './test_log/paper2/test1/test_1undir_cycle_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_unif[0-2]_INFtime_5000iter_mtrT2worst')
 
-    log['test3']['exp'], setup['test3']['exp'] = load_test_logs(
-        './test_log/paper2/test3/test_3alt_expander_alteigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_exp[1]_INFtime_5000iter_mtrT2worst')
-    log['test3']['par'], setup['test3']['par'] = load_test_logs(
-        './test_log/paper2/test3/test_3alt_expander_alteigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_par[3-2]_INFtime_5000iter_mtrT2worst')
-    log['test3']['unif'], setup['test3']['unif'] = load_test_logs(
-        './test_log/paper2/test3/test_3alt_expander_alteigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_unif[0-2]_INFtime_5000iter_mtrT2worst')
+    if 'test2' in active_tests:
+        log['test2']['exp'], setup['test2']['exp'] = load_test_logs(
+            './test_log/paper2/test2/test_2expander_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_exp[1]_INFtime_5000iter_mtrT2worst')
+        log['test2']['par'], setup['test2']['par'] = load_test_logs(
+            './test_log/paper2/test2/test_2expander_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_par[3-2]_INFtime_5000iter_mtrT2worst')
+        log['test2']['unif'], setup['test2']['unif'] = load_test_logs(
+            './test_log/paper2/test2/test_2expander_eigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_unif[0-2]_INFtime_5000iter_mtrT2worst')
+
+    if 'test3' in active_tests:
+        log['test3']['exp'], setup['test3']['exp'] = load_test_logs(
+            './test_log/paper2/test3/test_3alt_expander_alteigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_exp[1]_INFtime_5000iter_mtrT2worst')
+        log['test3']['par'], setup['test3']['par'] = load_test_logs(
+            './test_log/paper2/test3/test_3alt_expander_alteigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_par[3-2]_INFtime_5000iter_mtrT2worst')
+        log['test3']['unif'], setup['test3']['unif'] = load_test_logs(
+            './test_log/paper2/test3/test_3alt_expander_alteigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_unif[0-2]_INFtime_5000iter_mtrT2worst')
 
     return log, setup
-
-
-def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=False):
-    # plt.title('Min iteration VS time', loc='left')
-    plt.xlabel('Time')
-    plt.ylabel('Iteration')
-
-    xlim = 0
-
-    for graph, iters in logs['iter_time'].items():
-        deg = degree_from_label(graph)
-        if deg == 20:  # and distr == 'par':
-            markersize = 8
-            marker = 'x'
-        elif 'clique' in graph:
-            markersize = 5
-            marker = 'o'
-        else:
-            markersize = 0
-            marker = 'o'
-
-        plt.plot(
-            iters,
-            list(range(len(iters))),
-            label=deg,
-            markersize=markersize,
-            marker=marker,
-            markevery=0.05,
-            color=degree_colors[setup['n']][deg]
-        )
-        xlim = max(xlim, iters[-1])
-
-    plt.xlim(xmax=xlim)
-    plt.yscale('linear')
-    plt.legend(title="Degree (d)", fontsize='small', fancybox=True)
-    if save:
-        dest = root_folder_path + '{}_{}n_{}_iter_vs_time.png'.format(
-            dataset,
-            n,
-            distr
-        )
-        plt.savefig(dest, bbox_inches='tight')
-        print('Create file {}'.format(dest))
-    else:
-        plt.show()
-    plt.close()
 
 
 def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, save=False):
@@ -246,41 +229,47 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, save=Fal
     # plt.title('Error VS iterations', loc='left')
 
     plt.xlabel('Iterations')
-    if 'svm' in dataset:
-        plt.ylabel('Hinge loss')
-    elif 'reg' in dataset:
-        plt.ylabel('Mean Squared Error')
+    plt.ylabel('Hinge loss')
 
     zoom_region = False
     x1, x2, y1, y2 = 0, 0, 0, 0
-    loc1, loc2 = 2,4
+    loc1, loc2 = 2, 4
     zoom_loc = 1
     zoom_scale = 3
     legend_loc = 0
     markevery = 0.05
     bbox_to_anchor = False
-    if dataset == 'eigvecsvm':
-        if test == 'test2':
-            x1, x2 = 990, 1010
-            y1, y2 = 0.605, 0.715
-            legend_loc = 5
-            zoom_loc = 9
-            zoom_region = True
-            zoom_scale = 40
-            markevery = 0.05
-        elif test == 'test3':
-            x1, x2 = 990, 1010
-            y1, y2 = 0.606, 0.641
-            legend_loc = 1
-            zoom_loc = 3
-            zoom_region = True
-            zoom_scale = 42
-            markevery = 0.05
-            loc1=1
-            loc2=2
-            bbox_to_anchor = (0.1,0.1)
 
-
+    if test == 'test1':
+        x1, x2 = 960, 1050
+        y1, y2 = 0.600, 0.665
+        legend_loc = 5
+        zoom_loc = 3
+        zoom_region = True
+        zoom_scale = 16
+        markevery = 0.05
+        loc1 = 1
+        loc2 = 2
+        bbox_to_anchor = (0.08, 0.06)
+    elif test == 'test2':
+        x1, x2 = 990, 1010
+        y1, y2 = 0.605, 0.715
+        legend_loc = 5
+        zoom_loc = 9
+        zoom_region = True
+        zoom_scale = 40
+        markevery = 0.05
+    elif test == 'test3':
+        x1, x2 = 990, 1010
+        y1, y2 = 0.606, 0.641
+        legend_loc = 1
+        zoom_loc = 3
+        zoom_region = True
+        zoom_scale = 42
+        markevery = 0.05
+        loc1 = 1
+        loc2 = 2
+        bbox_to_anchor = (0.1, 0.1)
 
     axins = None
     if zoom_region:
@@ -339,8 +328,8 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, save=Fal
     if zoom_region:
         axins.set_xlim(x1, x2)  # apply the x-limits
         axins.set_ylim(y1, y2)  # apply the y-limits
-        plt.yticks(visible=True)
-        plt.xticks(visible=True)
+        plt.yticks(visible=True, fontsize='x-small')
+        plt.xticks(visible=True, fontsize='x-small')
         mark_inset(ax, axins, loc1=loc1, loc2=loc2, fc="none", ec="0.5", zorder=100)
 
     plt.yscale('linear')
@@ -370,7 +359,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, s
         plt.ylabel('Mean Squared Error')
     zoom_region = False
     x1, x2, y1, y2 = 0, 0, 0, 0
-    loc1, loc2 = 2,4
+    loc1, loc2 = 2, 4
     zoom_loc = 1
     legend_loc = 0
     markevery = 0.05
@@ -392,7 +381,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, s
     for graph in logs['metrics'][setup['obj_function']]:
         deg = degree_from_label(graph)
         zorder = 2
-        if deg == 20 : #and distr == 'par':
+        if deg == 20:  # and distr == 'par':
             markersize = 8
             marker = 'x'
             zorder = 10
@@ -438,8 +427,8 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, s
         plt.xticks(visible=False)
         mark_inset(ax, axins, loc1=loc1, loc2=loc2, fc="none", ec="0.5", zorder=100)
 
-    #ax.set_xlim(-50, xlim)
-    #plt.yscale('linear')
+    # ax.set_xlim(-50, xlim)
+    # plt.yscale('linear')
 
     """locs, _ = plt.yticks()
     labels = []
@@ -467,13 +456,59 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, s
         # size='small'
     )
     """
-    #ylim_padding = (ylim_up - ylim_dw) / 30
-    #ax.set_ylim(max(ylim_dw - ylim_padding, 0), ylim_up + ylim_padding)
+    # ylim_padding = (ylim_up - ylim_dw) / 30
+    # ax.set_ylim(max(ylim_dw - ylim_padding, 0), ylim_up + ylim_padding)
 
     ax.legend(title="Degree (d)", fontsize='small', fancybox=True, loc=legend_loc)
     if save:
         dest = root_folder_path + '{}_{}_{}n_{}_err_vs_time.png'.format(
             test,
+            dataset,
+            n,
+            distr
+        )
+        plt.savefig(dest, bbox_inches='tight')
+        print('Create file {}'.format(dest))
+    else:
+        plt.show()
+    plt.close()
+
+
+def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=False):
+    # plt.title('Min iteration VS time', loc='left')
+    plt.xlabel('Time')
+    plt.ylabel('Iteration')
+
+    xlim = 0
+
+    for graph, iters in logs['iter_time'].items():
+        deg = degree_from_label(graph)
+        if deg == 20:  # and distr == 'par':
+            markersize = 8
+            marker = 'x'
+        elif 'clique' in graph:
+            markersize = 5
+            marker = 'o'
+        else:
+            markersize = 0
+            marker = 'o'
+
+        plt.plot(
+            iters,
+            list(range(len(iters))),
+            label=deg,
+            markersize=markersize,
+            marker=marker,
+            markevery=0.05,
+            color=degree_colors[setup['n']][deg]
+        )
+        xlim = max(xlim, iters[-1])
+
+    plt.xlim(xmax=xlim)
+    plt.yscale('linear')
+    plt.legend(title="Degree (d)", fontsize='small', fancybox=True)
+    if save:
+        dest = root_folder_path + '{}_{}n_{}_iter_vs_time.png'.format(
             dataset,
             n,
             distr
@@ -520,7 +555,8 @@ def plot_dataset_nodes_distr_err_slope_vs_iter_comparison(dataset, n, distr, err
         # print(slope)
 
         real_slopes[graph] = slope
-        pred_ratios[graph] = 1 / math.sqrt(uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph]))
+        pred_ratios[graph] = 1 / math.sqrt(
+            uniform_weighted_Pn_spectral_gap_from_adjacency_matrix(setup['graphs'][graph]))
 
         if 'clique' in graph:
             clique_slope = slope
@@ -657,12 +693,12 @@ def plot_distr_iter_time_vs_degree(dataset, n, logs_dict, setup_dict, error='avg
             # size='x-small'
         )
 
-    l = [x for x in ly['exp'].keys() if x not in [16,50]]
+    l = [x for x in ly['exp'].keys() if x not in [16, 50]]
     plt.xticks(
         l,
         l,
         # rotation='vertical',
-        #size='small'
+        # size='small'
     )
 
     plt.legend(title="", fontsize='small', fancybox=True)
