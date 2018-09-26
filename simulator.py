@@ -402,7 +402,7 @@ def run(
             coef=True,
             random_state=None
         )
-    elif setup['dataset'] in ['eigvecsvm', 'alteigvecsvm', 'multieigvecsvm']:
+    elif setup['dataset'] in ['eigvecsvm', 'alteigvecsvm'] or 'multieigvecsvm' in setup['dataset']:
         pass
     else:
         delete_test_dir()
@@ -452,7 +452,7 @@ Summary:
         try:
             cluster = Cluster(adjmat, graph_name=graph, verbose=verbose_cluster)
 
-            if setup['dataset'] in ['eigvecsvm', 'alteigvecsvm', 'multieigvecsvm']:
+            if setup['dataset'] in ['eigvecsvm', 'alteigvecsvm']:
                 # if using the ones matrix with this dataset, something wrong happens
                 # so we use the last adj_mat also for the clique
                 if 'clique' in graph:
@@ -473,9 +473,6 @@ Summary:
                             max_deg,
                             matrix_type='uniform-weighted'
                         )
-                    elif setup['dataset'] == 'multieigvecsvm':
-                        X, y, w = datasets.multieigvecsvm_dataset_from_expander(
-                            setup['n_samples'], setup['n'], max_deg)
                 else:
                     if setup['dataset'] == 'eigvecsvm':
                         X, y, w = datasets.eigvecsvm_dataset_from_adjacency_matrix(adjmat)
@@ -486,10 +483,10 @@ Summary:
                             deg,
                             matrix_type='uniform-weighted'
                         )
-                    elif setup['dataset'] == 'multieigvecsvm':
-                        deg = int(graph.split('-')[0])
-                        X, y, w = datasets.multieigvecsvm_dataset_from_expander(
-                            setup['n_samples'], setup['n'], deg)
+            elif 'multieigvecsvm' in setup['dataset']:
+                deg = int(setup['dataset'].split('-')[0])
+                X, y, w = datasets.multieigvecsvm_dataset_from_expander(
+                    setup['n_samples'], setup['n'], deg)
 
             alpha = setup['alpha']
             if spectrum_dependent_learning_rate:

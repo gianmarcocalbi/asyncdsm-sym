@@ -86,13 +86,13 @@ def run(core=-1):
     elif core == 11:
         test4_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=100, distr='par', metrics_nodes='worst')
     elif core == 12:
-        test5_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=2, distr='par', metrics_nodes='worst')
+        test5_on_multieigvecsvm_dataset(seed=22052010, n=100, k=3, n_samples=2, distr='par', metrics_nodes='worst')
     elif core == 13:
-        test5_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=10, distr='par', metrics_nodes='worst')
+        test5_on_multieigvecsvm_dataset(seed=22052010, n=100, k=3, n_samples=10, distr='par', metrics_nodes='worst')
     elif core == 14:
-        test5_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=100, distr='par', metrics_nodes='worst')
+        test5_on_multieigvecsvm_dataset(seed=22052010, n=100, k=3, n_samples=100, distr='par', metrics_nodes='worst')
 
-def test5_on_multieigvecsvm_dataset(seed=None, n=100, n_samples=2, distr='par', metrics_nodes='all', alert=False):
+def test5_on_multieigvecsvm_dataset(seed=None, n=100, k=16, n_samples=2, distr='par', metrics_nodes='all', alert=False):
     if alert:
         print('test_exp_on_unisvm_dataset()')
         print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
@@ -113,7 +113,7 @@ def test5_on_multieigvecsvm_dataset(seed=None, n=100, n_samples=2, distr='par', 
         n=n,
         n_samples=n_samples,
         graphs=get_graphs('expander', n),
-        dataset='multieigvecsvm',
+        dataset='{}-multieigvecsvm'.format(k),
         starting_weights_domain=[1, 1],
         smv_label_flip_prob=0.00,
         max_iter=5000,

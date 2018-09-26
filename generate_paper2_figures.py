@@ -33,7 +33,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 # root_folder_path = 'C:/Users/grimidev/Dropbox/Mine/Skull/Uni/Erasmus/Report and Thesis/report/figures/simulations/'
 root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/followup/figures/simulations/'
-#root_folder_path = './figures/paper2/'
+# root_folder_path = './figures/paper2/'
 
 old_colors = {
     'black': [0x00, 0x00, 0x00, 0xff],
@@ -160,12 +160,12 @@ def run():
         'test1',
         'test2',
         'test3',
-        # 'test4',
+        'test4',
         # 'test5'
     ]
     log, setup = load(active_tests)
     #plot_dataset_nodes_distr_err_vs_iter(
-    #    'test3', 'eigvecsvm', 100, log['test3']['exp'], setup['test3']['exp'], save=False)
+    #    'test4', 'multieigvecsvm', 100, log['test4']['par'][10], setup['test4']['par'][10], n_samples=10, save=False)
     plot_all(log, setup, active_tests)
 
 
@@ -173,12 +173,22 @@ def plot_all(log, setup, active_tests):
     distributions = ['exp', 'unif', 'par']
 
     for test in active_tests:
-        plot_dataset_nodes_distr_err_vs_iter(test, 'eigvecsvm', 100, log[test]['exp'], setup[test]['exp'], save=True)
-        if test in ['test1', 'test2']:
-            for distr in distributions:
-                #plot_dataset_nodes_distr_err_vs_time(
-                #    test, 'eigvecsvm', 100, distr, log[test][distr], setup[test][distr], save=True)
-                pass
+        if test in ['test1', 'test2', 'test3']:
+            plot_dataset_nodes_distr_err_vs_iter(test, 'eigvecsvm', 100, log[test]['exp'], setup[test]['exp'], save=True)
+            if test in ['test1', 'test2']:
+                for distr in distributions:
+                    # plot_dataset_nodes_distr_err_vs_time(
+                    #    test, 'eigvecsvm', 100, distr, log[test][distr], setup[test][distr], save=True)
+                    pass
+        elif test in ['test4', 'test5']:
+            plot_dataset_nodes_distr_err_vs_iter(
+                test, 'multieigvecsvm', 100, log[test]['par'][2], setup[test]['par'][2], n_samples=2, save=True)
+            plot_dataset_nodes_distr_err_vs_iter(
+                test, 'multieigvecsvm', 100, log[test]['par'][10], setup[test]['par'][10], n_samples=10, save=True)
+            plot_dataset_nodes_distr_err_vs_iter(
+                test, 'multieigvecsvm', 100, log[test]['par'][100], setup[test]['par'][100], n_samples=100, save=True)
+
+
 
 
 def load(active_tests):
@@ -186,14 +196,14 @@ def load(active_tests):
         'test1': {'par': None, 'unif': None, 'exp': None},
         'test2': {'par': None, 'unif': None, 'exp': None},
         'test3': {'par': None, 'unif': None, 'exp': None},
-        'test4': {'par': None, 'unif': None, 'exp': None},
+        'test4': {'par': {}, 'unif': None, 'exp': None},
         'test5': {'par': None, 'unif': None, 'exp': None}
     }
     setup = {
         'test1': {'par': None, 'unif': None, 'exp': None},
         'test2': {'par': None, 'unif': None, 'exp': None},
         'test3': {'par': None, 'unif': None, 'exp': None},
-        'test4': {'par': None, 'unif': None, 'exp': None},
+        'test4': {'par': {}, 'unif': None, 'exp': None},
         'test5': {'par': None, 'unif': None, 'exp': None}
     }
 
@@ -221,10 +231,18 @@ def load(active_tests):
         log['test3']['unif'], setup['test3']['unif'] = load_test_logs(
             './test_log/paper2/test3/test_3alt_expander_alteigvecsvm_C0.1alpha_100n_noshuf_Win[1,1]_unif[0-2]_INFtime_5000iter_mtrT2worst')
 
+    if 'test4' in active_tests:
+        log['test4']['par'][2], setup['test4']['par'][2] = load_test_logs(
+            './test_log/paper2/test4/test_test4_multieigvecsvm_2samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
+        log['test4']['par'][10], setup['test4']['par'][10] = load_test_logs(
+            './test_log/paper2/test4/test_test4_multieigvecsvm_10samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
+        log['test4']['par'][100], setup['test4']['par'][100] = load_test_logs(
+            './test_log/paper2/test4/test_test4_multieigvecsvm_100samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
+
     return log, setup
 
 
-def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, save=False):
+def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_samples=2, save=False):
     fig, ax = plt.subplots()
     # plt.title('Error VS iterations', loc='left')
 
@@ -270,6 +288,40 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, save=Fal
         loc1 = 1
         loc2 = 2
         bbox_to_anchor = (0.1, 0.1)
+    elif test == 'test4':
+        if n_samples == 2:
+            x1, x2 = 990, 1010
+            y1, y2 = 0.606, 0.641
+            legend_loc = 1
+            zoom_loc = 3
+            zoom_region = True
+            zoom_scale = 42
+            markevery = 0.05
+            loc1 = 1
+            loc2 = 2
+            bbox_to_anchor = (0.1, 0.1)
+        elif n_samples == 10:
+            x1, x2 = 990, 1010
+            y1, y2 = 0.60, 0.615
+            legend_loc = 1
+            zoom_loc = 3
+            zoom_region = True
+            zoom_scale = 60
+            markevery = 0.05
+            loc1 = 1
+            loc2 = 2
+            bbox_to_anchor = (0.1, 0.1)
+        elif n_samples == 100:
+            x1, x2 = 990, 1010
+            y1, y2 = 0.595, 0.61
+            legend_loc = 1
+            zoom_loc = 3
+            zoom_region = True
+            zoom_scale = 60
+            markevery = 0.05
+            loc1 = 1
+            loc2 = 2
+            bbox_to_anchor = (0.1, 0.1)
 
     axins = None
     if zoom_region:
@@ -336,11 +388,19 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, save=Fal
 
     ax.legend(title="Degree (d)", fontsize='small', fancybox=True, loc=legend_loc)
     if save:
-        dest = root_folder_path + '{}_{}_{}n_err_vs_iter.png'.format(
-            test,
-            dataset,
-            n
-        )
+        if dataset == 'multieigvecsvm':
+            dest = root_folder_path + '{}_{}_{}n_{}samples_err_vs_iter.png'.format(
+                test,
+                dataset,
+                n,
+                n_samples
+            )
+        else:
+            dest = root_folder_path + '{}_{}_{}n_err_vs_iter.png'.format(
+                test,
+                dataset,
+                n
+            )
         plt.savefig(dest, bbox_inches='tight')
         print('Create file {}'.format(dest))
     else:
