@@ -161,11 +161,11 @@ def run():
         'test2',
         'test3',
         'test4',
-        # 'test5'
+        'test5'
     ]
     log, setup = load(active_tests)
     #plot_dataset_nodes_distr_err_vs_iter(
-    #    'test4', 'multieigvecsvm', 100, log['test4']['par'][10], setup['test4']['par'][10], n_samples=10, save=False)
+    #    'test5', 'multieigvecsvm', 100, log['test5']['par'][100], setup['test5']['par'][100], n_samples=100, save=False)
     plot_all(log, setup, active_tests)
 
 
@@ -180,11 +180,14 @@ def plot_all(log, setup, active_tests):
                     # plot_dataset_nodes_distr_err_vs_time(
                     #    test, 'eigvecsvm', 100, distr, log[test][distr], setup[test][distr], save=True)
                     pass
-        elif test in ['test4', 'test5']:
+        elif test == 'test4':
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][2], setup[test]['par'][2], n_samples=2, save=True)
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][10], setup[test]['par'][10], n_samples=10, save=True)
+            plot_dataset_nodes_distr_err_vs_iter(
+                test, 'multieigvecsvm', 100, log[test]['par'][100], setup[test]['par'][100], n_samples=100, save=True)
+        elif test == 'test5':
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][100], setup[test]['par'][100], n_samples=100, save=True)
 
@@ -197,14 +200,14 @@ def load(active_tests):
         'test2': {'par': None, 'unif': None, 'exp': None},
         'test3': {'par': None, 'unif': None, 'exp': None},
         'test4': {'par': {}, 'unif': None, 'exp': None},
-        'test5': {'par': None, 'unif': None, 'exp': None}
+        'test5': {'par': {}, 'unif': None, 'exp': None}
     }
     setup = {
         'test1': {'par': None, 'unif': None, 'exp': None},
         'test2': {'par': None, 'unif': None, 'exp': None},
         'test3': {'par': None, 'unif': None, 'exp': None},
         'test4': {'par': {}, 'unif': None, 'exp': None},
-        'test5': {'par': None, 'unif': None, 'exp': None}
+        'test5': {'par': {}, 'unif': None, 'exp': None}
     }
 
     if 'test1' in active_tests:
@@ -239,6 +242,14 @@ def load(active_tests):
         log['test4']['par'][100], setup['test4']['par'][100] = load_test_logs(
             './test_log/paper2/test4/test_test4_multieigvecsvm_100samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
 
+    if 'test5' in active_tests:
+        log['test5']['par'][2], setup['test5']['par'][2] = load_test_logs(
+            './test_log/paper2/test5/test_test5_3-multieigvecsvm_2samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
+        log['test5']['par'][10], setup['test5']['par'][10] = load_test_logs(
+            './test_log/paper2/test5/test_test5_3-multieigvecsvm_10samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
+        log['test5']['par'][100], setup['test5']['par'][100] = load_test_logs(
+            './test_log/paper2/test5/test_test5_3-multieigvecsvm_100samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
+
     return log, setup
 
 
@@ -247,7 +258,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     # plt.title('Error VS iterations', loc='left')
 
     plt.xlabel('Iterations')
-    plt.ylabel('Hinge loss')
+    plt.ylabel(r'$F(\bar \v w)$')
 
     zoom_region = False
     x1, x2, y1, y2 = 0, 0, 0, 0
@@ -291,37 +302,49 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     elif test == 'test4':
         if n_samples == 2:
             x1, x2 = 990, 1010
-            y1, y2 = 0.606, 0.641
+            y1, y2 = 0.595, 0.63  # y1, y2 = 0.606, 0.641
             legend_loc = 1
             zoom_loc = 3
             zoom_region = True
-            zoom_scale = 42
+            zoom_scale = 40
             markevery = 0.05
             loc1 = 1
             loc2 = 2
             bbox_to_anchor = (0.1, 0.1)
         elif n_samples == 10:
             x1, x2 = 990, 1010
-            y1, y2 = 0.60, 0.615
+            y1, y2 = 0.595, 0.63  # y1, y2 = 0.60, 0.615
             legend_loc = 1
             zoom_loc = 3
             zoom_region = True
-            zoom_scale = 60
+            zoom_scale = 40
             markevery = 0.05
             loc1 = 1
             loc2 = 2
             bbox_to_anchor = (0.1, 0.1)
         elif n_samples == 100:
             x1, x2 = 990, 1010
-            y1, y2 = 0.595, 0.61
+            y1, y2 = 0.595, 0.63  # y1, y2 = 0.595, 0.61
             legend_loc = 1
             zoom_loc = 3
             zoom_region = True
-            zoom_scale = 60
+            zoom_scale = 40
             markevery = 0.05
             loc1 = 1
             loc2 = 2
             bbox_to_anchor = (0.1, 0.1)
+    if test == 'test5':
+        if n_samples == 100:
+            x1, x2 = 950, 1050
+            y1, y2 = 0.8765, 0.8855
+            legend_loc = 1
+            zoom_loc = 9
+            zoom_region = True
+            zoom_scale = 18
+            markevery = 0.05
+            loc1 = 2
+            loc2 = 4
+            #bbox_to_anchor = (0.1, 0.1)
 
     axins = None
     if zoom_region:
