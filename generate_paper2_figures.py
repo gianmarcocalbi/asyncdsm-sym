@@ -157,15 +157,24 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 def run():
     active_tests = [
-        'test1',
-        'test2',
-        'test3',
-        'test4',
-        'test5'
+        # 'test1',
+        # 'test2',
+        # 'test3',
+        # 'test4',
+        # 'test5',
+        'test6_svm',
+        'test6_reg'
     ]
     log, setup = load(active_tests)
-    #plot_dataset_nodes_distr_err_vs_iter(
-    #    'test5', 'multieigvecsvm', 100, log['test5']['par'][100], setup['test5']['par'][100], n_samples=100, save=False)
+    # plot_dataset_nodes_distr_err_vs_iter(
+    #    'test6_svm', 'susysvm', 100, log['test6_svm']['spark'], setup['test6_svm']['spark'], n_samples=100, save=False)
+    # plot_dataset_nodes_distr_err_vs_time(
+    #    'test6_svm', 'real_svm', 100, 'spark', log['test6_svm']['spark'], setup['test6_svm']['spark'], n_samples=100,
+    #    save=False)
+    # plot_dataset_nodes_distr_err_vs_time(
+    #    'test6_reg', 'real_reg', 100, 'spark', log['test6_reg']['spark'], setup['test6_reg']['spark'], n_samples=100,
+    #    save=False)
+
     plot_all(log, setup, active_tests)
 
 
@@ -174,7 +183,8 @@ def plot_all(log, setup, active_tests):
 
     for test in active_tests:
         if test in ['test1', 'test2', 'test3']:
-            plot_dataset_nodes_distr_err_vs_iter(test, 'eigvecsvm', 100, log[test]['exp'], setup[test]['exp'], save=True)
+            plot_dataset_nodes_distr_err_vs_iter(test, 'eigvecsvm', 100, log[test]['exp'], setup[test]['exp'],
+                save=True)
             if test in ['test1', 'test2']:
                 for distr in distributions:
                     # plot_dataset_nodes_distr_err_vs_time(
@@ -190,8 +200,18 @@ def plot_all(log, setup, active_tests):
         elif test == 'test5':
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][100], setup[test]['par'][100], n_samples=100, save=True)
-
-
+        elif test == 'test6_reg':
+            plot_dataset_nodes_distr_err_vs_iter(
+                test, 'real_reg', 100, log[test]['spark'], setup[test]['spark'], n_samples=100, save=True)
+            plot_dataset_nodes_distr_err_vs_time(
+                'test6_reg', 'real_reg', 100, 'spark', log['test6_reg']['spark'], setup['test6_reg']['spark'],
+                n_samples=100, save=True)
+        elif test == 'test6_svm':
+            plot_dataset_nodes_distr_err_vs_iter(
+                test, 'real_svm', 100, log[test]['spark'], setup[test]['spark'], n_samples=100, save=True)
+            plot_dataset_nodes_distr_err_vs_time(
+                'test6_svm', 'real_svm', 100, 'spark', log['test6_svm']['spark'], setup['test6_svm']['spark'],
+                n_samples=100, save=True)
 
 
 def load(active_tests):
@@ -200,14 +220,18 @@ def load(active_tests):
         'test2': {'par': None, 'unif': None, 'exp': None},
         'test3': {'par': None, 'unif': None, 'exp': None},
         'test4': {'par': {}, 'unif': None, 'exp': None},
-        'test5': {'par': {}, 'unif': None, 'exp': None}
+        'test5': {'par': {}, 'unif': None, 'exp': None},
+        'test6_reg': {'spark': None},
+        'test6_svm': {'spark': None}
     }
     setup = {
         'test1': {'par': None, 'unif': None, 'exp': None},
         'test2': {'par': None, 'unif': None, 'exp': None},
         'test3': {'par': None, 'unif': None, 'exp': None},
         'test4': {'par': {}, 'unif': None, 'exp': None},
-        'test5': {'par': {}, 'unif': None, 'exp': None}
+        'test5': {'par': {}, 'unif': None, 'exp': None},
+        'test6_reg': {'spark': None},
+        'test6_svm': {'spark': None}
     }
 
     if 'test1' in active_tests:
@@ -250,6 +274,13 @@ def load(active_tests):
         log['test5']['par'][100], setup['test5']['par'][100] = load_test_logs(
             './test_log/paper2/test5/test_test5_3-multieigvecsvm_100samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
 
+    if 'test6_svm' in active_tests:
+        log['test6_svm']['spark'], setup['test6_svm']['spark'] = load_test_logs(
+            './test_log/paper2/test6/test_test6_susysvm_100n_spark_real[None]_mtrT2worst_C0.05alpha_500000samp_INFtime_6000iter')
+    if 'test6_reg' in active_tests:
+        log['test6_reg']['spark'], setup['test6_reg']['spark'] = load_test_logs(
+            './test_log/paper2/test6/test_test6_sloreg_100n_spark_real[None]_mtrT2worst_C5e-06alpha_52000samp_INFtime_5000iter')
+
     return log, setup
 
 
@@ -258,7 +289,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     # plt.title('Error VS iterations', loc='left')
 
     plt.xlabel('Iterations')
-    plt.ylabel(r'$F(\bar \v w)$')
+    plt.ylabel(r'$F(\bar w_i)$')
 
     zoom_region = False
     x1, x2, y1, y2 = 0, 0, 0, 0
@@ -344,7 +375,19 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
             markevery = 0.05
             loc1 = 2
             loc2 = 4
-            #bbox_to_anchor = (0.1, 0.1)
+            # bbox_to_anchor = (0.1, 0.1)
+    if test == 'test6_svm':
+        if n_samples == 100:
+            x1, x2 = 0, 1000
+            y1, y2 = 0.2, 0.3
+            legend_loc = 1
+            zoom_loc = 9
+            zoom_region = False
+            zoom_scale = 4
+            markevery = 0.05
+            loc1 = 2
+            loc2 = 4
+            # bbox_to_anchor = (0.1, 0.1)
 
     axins = None
     if zoom_region:
@@ -431,21 +474,24 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     plt.close()
 
 
-def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, save=False):
+def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n_samples=2, save=False):
     fig, ax = plt.subplots()
-    plt.title('Error VS time', loc='left')
-    plt.title(distr, loc='Right')
+
+    # plt.title('Error VS time', loc='left')
+    # plt.title(distr, loc='Right')
+
     plt.xlabel('Time')
-    if 'svm' in dataset:
-        plt.ylabel('Hinge loss')
-    elif 'reg' in dataset:
-        plt.ylabel('Mean Squared Error')
+    plt.ylabel(r'$F(\bar w_i)$')
+
     zoom_region = False
     x1, x2, y1, y2 = 0, 0, 0, 0
     loc1, loc2 = 2, 4
     zoom_loc = 1
+    zoom_scale = 3
     legend_loc = 0
     markevery = 0.05
+    bbox_to_anchor = False
+
     if dataset == 'eigvecsvm':
         if True:
             x1, x2 = 6500, 10500
@@ -454,10 +500,48 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, s
             zoom_loc = 10
             markevery = 0.025
             zoom_region = True
+    if test == 'test6_svm':
+        if n_samples == 100:
+            x1, x2 = 1e6, 3e6
+            y1, y2 = 0.145, 0.2
+            legend_loc = 1
+            zoom_loc = 10
+            zoom_region = True
+            zoom_scale = 5
+            markevery = 0.05
+            loc1 = 2
+            loc2 = 4
+            bbox_to_anchor = (0.45, 0.55)
+    if test == 'test6_reg':
+        if n_samples == 100:
+            x1, x2 = 250000, 900000
+            y1, y2 = 6500, 9000
+            legend_loc = 1
+            zoom_loc = 10
+            zoom_region = True
+            zoom_scale = 12
+            markevery = 0.05
+            loc1 = 2
+            loc2 = 4
+            bbox_to_anchor = (0.5, 0.55)
 
     axins = None
     if zoom_region:
-        axins = zoomed_inset_axes(ax, 3, loc=zoom_loc)
+        if bbox_to_anchor is False:
+            axins = zoomed_inset_axes(
+                ax,
+                zoom_scale,
+                loc=zoom_loc
+            )
+        else:
+            axins = zoomed_inset_axes(
+                ax,
+                zoom_scale,
+                loc=zoom_loc,
+                bbox_to_anchor=bbox_to_anchor,
+                bbox_transform=ax.transAxes
+            )
+
     ylim_up = -math.inf
     ylim_dw = math.inf
     xlim = math.inf
@@ -501,13 +585,12 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, s
         xlim = min(xlim, logs['iter_time'][graph][-1])
         ylim_up = max(ylim_up, logs['metrics'][setup['obj_function']][graph][0])
         ylim_dw = min(ylim_dw, logs['metrics'][setup['obj_function']][graph][-1])
-        pass
 
     if zoom_region:
         axins.set_xlim(x1, x2)  # apply the x-limits
         axins.set_ylim(y1, y2)  # apply the y-limits
-        plt.yticks(visible=False)
-        plt.xticks(visible=False)
+        plt.yticks(visible=True, fontsize='x-small')
+        plt.xticks(visible=True, fontsize='x-small')
         mark_inset(ax, axins, loc1=loc1, loc2=loc2, fc="none", ec="0.5", zorder=100)
 
     # ax.set_xlim(-50, xlim)
