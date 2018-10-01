@@ -212,6 +212,24 @@ class SparkRealTimings(DistributionAbstract):
         return np.var(SparkRealTimings.pool)
 
 
+class CustomRealTimings(DistributionAbstract):
+    name = "Custom Real Timings"
+    shortname = 'custom_real'
+    pool = np.loadtxt('./distr/custom_timings.txt')
+
+    @staticmethod
+    def sample(*args):
+        return np.random.choice(CustomRealTimings.pool)
+
+    @staticmethod
+    def mean(*args, out_decimal=False):
+        return sum(CustomRealTimings.pool) / len(CustomRealTimings.pool)
+
+    @staticmethod
+    def variance(*args):
+        return np.var(CustomRealTimings.pool)
+
+
 class MaxOfExponentialDistribution(DistributionAbstract):
     @staticmethod
     def sample(lambd, k=1, out_decimal=False):

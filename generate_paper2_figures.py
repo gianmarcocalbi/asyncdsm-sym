@@ -162,7 +162,7 @@ def run():
         # 'test3',
         # 'test4',
         # 'test5',
-        'test6_svm',
+        # 'test6_svm',
         'test6_reg'
     ]
     log, setup = load(active_tests)
@@ -171,7 +171,7 @@ def run():
     # plot_dataset_nodes_distr_err_vs_time(
     #    'test6_svm', 'real_svm', 100, 'spark', log['test6_svm']['spark'], setup['test6_svm']['spark'], n_samples=100,
     #    save=False)
-    # plot_dataset_nodes_distr_err_vs_time(
+    #plot_dataset_nodes_distr_err_vs_time(
     #    'test6_reg', 'real_reg', 100, 'spark', log['test6_reg']['spark'], setup['test6_reg']['spark'], n_samples=100,
     #    save=False)
 
@@ -491,6 +491,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     legend_loc = 0
     markevery = 0.05
     bbox_to_anchor = False
+    xlim1, xlim2, ylim_dw, ylim_dw = None, None, None, None
 
     if dataset == 'eigvecsvm':
         if True:
@@ -514,16 +515,18 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             bbox_to_anchor = (0.45, 0.55)
     if test == 'test6_reg':
         if n_samples == 100:
-            x1, x2 = 250000, 900000
-            y1, y2 = 6500, 9000
+            x1, x2 = 220000, 500000
+            y1, y2 = 7000, 10000
             legend_loc = 1
             zoom_loc = 10
             zoom_region = True
-            zoom_scale = 12
+            zoom_scale = 6
             markevery = 0.05
             loc1 = 2
             loc2 = 4
             bbox_to_anchor = (0.5, 0.55)
+            xlim1 = -100000
+            xlim2 = 3e6
 
     axins = None
     if zoom_region:
@@ -542,9 +545,10 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
                 bbox_transform=ax.transAxes
             )
 
-    ylim_up = -math.inf
-    ylim_dw = math.inf
-    xlim = math.inf
+    # ylim_up = -math.inf
+    # ylim_dw = math.inf
+    # xlim = math.inf
+
     for graph in logs['metrics'][setup['obj_function']]:
         deg = degree_from_label(graph)
         zorder = 2
@@ -582,9 +586,9 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
                 zorder=zorder
             )
 
-        xlim = min(xlim, logs['iter_time'][graph][-1])
-        ylim_up = max(ylim_up, logs['metrics'][setup['obj_function']][graph][0])
-        ylim_dw = min(ylim_dw, logs['metrics'][setup['obj_function']][graph][-1])
+        # xlim = min(xlim, logs['iter_time'][graph][-1])
+        # ylim_up = max(ylim_up, logs['metrics'][setup['obj_function']][graph][0])
+        # ylim_dw = min(ylim_dw, logs['metrics'][setup['obj_function']][graph][-1])
 
     if zoom_region:
         axins.set_xlim(x1, x2)  # apply the x-limits
@@ -593,7 +597,9 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
         plt.xticks(visible=True, fontsize='x-small')
         mark_inset(ax, axins, loc1=loc1, loc2=loc2, fc="none", ec="0.5", zorder=100)
 
-    # ax.set_xlim(-50, xlim)
+    if xlim1 is not None and xlim2 is not None:
+        ax.set_xlim(xlim1, xlim2)
+
     # plt.yscale('linear')
 
     """locs, _ = plt.yticks()

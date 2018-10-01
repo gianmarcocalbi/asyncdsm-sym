@@ -1,0 +1,32 @@
+import numpy as np
+a = []
+
+a += [0.75 for _ in range(8)]
+a += [0.80 for _ in range(32)]
+a += [0.85 for _ in range(70)]
+a += [0.90 for _ in range(112)]
+a += [0.95 for _ in range(114)]
+a += [1.00 for _ in range(86)]
+a += [1.05 for _ in range(102)]
+a += [1.10 for _ in range(80)]
+a += [1.15 for _ in range(100)]
+a += [1.20 for _ in range(74)]
+a += [1.25 for _ in range(56)]
+a += [1.30 for _ in range(40)]
+a += [1.35 for _ in range(30)]
+a += [1.40 for _ in range(25)]
+a += [1.45 for _ in range(25)]
+a += [1.50 for _ in range(10)]
+a += [1.55 for _ in range(12)]
+a += [1.60 for _ in range(10)]
+a += [1.65 for _ in range(8)]
+a += [1.70 for _ in range(2)]
+a += [1.75 for _ in range(2)]
+a += [1.80 for _ in range(2)]
+a += [1.85 for _ in range(2)]
+a += [1.90 for _ in range(0)]
+a += [1.95 for _ in range(0)]
+a += [2.00 for _ in range(7)]
+
+np.savetxt('./distr/custom_timings.txt', np.array(a), fmt='%10.2f', delimiter=',')
+print('Create file ' + './distr/custom_timings.txt')

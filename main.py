@@ -53,9 +53,98 @@ def run(core=-1):
         print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
     if core == 0:
-        test6_on_susysvm_dataset(seed=22052010, n=100)
+        test7_on_susysvm_dataset(seed=22052010, n=100)
     elif core == 1:
-        test6_on_sloreg_dataset(seed=22052010, n=100)
+        test7_on_sloreg_dataset(seed=22052010, n=100)
+
+
+
+def test7_on_sloreg_dataset(seed=None, n=100):
+   # linear_regression result = 67.30972320004327
+
+    simulator.run(
+        seed=seed,
+        n=n,
+        n_samples=52000,
+        graphs=get_graphs('expander', n),
+        dataset='sloreg',
+        starting_weights_domain=[2, 3],
+        max_iter=5000,
+        max_time=None,
+        alpha=5e-6,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=statistics.CustomRealTimings,
+        time_distr_param=[],
+        obj_function='mse',
+        metrics=[],
+        metrics_type=2,
+        metrics_nodes='worst',
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'test7',
+            'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            # 'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['mse_iter', 'mse_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
+    )
+
+def test7_on_susysvm_dataset(seed=None, n=100):
+    simulator.run(
+        seed=seed,
+        n=n,
+        n_samples=500000,
+        graphs=get_graphs('expander', n),
+        dataset='susysvm',
+        starting_weights_domain=[-0.5, 2],
+        max_iter=6000,
+        max_time=None,
+        alpha=5e-2,
+        learning_rate='constant',
+        spectrum_dependent_learning_rate=False,
+        time_distr_class=statistics.CustomRealTimings,
+        time_distr_param=[],
+        obj_function='hinge_loss',
+        average_model_toggle=True,
+        metrics=[],
+        metrics_type=2,
+        metrics_nodes='worst',
+        shuffle=True,
+        save_test_to_file=True,
+        test_folder_name_struct=[
+            'test7',
+            'dataset',
+            # 'w_domain',
+            'nodes',
+            'distr',
+            'metrics',
+            'alpha',
+            'samp',
+            # 'feat',
+            'time',
+            'iter'
+        ],
+        test_parent_folder="",
+        instant_plot=False,
+        plots=['hinge_loss_iter', 'hinge_loss_time'],
+        save_plot_to_file=False,
+        plot_global_w=False,
+        plot_node_w=False
+    )
 
 def test6_on_sloreg_dataset(seed=None, n=100):
    # linear_regression result = 67.30972320004327
