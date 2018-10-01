@@ -157,12 +157,12 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 def run():
     active_tests = [
-        # 'test1',
-        # 'test2',
-        # 'test3',
-        # 'test4',
-        # 'test5',
-        # 'test6_svm',
+        #'test1',
+        #'test2',
+        #'test3',
+        #'test4',
+        #'test5',
+        'test6_svm',
         'test6_reg'
     ]
     log, setup = load(active_tests)
@@ -171,7 +171,7 @@ def run():
     # plot_dataset_nodes_distr_err_vs_time(
     #    'test6_svm', 'real_svm', 100, 'spark', log['test6_svm']['spark'], setup['test6_svm']['spark'], n_samples=100,
     #    save=False)
-    #plot_dataset_nodes_distr_err_vs_time(
+    # plot_dataset_nodes_distr_err_vs_time(
     #    'test6_reg', 'real_reg', 100, 'spark', log['test6_reg']['spark'], setup['test6_reg']['spark'], n_samples=100,
     #    save=False)
 
@@ -179,17 +179,12 @@ def run():
 
 
 def plot_all(log, setup, active_tests):
-    distributions = ['exp', 'unif', 'par']
+    distributions = ['exp', 'unif', 'par', 'spark', 'custom']
 
     for test in active_tests:
         if test in ['test1', 'test2', 'test3']:
             plot_dataset_nodes_distr_err_vs_iter(test, 'eigvecsvm', 100, log[test]['exp'], setup[test]['exp'],
                 save=True)
-            if test in ['test1', 'test2']:
-                for distr in distributions:
-                    # plot_dataset_nodes_distr_err_vs_time(
-                    #    test, 'eigvecsvm', 100, distr, log[test][distr], setup[test][distr], save=True)
-                    pass
         elif test == 'test4':
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][2], setup[test]['par'][2], n_samples=2, save=True)
@@ -200,18 +195,14 @@ def plot_all(log, setup, active_tests):
         elif test == 'test5':
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][100], setup[test]['par'][100], n_samples=100, save=True)
-        elif test == 'test6_reg':
+        elif test in ['test6_reg', 'test6_svm']:
+            dataset = {'test6_reg' : 'real_reg', 'test6_svm' : 'real_svm'}[test]
+            plot_dataset_nodes_distr_iter_vs_time(
+                test, dataset, 100, 'spark', log[test]['spark'], setup[test]['spark'], save=True)
             plot_dataset_nodes_distr_err_vs_iter(
-                test, 'real_reg', 100, log[test]['spark'], setup[test]['spark'], n_samples=100, save=True)
+                test, dataset, 100, log[test]['spark'], setup[test]['spark'], n_samples=100, save=True)
             plot_dataset_nodes_distr_err_vs_time(
-                'test6_reg', 'real_reg', 100, 'spark', log['test6_reg']['spark'], setup['test6_reg']['spark'],
-                n_samples=100, save=True)
-        elif test == 'test6_svm':
-            plot_dataset_nodes_distr_err_vs_iter(
-                test, 'real_svm', 100, log[test]['spark'], setup[test]['spark'], n_samples=100, save=True)
-            plot_dataset_nodes_distr_err_vs_time(
-                'test6_svm', 'real_svm', 100, 'spark', log['test6_svm']['spark'], setup['test6_svm']['spark'],
-                n_samples=100, save=True)
+                test, dataset, 100, 'spark', log[test]['spark'], setup[test]['spark'], n_samples=100, save=True)
 
 
 def load(active_tests):
@@ -289,7 +280,12 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     # plt.title('Error VS iterations', loc='left')
 
     plt.xlabel('Iterations')
-    plt.ylabel(r'$F(\bar w_i)$')
+    # plt.ylabel(r'$F(\bar w_i)$')
+
+    if 'svm' in dataset:
+        plt.ylabel('Hinge Loss')
+    elif 'reg' in dataset:
+        plt.ylabel('Mean Squared Error')
 
     zoom_region = False
     x1, x2, y1, y2 = 0, 0, 0, 0
@@ -409,13 +405,14 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     for graph, loss in logs['metrics'][setup['obj_function']].items():
         deg = degree_from_label(graph)
         zorder = 1
-        if deg == 20:  # and distr == 'par':
-            markersize = 8
+        if deg == 2:  # and distr == 'par':
+            markersize = 6
             marker = 'x'
             zorder = 50
         elif 'clique' in graph:
             markersize = 5
             marker = 'o'
+            zorder = 80
         else:
             markersize = 0
             marker = 'o'
@@ -481,7 +478,12 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     # plt.title(distr, loc='Right')
 
     plt.xlabel('Time')
-    plt.ylabel(r'$F(\bar w_i)$')
+    # plt.ylabel(r'$F(\bar w_i)$')
+
+    if 'svm' in dataset:
+        plt.ylabel('Hinge Loss')
+    elif 'reg' in dataset:
+        plt.ylabel('Mean Squared Error')
 
     zoom_region = False
     x1, x2, y1, y2 = 0, 0, 0, 0
@@ -491,7 +493,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     legend_loc = 0
     markevery = 0.05
     bbox_to_anchor = False
-    xlim1, xlim2, ylim_dw, ylim_dw = None, None, None, None
+    xlim1, xlim2, ylim1, ylim2 = None, None, None, None
 
     if dataset == 'eigvecsvm':
         if True:
@@ -507,26 +509,32 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             y1, y2 = 0.145, 0.2
             legend_loc = 1
             zoom_loc = 10
-            zoom_region = True
+            zoom_region = False
             zoom_scale = 5
             markevery = 0.05
             loc1 = 2
             loc2 = 4
             bbox_to_anchor = (0.45, 0.55)
+            xlim1 = -40000
+            xlim2 = 1e6
+            ylim1 = 0.17
+            ylim2 = 0.716
     if test == 'test6_reg':
         if n_samples == 100:
-            x1, x2 = 220000, 500000
-            y1, y2 = 7000, 10000
+            x1, x2 = 150000, 270000
+            y1, y2 = 11000, 16000
             legend_loc = 1
             zoom_loc = 10
             zoom_region = True
-            zoom_scale = 6
+            zoom_scale = 3.8
             markevery = 0.05
             loc1 = 2
             loc2 = 4
-            bbox_to_anchor = (0.5, 0.55)
-            xlim1 = -100000
-            xlim2 = 3e6
+            bbox_to_anchor = (0.5, 0.68)
+            xlim1 = -40000
+            xlim2 = 1e6
+            ylim1 = 5500
+            ylim2 = 47000
 
     axins = None
     if zoom_region:
@@ -552,13 +560,14 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     for graph in logs['metrics'][setup['obj_function']]:
         deg = degree_from_label(graph)
         zorder = 2
-        if deg == 20:  # and distr == 'par':
-            markersize = 8
+        if deg == 2:  # and distr == 'par':
+            markersize = 6
             marker = 'x'
             zorder = 10
         elif 'clique' in graph:
             markersize = 5
             marker = 'o'
+            zorder = 12
         else:
             markersize = 0
             marker = 'o'
@@ -599,6 +608,8 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
 
     if xlim1 is not None and xlim2 is not None:
         ax.set_xlim(xlim1, xlim2)
+    if ylim1 is not None and ylim2 is not None:
+        ax.set_ylim(ylim1, ylim2)
 
     # plt.yscale('linear')
 
@@ -646,7 +657,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     plt.close()
 
 
-def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=False):
+def plot_dataset_nodes_distr_iter_vs_time(test, dataset, n, distr, logs, setup, save=False):
     # plt.title('Min iteration VS time', loc='left')
     plt.xlabel('Time')
     plt.ylabel('Iteration')
@@ -655,8 +666,8 @@ def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=F
 
     for graph, iters in logs['iter_time'].items():
         deg = degree_from_label(graph)
-        if deg == 20:  # and distr == 'par':
-            markersize = 8
+        if deg == 2:  # and distr == 'par':
+            markersize = 6
             marker = 'x'
         elif 'clique' in graph:
             markersize = 5
@@ -680,7 +691,8 @@ def plot_dataset_nodes_distr_iter_vs_time(dataset, n, distr, logs, setup, save=F
     plt.yscale('linear')
     plt.legend(title="Degree (d)", fontsize='small', fancybox=True)
     if save:
-        dest = root_folder_path + '{}_{}n_{}_iter_vs_time.png'.format(
+        dest = root_folder_path + '{}_{}_{}n_{}_iter_vs_time.png'.format(
+            test,
             dataset,
             n,
             distr
