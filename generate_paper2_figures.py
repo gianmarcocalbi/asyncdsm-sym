@@ -157,11 +157,11 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 def run():
     active_tests = [
-        #'test1',
-        #'test2',
-        #'test3',
-        #'test4',
-        #'test5',
+        'test1',
+        'test2',
+        'test3',
+        'test4',
+        'test5',
         'test6_svm',
         'test6_reg'
     ]
@@ -282,7 +282,9 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     plt.xlabel('Iterations')
     # plt.ylabel(r'$F(\bar w_i)$')
 
-    if 'svm' in dataset:
+    if test in ['test1', 'test2', 'test3']:
+        plt.ylabel(r'$F(\hat w_j(k))$')
+    elif 'svm' in dataset:
         plt.ylabel('Hinge Loss')
     elif 'reg' in dataset:
         plt.ylabel('Mean Squared Error')
@@ -308,7 +310,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
         loc2 = 2
         bbox_to_anchor = (0.08, 0.06)
     elif test == 'test2':
-        x1, x2 = 990, 1010
+        x1, x2 = 980, 1020
         y1, y2 = 0.605, 0.715
         legend_loc = 5
         zoom_loc = 9
@@ -316,7 +318,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
         zoom_scale = 40
         markevery = 0.05
     elif test == 'test3':
-        x1, x2 = 990, 1010
+        x1, x2 = 980, 1020
         y1, y2 = 0.606, 0.641
         legend_loc = 1
         zoom_loc = 3
@@ -328,7 +330,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
         bbox_to_anchor = (0.1, 0.1)
     elif test == 'test4':
         if n_samples == 2:
-            x1, x2 = 990, 1010
+            x1, x2 = 980, 1020
             y1, y2 = 0.595, 0.63  # y1, y2 = 0.606, 0.641
             legend_loc = 1
             zoom_loc = 3
@@ -339,7 +341,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
             loc2 = 2
             bbox_to_anchor = (0.1, 0.1)
         elif n_samples == 10:
-            x1, x2 = 990, 1010
+            x1, x2 = 980, 1020
             y1, y2 = 0.595, 0.63  # y1, y2 = 0.60, 0.615
             legend_loc = 1
             zoom_loc = 3
@@ -350,7 +352,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
             loc2 = 2
             bbox_to_anchor = (0.1, 0.1)
         elif n_samples == 100:
-            x1, x2 = 990, 1010
+            x1, x2 = 980, 1020
             y1, y2 = 0.595, 0.63  # y1, y2 = 0.595, 0.61
             legend_loc = 1
             zoom_loc = 3
@@ -478,9 +480,10 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     # plt.title(distr, loc='Right')
 
     plt.xlabel('Time')
-    # plt.ylabel(r'$F(\bar w_i)$')
 
-    if 'svm' in dataset:
+    if test in ['test1', 'test2', 'test3']:
+        plt.ylabel(r'$F(\hat w_j(k))$')
+    elif 'svm' in dataset:
         plt.ylabel('Hinge Loss')
     elif 'reg' in dataset:
         plt.ylabel('Mean Squared Error')
