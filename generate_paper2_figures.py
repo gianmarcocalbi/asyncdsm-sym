@@ -24,6 +24,7 @@ Location Legend:
 SMALL_SIZE = 10
 MEDIUM_SIZE = 12
 BIGGER_SIZE = 14
+BBOX_INCHES = 'tight'
 
 plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
@@ -33,8 +34,11 @@ plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
+if BBOX_INCHES is None:
+    root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/followup/figures/simulations_wide_layout/'
+else:
+    root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/followup/figures/simulations/'
 # root_folder_path = 'C:/Users/grimidev/Dropbox/Mine/Skull/Uni/Erasmus/Report and Thesis/report/figures/simulations/'
-root_folder_path = 'C:/Users/grimidev/Dropbox/Share/asynchronous_computing/followup/figures/simulations/'
 # root_folder_path = './figures/paper2/'
 
 old_colors = {
@@ -159,19 +163,19 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 def run():
     active_tests = [
-        # 'test1',
-        # 'test2',
-        # 'test3',
-        # 'test4',
-        # 'test5',
-        # 'test6_svm',
-        # 'test6_reg',
-        'test7_svm',
-        'test7_reg',
+        #'test1',
+        #'test2',
+        #'test3',
+        #'test4',
+        #'test5',
+        'test6_svm',
+        #'test6_reg',
+        #'test7_svm',
+        #'test7_reg',
     ]
     log, setup = load(active_tests)
     #plot_dataset_nodes_distr_err_vs_time(
-    #    'test7_svm', 'real_svm', 100, 'custom', log['test7_svm']['custom'], setup['test7_svm']['custom'], n_samples=100,
+    #    'test6_svm', 'real_svm', 100, 'spark', log['test6_svm']['spark'], setup['test6_svm']['spark'], n_samples=100,
     #    save=False)
 
     plot_all(log, setup, active_tests)
@@ -185,8 +189,10 @@ def plot_all(log, setup, active_tests):
         elif test == 'test4':
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][2], setup[test]['par'][2], n_samples=2, save=True)
+            # plot_dataset_nodes_distr_err_vs_iter(
+            #    test, 'multieigvecsvm', 100, log[test]['par'][10], setup[test]['par'][10], n_samples=10, save=True)
             plot_dataset_nodes_distr_err_vs_iter(
-                test, 'multieigvecsvm', 100, log[test]['par'][10], setup[test]['par'][10], n_samples=10, save=True)
+                test, 'multieigvecsvm', 100, log[test]['par'][20], setup[test]['par'][20], n_samples=20, save=True)
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][100], setup[test]['par'][100], n_samples=100, save=True)
         elif test == 'test5':
@@ -263,6 +269,8 @@ def load(active_tests):
             './test_log/paper2/test4/test_test4_multieigvecsvm_2samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
         log['test4']['par'][10], setup['test4']['par'][10] = load_test_logs(
             './test_log/paper2/test4/test_test4_multieigvecsvm_10samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
+        log['test4']['par'][20], setup['test4']['par'][20] = load_test_logs(
+            './test_log/paper2/test4/test_test4_multieigvecsvm_20samp_C0.1alpha_100n_Win[1,1]_exp[1]_5000iter')
         log['test4']['par'][100], setup['test4']['par'][100] = load_test_logs(
             './test_log/paper2/test4/test_test4_multieigvecsvm_100samp_C0.1alpha_100n_Win[1,1]_par[3-2]_5000iter')
 
@@ -356,7 +364,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
             loc1 = 1
             loc2 = 2
             bbox_to_anchor = (0.1, 0.1)
-        elif n_samples == 10:
+        elif n_samples == 20:
             x1, x2 = 980, 1020
             y1, y2 = 0.595, 0.63  # y1, y2 = 0.60, 0.615
             legend_loc = 1
@@ -494,7 +502,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
                 dataset,
                 n
             )
-        plt.savefig(dest, bbox_inches='tight')
+        plt.savefig(dest, bbox_inches=BBOX_INCHES)
         print('Create file {}'.format(dest))
     else:
         plt.show()
@@ -545,19 +553,29 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
         legend_loc = 5
     if test == 'test6_svm':
         if n_samples == 100:
-            zr1['active'] = False
-            zr1['x1'], zr1['x2'] = 6500, 10500
-            zr1['y1'], zr1['y2'] = -0.3, 0.5
+            zr1['active'] = True
+            zr1['x1'], zr1['x2'] = 784500, 810000
+            zr1['y1'], zr1['y2'] = 0.192, 0.208
             zr1['zoom_loc'] = 10
-            zr1['zoom_scale'] = 5
-            zr1['loc1'] = 2
+            zr1['zoom_scale'] = 11
+            zr1['loc1'] = 3
             zr1['loc2'] = 4
-            zr1['bbox_to_anchor'] = (0.45, 0.55)
+            zr1['bbox_to_anchor'] = (0.78, 0.30)
+
+            zr2['active'] = True
+            zr2['x1'], zr2['x2'] = 2000, 80000
+            zr2['y1'], zr2['y2'] = 0.235, 0.30
+            zr2['zoom_loc'] = 10
+            zr2['zoom_scale'] = 5
+            zr2['loc1'] = 2
+            zr2['loc2'] = 4
+            zr2['bbox_to_anchor'] = (0.32, 0.60)
+
             xlim1 = -40000
             xlim2 = 1e6
             ylim1 = 0.17
             ylim2 = 0.716
-            legend_loc = 5
+            legend_loc = 1
     if test == 'test6_reg':
         if n_samples == 100:
             zr1['active'] = True
@@ -569,7 +587,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             zr1['loc2'] = 4
             zr1['bbox_to_anchor'] = (0.5, 0.68)
             xlim1 = -40000
-            xlim2 = 1e6
+            xlim2 = 950000
             ylim1 = 5500
             ylim2 = 47000
             legend_loc = 1
@@ -583,7 +601,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             zr1['loc1'] = 3
             zr1['loc2'] = 4
             zr1['bbox_to_anchor'] = (0.78, 0.30)
-            
+
             zr2['active'] = True
             zr2['x1'], zr2['x2'] = 0, 225
             zr2['y1'], zr2['y2'] = 0.22, 0.29
@@ -592,7 +610,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             zr2['loc1'] = 2
             zr2['loc2'] = 4
             zr2['bbox_to_anchor'] = (0.32, 0.60)
-            
+
             markevery = 0.05
             xlim1 = -100
             xlim2 = 3000
@@ -704,16 +722,16 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
         # ylim_dw = min(ylim_dw, logs['metrics'][setup['obj_function']][graph][-1])
 
     if zr1['active']:
-        #plt.yticks(visible=True, fontsize='x-small')
-        #plt.xticks(visible=True, fontsize='x-small')
+        # plt.yticks(visible=True, fontsize='x-small')
+        # plt.xticks(visible=True, fontsize='x-small')
         axins1.set_xlim(zr1['x1'], zr1['x2'])  # apply the x-limits
         axins1.set_ylim(zr1['y1'], zr1['y2'])  # apply the y-limits
         axins1.tick_params(axis='both', labelsize='x-small')
         mark_inset(ax, axins1, loc1=zr1['loc1'], loc2=zr1['loc2'], fc="none", ec="0.5", zorder=100)
 
     if zr2['active']:
-        #plt.yticks(visible=True, fontsize='x-small')
-        #plt.xticks(visible=True, fontsize='x-small')
+        # plt.yticks(visible=True, fontsize='x-small')
+        # plt.xticks(visible=True, fontsize='x-small')
         axins2.set_xlim(zr2['x1'], zr2['x2'])  # apply the x-limits
         axins2.set_ylim(zr2['y1'], zr2['y2'])  # apply the y-limits
         axins2.tick_params(axis='both', labelsize='x-small')
@@ -763,7 +781,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             n,
             distr
         )
-        plt.savefig(dest, bbox_inches='tight')
+        plt.savefig(dest, bbox_inches=BBOX_INCHES)
         print('Create file {}'.format(dest))
     else:
         plt.show()
@@ -810,7 +828,7 @@ def plot_dataset_nodes_distr_iter_vs_time(test, dataset, n, distr, logs, setup, 
             n,
             distr
         )
-        plt.savefig(dest, bbox_inches='tight')
+        plt.savefig(dest, bbox_inches=BBOX_INCHES)
         print('Create file {}'.format(dest))
     else:
         plt.show()
@@ -902,7 +920,7 @@ def plot_dataset_nodes_distr_err_slope_vs_iter_comparison(dataset, n, distr, err
             distr,
             error
         )
-        plt.savefig(dest, bbox_inches='tight')
+        plt.savefig(dest, bbox_inches=BBOX_INCHES)
         print('Create file {}'.format(dest))
     else:
         plt.show()
@@ -1004,7 +1022,7 @@ def plot_distr_iter_time_vs_degree(dataset, n, logs_dict, setup_dict, error='avg
             dataset,
             n,
             error
-        ), bbox_inches='tight')
+        ), bbox_inches=BBOX_INCHES)
     else:
         plt.show()
     plt.close()
