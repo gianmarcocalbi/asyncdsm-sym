@@ -1,6 +1,6 @@
 from matplotlib import rcParams
-#rcParams['font.family'] = 'serif'
-#rcParams['font.sans-serif'] = ['Times New Roman']
+# rcParams['font.family'] = 'serif'
+# rcParams['font.sans-serif'] = ['Times New Roman']
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
@@ -159,30 +159,25 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 def run():
     active_tests = [
-        'test1',
-        'test2',
-        'test3',
-        'test4',
-        'test5',
-        'test6_svm',
-        'test6_reg'
+        # 'test1',
+        # 'test2',
+        # 'test3',
+        # 'test4',
+        # 'test5',
+        # 'test6_svm',
+        # 'test6_reg',
+        'test7_svm',
+        'test7_reg',
     ]
     log, setup = load(active_tests)
-    # plot_dataset_nodes_distr_err_vs_iter(
-    #    'test6_svm', 'susysvm', 100, log['test6_svm']['spark'], setup['test6_svm']['spark'], n_samples=100, save=False)
-    # plot_dataset_nodes_distr_err_vs_time(
-    #    'test6_svm', 'real_svm', 100, 'spark', log['test6_svm']['spark'], setup['test6_svm']['spark'], n_samples=100,
-    #    save=False)
-    # plot_dataset_nodes_distr_err_vs_time(
-    #    'test6_reg', 'real_reg', 100, 'spark', log['test6_reg']['spark'], setup['test6_reg']['spark'], n_samples=100,
+    #plot_dataset_nodes_distr_err_vs_time(
+    #    'test7_svm', 'real_svm', 100, 'custom', log['test7_svm']['custom'], setup['test7_svm']['custom'], n_samples=100,
     #    save=False)
 
     plot_all(log, setup, active_tests)
 
 
 def plot_all(log, setup, active_tests):
-    distributions = ['exp', 'unif', 'par', 'spark', 'custom']
-
     for test in active_tests:
         if test in ['test1', 'test2', 'test3']:
             plot_dataset_nodes_distr_err_vs_iter(test, 'eigvecsvm', 100, log[test]['exp'], setup[test]['exp'],
@@ -198,13 +193,21 @@ def plot_all(log, setup, active_tests):
             plot_dataset_nodes_distr_err_vs_iter(
                 test, 'multieigvecsvm', 100, log[test]['par'][100], setup[test]['par'][100], n_samples=100, save=True)
         elif test in ['test6_reg', 'test6_svm']:
-            dataset = {'test6_reg' : 'real_reg', 'test6_svm' : 'real_svm'}[test]
+            dataset = {'test6_reg': 'real_reg', 'test6_svm': 'real_svm'}[test]
             plot_dataset_nodes_distr_iter_vs_time(
                 test, dataset, 100, 'spark', log[test]['spark'], setup[test]['spark'], save=True)
             plot_dataset_nodes_distr_err_vs_iter(
                 test, dataset, 100, log[test]['spark'], setup[test]['spark'], n_samples=100, save=True)
             plot_dataset_nodes_distr_err_vs_time(
                 test, dataset, 100, 'spark', log[test]['spark'], setup[test]['spark'], n_samples=100, save=True)
+        elif test in ['test7_reg', 'test7_svm']:
+            dataset = {'test7_reg': 'real_reg', 'test7_svm': 'real_svm'}[test]
+            plot_dataset_nodes_distr_iter_vs_time(
+                test, dataset, 100, 'custom', log[test]['custom'], setup[test]['custom'], save=True)
+            plot_dataset_nodes_distr_err_vs_iter(
+                test, dataset, 100, log[test]['custom'], setup[test]['custom'], n_samples=100, save=True)
+            plot_dataset_nodes_distr_err_vs_time(
+                test, dataset, 100, 'custom', log[test]['custom'], setup[test]['custom'], n_samples=100, save=True)
 
 
 def load(active_tests):
@@ -215,7 +218,9 @@ def load(active_tests):
         'test4': {'par': {}, 'unif': None, 'exp': None},
         'test5': {'par': {}, 'unif': None, 'exp': None},
         'test6_reg': {'spark': None},
-        'test6_svm': {'spark': None}
+        'test6_svm': {'spark': None},
+        'test7_reg': {'custom': None},
+        'test7_svm': {'custom': None}
     }
     setup = {
         'test1': {'par': None, 'unif': None, 'exp': None},
@@ -224,7 +229,9 @@ def load(active_tests):
         'test4': {'par': {}, 'unif': None, 'exp': None},
         'test5': {'par': {}, 'unif': None, 'exp': None},
         'test6_reg': {'spark': None},
-        'test6_svm': {'spark': None}
+        'test6_svm': {'spark': None},
+        'test7_reg': {'custom': None},
+        'test7_svm': {'custom': None}
     }
 
     if 'test1' in active_tests:
@@ -273,6 +280,13 @@ def load(active_tests):
     if 'test6_reg' in active_tests:
         log['test6_reg']['spark'], setup['test6_reg']['spark'] = load_test_logs(
             './test_log/paper2/test6/test_test6_sloreg_100n_spark_real[None]_mtrT2worst_C5e-06alpha_52000samp_INFtime_5000iter')
+
+    if 'test7_svm' in active_tests:
+        log['test7_svm']['custom'], setup['test7_svm']['custom'] = load_test_logs(
+            './test_log/paper2/test7/test_test7_susysvm_100n_custom_real[None]_mtrT2worst_C0.05alpha_500000samp_INFtime_6000iter')
+    if 'test7_reg' in active_tests:
+        log['test7_reg']['custom'], setup['test7_reg']['custom'] = load_test_logs(
+            './test_log/paper2/test7/test_test7_sloreg_100n_custom_real[None]_mtrT2worst_C5e-06alpha_52000samp_INFtime_5000iter')
 
     return log, setup
 
@@ -388,6 +402,18 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
             loc1 = 2
             loc2 = 4
             # bbox_to_anchor = (0.1, 0.1)
+    if test == 'test7_svm':
+        if n_samples == 100:
+            x1, x2 = 0, 1000
+            y1, y2 = 0.2, 0.3
+            legend_loc = 1
+            zoom_loc = 9
+            zoom_region = False
+            zoom_scale = 4
+            markevery = 0.05
+            loc1 = 2
+            loc2 = 4
+            # bbox_to_anchor = (0.1, 0.1)
 
     axins = None
     if zoom_region:
@@ -490,77 +516,138 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     elif 'reg' in dataset:
         plt.ylabel('Mean Squared Error')
 
-    zoom_region = False
-    x1, x2, y1, y2 = 0, 0, 0, 0
-    loc1, loc2 = 2, 4
-    zoom_loc = 1
-    zoom_scale = 3
-    legend_loc = 0
     markevery = 0.05
-    bbox_to_anchor = False
+    legend_loc = 1
     xlim1, xlim2, ylim1, ylim2 = None, None, None, None
 
+    zoom_region_template = {
+        'active': False,
+        'x1': None,
+        'x2': None,
+        'y1': None,
+        'y2': None,
+        'loc1': 2,
+        'loc2': 4,
+        'zoom_loc': 10,
+        'zoom_scale': 4,
+        'markevery': 0.14,
+        'bbox_to_anchor': False
+    }
+    zr1 = dict(zoom_region_template)
+    zr2 = dict(zoom_region_template)
+
     if dataset == 'eigvecsvm':
-        if True:
-            x1, x2 = 6500, 10500
-            y1, y2 = -0.3, 0.5
-            legend_loc = 5
-            zoom_loc = 10
-            markevery = 0.025
-            zoom_region = True
+        zr1['active'] = True
+        zr1['x1'], zr1['x2'] = 6500, 10500
+        zr1['y1'], zr1['y2'] = -0.3, 0.5
+        zr1['zoom_loc'] = 10
+        markevery = 0.025
+        legend_loc = 5
     if test == 'test6_svm':
         if n_samples == 100:
-            x1, x2 = 1e6, 3e6
-            y1, y2 = 0.145, 0.2
-            legend_loc = 1
-            zoom_loc = 10
-            zoom_region = False
-            zoom_scale = 5
-            markevery = 0.05
-            loc1 = 2
-            loc2 = 4
-            bbox_to_anchor = (0.45, 0.55)
+            zr1['active'] = False
+            zr1['x1'], zr1['x2'] = 6500, 10500
+            zr1['y1'], zr1['y2'] = -0.3, 0.5
+            zr1['zoom_loc'] = 10
+            zr1['zoom_scale'] = 5
+            zr1['loc1'] = 2
+            zr1['loc2'] = 4
+            zr1['bbox_to_anchor'] = (0.45, 0.55)
             xlim1 = -40000
             xlim2 = 1e6
             ylim1 = 0.17
             ylim2 = 0.716
+            legend_loc = 5
     if test == 'test6_reg':
         if n_samples == 100:
-            x1, x2 = 150000, 270000
-            y1, y2 = 11000, 16000
-            legend_loc = 1
-            zoom_loc = 10
-            zoom_region = True
-            zoom_scale = 3.8
-            markevery = 0.05
-            loc1 = 2
-            loc2 = 4
-            bbox_to_anchor = (0.5, 0.68)
+            zr1['active'] = True
+            zr1['x1'], zr1['x2'] = 150000, 270000
+            zr1['y1'], zr1['y2'] = 11000, 16000
+            zr1['zoom_loc'] = 10
+            zr1['zoom_scale'] = 3.8
+            zr1['loc1'] = 2
+            zr1['loc2'] = 4
+            zr1['bbox_to_anchor'] = (0.5, 0.68)
             xlim1 = -40000
             xlim2 = 1e6
             ylim1 = 5500
             ylim2 = 47000
+            legend_loc = 1
+    if test == 'test7_svm':
+        if n_samples == 100:
+            zr1['active'] = True
+            zr1['x1'], zr1['x2'] = 2020, 2080
+            zr1['y1'], zr1['y2'] = 0.1565, 0.168
+            zr1['zoom_loc'] = 10
+            zr1['zoom_scale'] = 15
+            zr1['loc1'] = 3
+            zr1['loc2'] = 4
+            zr1['bbox_to_anchor'] = (0.78, 0.30)
+            
+            zr2['active'] = True
+            zr2['x1'], zr2['x2'] = 0, 225
+            zr2['y1'], zr2['y2'] = 0.22, 0.29
+            zr2['zoom_loc'] = 10
+            zr2['zoom_scale'] = 4.6
+            zr2['loc1'] = 2
+            zr2['loc2'] = 4
+            zr2['bbox_to_anchor'] = (0.32, 0.60)
+            
+            markevery = 0.05
+            xlim1 = -100
+            xlim2 = 3000
+            ylim1 = 0.128
+            ylim2 = 0.716
+            legend_loc = 1
+    if test == 'test7_reg':
+        if n_samples == 100:
+            zr1['active'] = True
+            zr1['x1'], zr1['x2'] = 160, 240
+            zr1['y1'], zr1['y2'] = 10000, 14500
+            zr1['zoom_loc'] = 10
+            zr1['zoom_scale'] = 4.6
+            zr1['loc1'] = 2
+            zr1['loc2'] = 4
+            zr1['bbox_to_anchor'] = (0.5, 0.68)
 
-    axins = None
-    if zoom_region:
-        if bbox_to_anchor is False:
-            axins = zoomed_inset_axes(
+            xlim1 = -30
+            xlim2 = 800
+            ylim1 = 5000
+            ylim2 = 47500
+            legend_loc = 1
+
+    axins1 = None
+    axins2 = None
+    if zr1['active']:
+        if zr1['bbox_to_anchor'] is False:
+            axins1 = zoomed_inset_axes(
                 ax,
-                zoom_scale,
-                loc=zoom_loc
+                zr1['zoom_scale'],
+                loc=zr1['zoom_loc']
             )
         else:
-            axins = zoomed_inset_axes(
+            axins1 = zoomed_inset_axes(
                 ax,
-                zoom_scale,
-                loc=zoom_loc,
-                bbox_to_anchor=bbox_to_anchor,
+                zr1['zoom_scale'],
+                loc=zr1['zoom_loc'],
+                bbox_to_anchor=zr1['bbox_to_anchor'],
                 bbox_transform=ax.transAxes
             )
-
-    # ylim_up = -math.inf
-    # ylim_dw = math.inf
-    # xlim = math.inf
+    if zr2['active']:
+        if zr2['bbox_to_anchor'] is False:
+            axins2 = zoomed_inset_axes(
+                ax,
+                zr2['zoom_scale'],
+                loc=zr2['zoom_loc']
+            )
+        else:
+            axins2 = zoomed_inset_axes(
+                ax,
+                zr2['zoom_scale'],
+                loc=zr2['zoom_loc'],
+                bbox_to_anchor=zr2['bbox_to_anchor'],
+                bbox_transform=ax.transAxes
+            )
 
     for graph in logs['metrics'][setup['obj_function']]:
         deg = degree_from_label(graph)
@@ -588,15 +675,27 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             zorder=zorder
         )
 
-        if zoom_region:
-            axins.plot(
+        if zr1['active']:
+            axins1.plot(
                 logs['iter_time'][graph],
                 logs['metrics'][setup['obj_function']][graph],
                 label=degree_from_label(graph),
                 color=degree_colors[setup['n']][deg],
                 markersize=markersize,
                 marker=marker,
-                markevery=0.14,
+                markevery=zr1['markevery'],
+                zorder=zorder
+            )
+
+        if zr2['active']:
+            axins2.plot(
+                logs['iter_time'][graph],
+                logs['metrics'][setup['obj_function']][graph],
+                label=degree_from_label(graph),
+                color=degree_colors[setup['n']][deg],
+                markersize=markersize,
+                marker=marker,
+                markevery=zr2['markevery'],
                 zorder=zorder
             )
 
@@ -604,12 +703,21 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
         # ylim_up = max(ylim_up, logs['metrics'][setup['obj_function']][graph][0])
         # ylim_dw = min(ylim_dw, logs['metrics'][setup['obj_function']][graph][-1])
 
-    if zoom_region:
-        axins.set_xlim(x1, x2)  # apply the x-limits
-        axins.set_ylim(y1, y2)  # apply the y-limits
-        plt.yticks(visible=True, fontsize='x-small')
-        plt.xticks(visible=True, fontsize='x-small')
-        mark_inset(ax, axins, loc1=loc1, loc2=loc2, fc="none", ec="0.5", zorder=100)
+    if zr1['active']:
+        #plt.yticks(visible=True, fontsize='x-small')
+        #plt.xticks(visible=True, fontsize='x-small')
+        axins1.set_xlim(zr1['x1'], zr1['x2'])  # apply the x-limits
+        axins1.set_ylim(zr1['y1'], zr1['y2'])  # apply the y-limits
+        axins1.tick_params(axis='both', labelsize='x-small')
+        mark_inset(ax, axins1, loc1=zr1['loc1'], loc2=zr1['loc2'], fc="none", ec="0.5", zorder=100)
+
+    if zr2['active']:
+        #plt.yticks(visible=True, fontsize='x-small')
+        #plt.xticks(visible=True, fontsize='x-small')
+        axins2.set_xlim(zr2['x1'], zr2['x2'])  # apply the x-limits
+        axins2.set_ylim(zr2['y1'], zr2['y2'])  # apply the y-limits
+        axins2.tick_params(axis='both', labelsize='x-small')
+        mark_inset(ax, axins2, loc1=zr2['loc1'], loc2=zr2['loc2'], fc="none", ec="0.5", zorder=100)
 
     if xlim1 is not None and xlim2 is not None:
         ax.set_xlim(xlim1, xlim2)
