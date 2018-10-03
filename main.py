@@ -53,9 +53,9 @@ def run(core=-1):
         print(g_name + ' ' + str(abs(eigenvals[1])))"""
 
     if core == 0:
-        test7_on_susysvm_dataset(seed=22052010, n=100)
+        test4_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=20, distr='exp')
     elif core == 1:
-        test7_on_sloreg_dataset(seed=22052010, n=100)
+        test4_on_multieigvecsvm_dataset(seed=22052010, n=100, n_samples=30, distr='exp')
 
 
 
@@ -293,10 +293,10 @@ def test5_on_multieigvecsvm_dataset(seed=None, n=100, k=16, n_samples=2, distr='
         plot_node_w=False
     )
 
-def test4_on_multieigvecsvm_dataset(seed=None, n=100, n_samples=2, distr='par', metrics_nodes='all', alert=False):
+def test4_on_multieigvecsvm_dataset(seed=None, n=100, n_samples=2, distr='par', alert=False):
     if alert:
         print('test_exp_on_unisvm_dataset()')
-        print('n={}, distr={}, metrics_nodes={}'.format(n, distr, metrics_nodes))
+        print('n={}, distr={}'.format(n, distr))
         input("click [ENTER] to continue or [CTRL]+[C] to abort")
 
     time_distr_class = {
@@ -304,10 +304,6 @@ def test4_on_multieigvecsvm_dataset(seed=None, n=100, n_samples=2, distr='par', 
         'par': statistics.Type2ParetoDistribution
     }[distr]
     time_distr_param = {'exp': [[1]], 'unif': [[0, 2]], 'par': [[3, 2]], }[distr]
-    if metrics_nodes in ['worst', 'all']:
-        metrics_type = {'worst': 2, 'all': 0, 'best': 2}[metrics_nodes]
-    else:
-        metrics_type = 2
 
     simulator.run(
         seed=seed,
@@ -328,8 +324,8 @@ def test4_on_multieigvecsvm_dataset(seed=None, n=100, n_samples=2, distr='par', 
         epsilon=-math.inf,
         average_model_toggle=True,
         metrics=[],
-        metrics_type=metrics_type,
-        metrics_nodes=metrics_nodes,
+        metrics_type=2,
+        metrics_nodes='worst',
         shuffle=False,
         save_test_to_file=True,
         test_folder_name_struct=[

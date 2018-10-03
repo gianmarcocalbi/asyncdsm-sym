@@ -282,7 +282,7 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     plt.xlabel('Iterations')
     # plt.ylabel(r'$F(\bar w_i)$')
 
-    if test in ['test1', 'test2', 'test3']:
+    if test in ['test1', 'test2', 'test3', 'test4']:
         plt.ylabel(r'$F(\hat w_j(k))$')
     elif 'svm' in dataset:
         plt.ylabel('Hinge Loss')
@@ -481,7 +481,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
 
     plt.xlabel('Time')
 
-    if test in ['test1', 'test2', 'test3']:
+    if test in ['test1', 'test2', 'test3', 'test4']:
         plt.ylabel(r'$F(\hat w_j(k))$')
     elif 'svm' in dataset:
         plt.ylabel('Hinge Loss')
