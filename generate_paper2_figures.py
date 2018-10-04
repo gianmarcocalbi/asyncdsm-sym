@@ -3,7 +3,7 @@ from matplotlib import rcParams
 # rcParams['font.sans-serif'] = ['Times New Roman']
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
-
+from src import statistics
 from src.utils import *
 
 """
@@ -24,7 +24,11 @@ Location Legend:
 SMALL_SIZE = 10
 MEDIUM_SIZE = 12
 BIGGER_SIZE = 14
-BBOX_INCHES = 'tight'
+BBOX_INCHES = None
+INSERT_FONT_SIZE = 'small'
+AXIS_FONT_SIZE = 'large'
+AXIS_FONT_SIZE_BIGGER = 'x-large'
+LEGEND_FONT_SIZE = 'medium'
 
 plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
@@ -163,23 +167,47 @@ n=1000, c=.1, alpha dep from SG, par(3,2), for expanders
 
 def run():
     active_tests = [
-        #'test1',
-        #'test2',
-        #'test3',
-        #'test4',
-        #'test5',
+        'test1',
+        'test2',
+        'test3',
+        'test4',
+        'test5',
         'test6_svm',
-        #'test6_reg',
-        #'test7_svm',
-        #'test7_reg',
+        'test6_reg',
+        'test7_svm',
+        'test7_reg',
     ]
     log, setup = load(active_tests)
-    #plot_dataset_nodes_distr_err_vs_time(
+    # plot_dataset_nodes_distr_err_vs_time(
     #    'test6_svm', 'real_svm', 100, 'spark', log['test6_svm']['spark'], setup['test6_svm']['spark'], n_samples=100,
     #    save=False)
 
     plot_all(log, setup, active_tests)
 
+def plot_cdf(pool, distr_name, save=False):
+    # Create some test data
+    pool = np.sort(pool)
+    cdf = np.cumsum(pool) / sum(pool)
+
+    fig, ax = plt.subplots()
+    plt.xlabel('Computing times (s)', fontsize=AXIS_FONT_SIZE)
+    plt.ylabel('CDF', fontsize=AXIS_FONT_SIZE)
+
+    ax.plot(
+        [0] + list(pool),
+        [0] + list(cdf),
+        label='CDF',
+        color='blue'
+    )
+    plt.yscale('linear')
+    plt.xlim(0, pool[-1])
+    if save:
+        dest = root_folder_path + distr_name + '_computing_times_cdf.png'
+        plt.savefig(dest, bbox_inches=BBOX_INCHES)
+        print('Create file {}'.format(dest))
+    else:
+        plt.show()
+    plt.close()
 
 def plot_all(log, setup, active_tests):
     for test in active_tests:
@@ -228,6 +256,7 @@ def load(active_tests):
         'test7_reg': {'custom': None},
         'test7_svm': {'custom': None}
     }
+
     setup = {
         'test1': {'par': None, 'unif': None, 'exp': None},
         'test2': {'par': None, 'unif': None, 'exp': None},
@@ -285,9 +314,13 @@ def load(active_tests):
     if 'test6_svm' in active_tests:
         log['test6_svm']['spark'], setup['test6_svm']['spark'] = load_test_logs(
             './test_log/paper2/test6/test_test6_susysvm_100n_spark_real[None]_mtrT2worst_C0.05alpha_500000samp_INFtime_6000iter')
+        for graph in log['test6_svm']['spark']['iter_time']:
+            log['test6_svm']['spark']['iter_time'][graph] /= 1000
     if 'test6_reg' in active_tests:
         log['test6_reg']['spark'], setup['test6_reg']['spark'] = load_test_logs(
             './test_log/paper2/test6/test_test6_sloreg_100n_spark_real[None]_mtrT2worst_C5e-06alpha_52000samp_INFtime_5000iter')
+        for graph in log['test6_reg']['spark']['iter_time']:
+            log['test6_reg']['spark']['iter_time'][graph] /= 1000
 
     if 'test7_svm' in active_tests:
         log['test7_svm']['custom'], setup['test7_svm']['custom'] = load_test_logs(
@@ -303,15 +336,15 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     fig, ax = plt.subplots()
     # plt.title('Error VS iterations', loc='left')
 
-    plt.xlabel('Iterations')
+    plt.xlabel('Iterations (k)', fontsize=AXIS_FONT_SIZE)
     # plt.ylabel(r'$F(\bar w_i)$')
 
     if test in ['test1', 'test2', 'test3', 'test4']:
-        plt.ylabel(r'$F(\hat w_j(k))$')
+        plt.ylabel(r'$F(\hat w_j(k))$', fontsize=AXIS_FONT_SIZE_BIGGER)
     elif 'svm' in dataset:
-        plt.ylabel('Hinge Loss')
+        plt.ylabel('Hinge Loss', fontsize=AXIS_FONT_SIZE)
     elif 'reg' in dataset:
-        plt.ylabel('Mean Squared Error')
+        plt.ylabel('Mean Squared Error', fontsize=AXIS_FONT_SIZE)
 
     zoom_region = False
     x1, x2, y1, y2 = 0, 0, 0, 0
@@ -481,13 +514,13 @@ def plot_dataset_nodes_distr_err_vs_iter(test, dataset, n, logs, setup, n_sample
     if zoom_region:
         axins.set_xlim(x1, x2)  # apply the x-limits
         axins.set_ylim(y1, y2)  # apply the y-limits
-        plt.yticks(visible=True, fontsize='x-small')
-        plt.xticks(visible=True, fontsize='x-small')
+        plt.yticks(visible=True, fontsize=INSERT_FONT_SIZE)
+        plt.xticks(visible=True, fontsize=INSERT_FONT_SIZE)
         mark_inset(ax, axins, loc1=loc1, loc2=loc2, fc="none", ec="0.5", zorder=100)
 
     plt.yscale('linear')
 
-    ax.legend(title="Degree (d)", fontsize='small', fancybox=True, loc=legend_loc)
+    ax.legend(title="Degree (d)", fontsize=LEGEND_FONT_SIZE, fancybox=True, loc=legend_loc)
     if save:
         if dataset == 'multieigvecsvm':
             dest = root_folder_path + '{}_{}_{}n_{}samples_err_vs_iter.png'.format(
@@ -515,14 +548,14 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     # plt.title('Error VS time', loc='left')
     # plt.title(distr, loc='Right')
 
-    plt.xlabel('Time')
+    plt.xlabel('Time (s)', fontsize=AXIS_FONT_SIZE)
 
     if test in ['test1', 'test2', 'test3', 'test4']:
-        plt.ylabel(r'$F(\hat w_j(k))$')
+        plt.ylabel(r'$F(\hat w_j(k))$', fontsize=AXIS_FONT_SIZE_BIGGER)
     elif 'svm' in dataset:
-        plt.ylabel('Hinge Loss')
+        plt.ylabel('Hinge Loss', fontsize=AXIS_FONT_SIZE)
     elif 'reg' in dataset:
-        plt.ylabel('Mean Squared Error')
+        plt.ylabel('Mean Squared Error', fontsize=AXIS_FONT_SIZE)
 
     markevery = 0.05
     legend_loc = 1
@@ -554,7 +587,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     if test == 'test6_svm':
         if n_samples == 100:
             zr1['active'] = True
-            zr1['x1'], zr1['x2'] = 784500, 810000
+            zr1['x1'], zr1['x2'] = 784.500, 810
             zr1['y1'], zr1['y2'] = 0.192, 0.208
             zr1['zoom_loc'] = 10
             zr1['zoom_scale'] = 11
@@ -563,7 +596,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             zr1['bbox_to_anchor'] = (0.78, 0.30)
 
             zr2['active'] = True
-            zr2['x1'], zr2['x2'] = 2000, 80000
+            zr2['x1'], zr2['x2'] = 2, 80
             zr2['y1'], zr2['y2'] = 0.235, 0.30
             zr2['zoom_loc'] = 10
             zr2['zoom_scale'] = 5
@@ -571,23 +604,23 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
             zr2['loc2'] = 4
             zr2['bbox_to_anchor'] = (0.32, 0.60)
 
-            xlim1 = -40000
-            xlim2 = 1e6
+            xlim1 = -40
+            xlim2 = 1e3
             ylim1 = 0.17
             ylim2 = 0.716
             legend_loc = 1
     if test == 'test6_reg':
         if n_samples == 100:
             zr1['active'] = True
-            zr1['x1'], zr1['x2'] = 150000, 270000
+            zr1['x1'], zr1['x2'] = 150, 270
             zr1['y1'], zr1['y2'] = 11000, 16000
             zr1['zoom_loc'] = 10
             zr1['zoom_scale'] = 3.8
             zr1['loc1'] = 2
             zr1['loc2'] = 4
             zr1['bbox_to_anchor'] = (0.5, 0.68)
-            xlim1 = -40000
-            xlim2 = 950000
+            xlim1 = -40
+            xlim2 = 950
             ylim1 = 5500
             ylim2 = 47000
             legend_loc = 1
@@ -726,7 +759,9 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
         # plt.xticks(visible=True, fontsize='x-small')
         axins1.set_xlim(zr1['x1'], zr1['x2'])  # apply the x-limits
         axins1.set_ylim(zr1['y1'], zr1['y2'])  # apply the y-limits
-        axins1.tick_params(axis='both', labelsize='x-small')
+        axins1.tick_params(axis='both', labelsize=INSERT_FONT_SIZE)
+        #if test == 'test6_reg':
+        #    axins1.ticklabel_format(axis='x', scilimits=(0, 0), style='scientific')
         mark_inset(ax, axins1, loc1=zr1['loc1'], loc2=zr1['loc2'], fc="none", ec="0.5", zorder=100)
 
     if zr2['active']:
@@ -734,7 +769,9 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
         # plt.xticks(visible=True, fontsize='x-small')
         axins2.set_xlim(zr2['x1'], zr2['x2'])  # apply the x-limits
         axins2.set_ylim(zr2['y1'], zr2['y2'])  # apply the y-limits
-        axins2.tick_params(axis='both', labelsize='x-small')
+        axins2.tick_params(axis='both', labelsize=INSERT_FONT_SIZE)
+        #if test == 'test6_reg':
+        #    axins2.ticklabel_format(axis='x', scilimits=(0, 0), style='scientific')
         mark_inset(ax, axins2, loc1=zr2['loc1'], loc2=zr2['loc2'], fc="none", ec="0.5", zorder=100)
 
     if xlim1 is not None and xlim2 is not None:
@@ -773,7 +810,7 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
     # ylim_padding = (ylim_up - ylim_dw) / 30
     # ax.set_ylim(max(ylim_dw - ylim_padding, 0), ylim_up + ylim_padding)
 
-    ax.legend(title="Degree (d)", fontsize='small', fancybox=True, loc=legend_loc)
+    ax.legend(title="Degree (d)", fontsize=LEGEND_FONT_SIZE, fancybox=True, loc=legend_loc)
     if save:
         dest = root_folder_path + '{}_{}_{}n_{}_err_vs_time.png'.format(
             test,
@@ -790,8 +827,8 @@ def plot_dataset_nodes_distr_err_vs_time(test, dataset, n, distr, logs, setup, n
 
 def plot_dataset_nodes_distr_iter_vs_time(test, dataset, n, distr, logs, setup, save=False):
     # plt.title('Min iteration VS time', loc='left')
-    plt.xlabel('Time')
-    plt.ylabel('Iteration')
+    plt.xlabel('Time (s)', fontsize=AXIS_FONT_SIZE)
+    plt.ylabel('Iterations (k)', fontsize=AXIS_FONT_SIZE)
 
     xlim = 0
 
@@ -820,7 +857,7 @@ def plot_dataset_nodes_distr_iter_vs_time(test, dataset, n, distr, logs, setup, 
 
     plt.xlim(xmax=xlim)
     plt.yscale('linear')
-    plt.legend(title="Degree (d)", fontsize='small', fancybox=True)
+    plt.legend(title="Degree (d)", fontsize=LEGEND_FONT_SIZE, fancybox=True)
     if save:
         dest = root_folder_path + '{}_{}_{}n_{}_iter_vs_time.png'.format(
             test,
@@ -1029,4 +1066,6 @@ def plot_distr_iter_time_vs_degree(dataset, n, logs_dict, setup_dict, error='avg
 
 
 if __name__ == '__main__':
-    run()
+    plot_cdf(statistics.CustomRealTimings.pool, 'custom', True)
+    plot_cdf(statistics.SparkRealTimings.pool / 1000, 'spark', True)
+    #run()

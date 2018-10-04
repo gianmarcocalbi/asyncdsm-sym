@@ -1,3 +1,2 @@
-from src.mltoolbox import datasets
-
-datasets.multieigvecsvm_dataset_from_expander(100, 100, 2)
+def compute_value(self, X, y, w):
+    return np.sum(1 - y * X.dot(w) / len(y))

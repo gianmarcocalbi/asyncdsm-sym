@@ -166,8 +166,8 @@ class Node:
             return 0
         return i
 
-    def enqueue_outgoing_data(self, dependency_node_id, data):
-        self.buffer[dependency_node_id].append(data)
+    def enqueue_outgoing_data(self, recipient_node_id, data):
+        self.buffer[recipient_node_id].append(data)
 
     def dequeue_incoming_data(self, dependency_node_id):
         return self.buffer[dependency_node_id].pop(0)
